@@ -1,0 +1,30 @@
+volumes:
+  pgdata:
+  rabbitmq_data:
+
+services:
+  postgres:
+    image: postgres:17.1-alpine
+    container_name: talka-postgres
+    volumes: pgdata:/var/lib/postgresql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  rabbitmq:
+    container_name: talka-rabbitmq
+    image: rabbitmq:4.1-alpine
+    volumes: rabbitmq_data:/var/lib/rabbitmq
+  users:
+    build: ./users
+    volumes: ./users:/app
+  gateway:
+    build: ./gateway
+    volumes: ./gateway:/app
+    ports: 5050:8000
+    depends_on:
+      db:
+        condition: service_healthy
+      users:
+      rabbitmq:
