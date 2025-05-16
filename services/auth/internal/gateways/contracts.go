@@ -8,7 +8,7 @@ import (
 	"github.com/modulix-systems/goose-talk/internal/entity"
 )
 
-//go:generate mockgen -source=contracts.go -destination=../services/tests/mocks_gateways_test.go -package=services_test
+//go:generate mockgen -source=contracts.go -destination=../../tests/mocks/mocks_gateways.go -package=mocks
 type (
 	UsersRepo interface {
 		Insert(ctx context.Context, user *entity.User) (*entity.User, error)

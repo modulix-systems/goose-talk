@@ -1,4 +1,4 @@
-package services_test
+package auth_test
 
 import (
 	"context"
@@ -9,40 +9,10 @@ import (
 	"github.com/modulix-systems/goose-talk/internal/entity"
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage"
 	"github.com/modulix-systems/goose-talk/internal/schemas"
-	"github.com/modulix-systems/goose-talk/internal/services/auth.go"
-	"github.com/modulix-systems/goose-talk/tests/suite"
+	"github.com/modulix-systems/goose-talk/internal/services/auth"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
-
-type AuthTestSuite struct {
-	mockCodeRepo          *MockSignUpCodeRepo
-	mockUsersRepo         *MockUsersRepo
-	mockAuthTokenProvider *MockAuthTokenProvider
-	authService           *auth.AuthService
-	tokenTTL              time.Duration
-}
-
-func NewAuthTestSuite(ctrl *gomock.Controller) *AuthTestSuite {
-	mockCodeRepo := NewMockSignUpCodeRepo(ctrl)
-	mockUsersRepo := NewMockUsersRepo(ctrl)
-	tokenTTL := suite.MockDuration("")
-	mockAuthTokenProvider := NewMockAuthTokenProvider(ctrl)
-	service := auth.New(
-		mockUsersRepo,
-		mockCodeRepo,
-		mockAuthTokenProvider,
-		tokenTTL,
-		tokenTTL,
-	)
-	return &AuthTestSuite{
-		mockCodeRepo:          mockCodeRepo,
-		mockUsersRepo:         mockUsersRepo,
-		mockAuthTokenProvider: mockAuthTokenProvider,
-		tokenTTL:              tokenTTL,
-		authService:           service,
-	}
-}
 
 func mockSignUpPayload() *schemas.SignUpSchema {
 	return &schemas.SignUpSchema{
