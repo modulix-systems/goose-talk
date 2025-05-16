@@ -42,6 +42,21 @@ func (m *MockUsersRepo) EXPECT() *MockUsersRepoMockRecorder {
 	return m.recorder
 }
 
+// CheckExistsWithEmail mocks base method.
+func (m *MockUsersRepo) CheckExistsWithEmail(ctx context.Context, email string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckExistsWithEmail", ctx, email)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckExistsWithEmail indicates an expected call of CheckExistsWithEmail.
+func (mr *MockUsersRepoMockRecorder) CheckExistsWithEmail(ctx, email any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckExistsWithEmail", reflect.TypeOf((*MockUsersRepo)(nil).CheckExistsWithEmail), ctx, email)
+}
+
 // Insert mocks base method.
 func (m *MockUsersRepo) Insert(ctx context.Context, user *entity.User) (*entity.User, error) {
 	m.ctrl.T.Helper()
@@ -96,42 +111,18 @@ func (mr *MockSignUpCodeRepoMockRecorder) GetByEmail(ctx, email any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByEmail", reflect.TypeOf((*MockSignUpCodeRepo)(nil).GetByEmail), ctx, email)
 }
 
-// MockTotpProvider is a mock of TotpProvider interface.
-type MockTotpProvider struct {
-	ctrl     *gomock.Controller
-	recorder *MockTotpProviderMockRecorder
-	isgomock struct{}
-}
-
-// MockTotpProviderMockRecorder is the mock recorder for MockTotpProvider.
-type MockTotpProviderMockRecorder struct {
-	mock *MockTotpProvider
-}
-
-// NewMockTotpProvider creates a new mock instance.
-func NewMockTotpProvider(ctrl *gomock.Controller) *MockTotpProvider {
-	mock := &MockTotpProvider{ctrl: ctrl}
-	mock.recorder = &MockTotpProviderMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockTotpProvider) EXPECT() *MockTotpProviderMockRecorder {
-	return m.recorder
-}
-
-// Generate mocks base method.
-func (m *MockTotpProvider) Generate() string {
+// Insert mocks base method.
+func (m *MockSignUpCodeRepo) Insert(ctx context.Context, code *entity.SignUpCode) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Generate")
-	ret0, _ := ret[0].(string)
+	ret := m.ctrl.Call(m, "Insert", ctx, code)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Generate indicates an expected call of Generate.
-func (mr *MockTotpProviderMockRecorder) Generate() *gomock.Call {
+// Insert indicates an expected call of Insert.
+func (mr *MockSignUpCodeRepoMockRecorder) Insert(ctx, code any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Generate", reflect.TypeOf((*MockTotpProvider)(nil).Generate))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockSignUpCodeRepo)(nil).Insert), ctx, code)
 }
 
 // MockAuthTokenProvider is a mock of AuthTokenProvider interface.
@@ -186,4 +177,80 @@ func (m *MockAuthTokenProvider) ParseClaimsFromToken(token string) (map[string]a
 func (mr *MockAuthTokenProviderMockRecorder) ParseClaimsFromToken(token any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParseClaimsFromToken", reflect.TypeOf((*MockAuthTokenProvider)(nil).ParseClaimsFromToken), token)
+}
+
+// MockSecurityProvider is a mock of SecurityProvider interface.
+type MockSecurityProvider struct {
+	ctrl     *gomock.Controller
+	recorder *MockSecurityProviderMockRecorder
+	isgomock struct{}
+}
+
+// MockSecurityProviderMockRecorder is the mock recorder for MockSecurityProvider.
+type MockSecurityProviderMockRecorder struct {
+	mock *MockSecurityProvider
+}
+
+// NewMockSecurityProvider creates a new mock instance.
+func NewMockSecurityProvider(ctrl *gomock.Controller) *MockSecurityProvider {
+	mock := &MockSecurityProvider{ctrl: ctrl}
+	mock.recorder = &MockSecurityProviderMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockSecurityProvider) EXPECT() *MockSecurityProviderMockRecorder {
+	return m.recorder
+}
+
+// NewSecureToken mocks base method.
+func (m *MockSecurityProvider) NewSecureToken(len int) string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NewSecureToken", len)
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// NewSecureToken indicates an expected call of NewSecureToken.
+func (mr *MockSecurityProviderMockRecorder) NewSecureToken(len any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewSecureToken", reflect.TypeOf((*MockSecurityProvider)(nil).NewSecureToken), len)
+}
+
+// MockNotificationsService is a mock of NotificationsService interface.
+type MockNotificationsService struct {
+	ctrl     *gomock.Controller
+	recorder *MockNotificationsServiceMockRecorder
+	isgomock struct{}
+}
+
+// MockNotificationsServiceMockRecorder is the mock recorder for MockNotificationsService.
+type MockNotificationsServiceMockRecorder struct {
+	mock *MockNotificationsService
+}
+
+// NewMockNotificationsService creates a new mock instance.
+func NewMockNotificationsService(ctrl *gomock.Controller) *MockNotificationsService {
+	mock := &MockNotificationsService{ctrl: ctrl}
+	mock.recorder = &MockNotificationsServiceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockNotificationsService) EXPECT() *MockNotificationsServiceMockRecorder {
+	return m.recorder
+}
+
+// SendSignUpConfirmationEmail mocks base method.
+func (m *MockNotificationsService) SendSignUpConfirmationEmail(ctx context.Context, to, code string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendSignUpConfirmationEmail", ctx, to, code)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendSignUpConfirmationEmail indicates an expected call of SendSignUpConfirmationEmail.
+func (mr *MockNotificationsServiceMockRecorder) SendSignUpConfirmationEmail(ctx, to, code any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendSignUpConfirmationEmail", reflect.TypeOf((*MockNotificationsService)(nil).SendSignUpConfirmationEmail), ctx, to, code)
 }

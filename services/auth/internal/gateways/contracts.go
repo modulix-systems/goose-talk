@@ -12,15 +12,20 @@ import (
 type (
 	UsersRepo interface {
 		Insert(ctx context.Context, user *entity.User) (*entity.User, error)
+		CheckExistsWithEmail(ctx context.Context, email string) (bool, error)
 	}
 	SignUpCodeRepo interface {
 		GetByEmail(ctx context.Context, email string) (*entity.SignUpCode, error)
-	}
-	TotpProvider interface {
-		Generate() string
+		Insert(ctx context.Context, code *entity.SignUpCode) error
 	}
 	AuthTokenProvider interface {
 		NewToken(expires time.Duration, claims map[string]any) (string, error)
 		ParseClaimsFromToken(token string) (map[string]any, error)
+	}
+	SecurityProvider interface {
+		NewSecureToken(len int) string
+	}
+	NotificationsService interface {
+		SendSignUpConfirmationEmail(ctx context.Context, to string, code string) error
 	}
 )

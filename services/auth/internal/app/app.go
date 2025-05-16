@@ -8,7 +8,7 @@ import (
 	"syscall"
 
 	"github.com/modulix-systems/goose-talk/internal/config"
-	"github.com/modulix-systems/goose-talk/internal/services/auth.go"
+	"github.com/modulix-systems/goose-talk/internal/services/auth"
 	"github.com/modulix-systems/goose-talk/pkg/grpcserver"
 	"github.com/modulix-systems/goose-talk/pkg/logger"
 	"github.com/modulix-systems/goose-talk/pkg/postgres"

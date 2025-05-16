@@ -13,7 +13,9 @@ type AuthTestSuite struct {
 	mockCodeRepo          *mocks.MockSignUpCodeRepo
 	mockUsersRepo         *mocks.MockUsersRepo
 	mockAuthTokenProvider *mocks.MockAuthTokenProvider
-	authService           *auth.AuthService
+	mockMailSender        *mocks.MockNotificationsService
+	mockSecurityProvider  *mocks.MockSecurityProvider
+	service               *auth.AuthService
 	tokenTTL              time.Duration
 }
 
@@ -22,18 +24,24 @@ func NewAuthTestSuite(ctrl *gomock.Controller) *AuthTestSuite {
 	mockUsersRepo := mocks.NewMockUsersRepo(ctrl)
 	tokenTTL := suite.MockDuration("")
 	mockAuthTokenProvider := mocks.NewMockAuthTokenProvider(ctrl)
+	mockMailSender := mocks.NewMockNotificationsService(ctrl)
+	mockSecurityProvider := mocks.NewMockSecurityProvider(ctrl)
 	service := auth.New(
 		mockUsersRepo,
+		mockMailSender,
 		mockCodeRepo,
 		mockAuthTokenProvider,
 		tokenTTL,
 		tokenTTL,
+		mockSecurityProvider,
 	)
 	return &AuthTestSuite{
 		mockCodeRepo:          mockCodeRepo,
 		mockUsersRepo:         mockUsersRepo,
+		mockSecurityProvider:  mockSecurityProvider,
 		mockAuthTokenProvider: mockAuthTokenProvider,
 		tokenTTL:              tokenTTL,
-		authService:           service,
+		mockMailSender:        mockMailSender,
+		service:               service,
 	}
 }

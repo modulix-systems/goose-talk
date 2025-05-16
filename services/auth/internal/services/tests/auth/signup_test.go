@@ -26,23 +26,23 @@ func mockSignUpPayload() *schemas.SignUpSchema {
 
 func TestSignupSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	suite := NewAuthTestSuite(ctrl)
+	authSuite := NewAuthTestSuite(ctrl)
 	dto := mockSignUpPayload()
 	expectedToken := "auth token"
 	ctx := context.Background()
 	expectedUser := entity.User{ID: gofakeit.Number(1, 1000), Email: dto.Email}
-	suite.mockAuthTokenProvider.EXPECT().
-		NewToken(suite.tokenTTL, map[string]any{"uid": expectedUser.ID}).
+	authSuite.mockAuthTokenProvider.EXPECT().
+		NewToken(authSuite.tokenTTL, map[string]any{"uid": expectedUser.ID}).
 		Return(expectedToken, nil)
-	suite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(
+	authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(
 		&entity.SignUpCode{Code: dto.ConfirmationCode, Email: dto.Email, CreatedAt: time.Now()},
 		nil,
 	)
-	suite.mockUsersRepo.EXPECT().
+	authSuite.mockUsersRepo.EXPECT().
 		Insert(ctx, &entity.User{FirstName: dto.FirstName, LastName: dto.LastName, Email: dto.Email}).
 		Return(&expectedUser, nil)
 
-	token, user, err := suite.authService.SignUp(ctx, dto)
+	token, user, err := authSuite.service.SignUp(ctx, dto)
 
 	assert.Equal(t, token, expectedToken)
 	assert.Equal(t, user.ID, expectedUser.ID)
@@ -51,15 +51,15 @@ func TestSignupSuccess(t *testing.T) {
 
 func TestSignupNotFoundCode(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	suite := NewAuthTestSuite(ctrl)
+	authSuite := NewAuthTestSuite(ctrl)
 	dto := mockSignUpPayload()
 	ctx := context.Background()
-	suite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(
+	authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(
 		nil,
 		storage.ErrNotFound,
 	)
 
-	token, user, err := suite.authService.SignUp(ctx, dto)
+	token, user, err := authSuite.service.SignUp(ctx, dto)
 
 	assert.Empty(t, token)
 	assert.Empty(t, user)
@@ -68,19 +68,19 @@ func TestSignupNotFoundCode(t *testing.T) {
 
 func TestSignupExpiredCode(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	suite := NewAuthTestSuite(ctrl)
+	authSuite := NewAuthTestSuite(ctrl)
 	dto := mockSignUpPayload()
 	ctx := context.Background()
-	suite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(
+	authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(
 		&entity.SignUpCode{
 			Code:      dto.ConfirmationCode,
 			Email:     dto.Email,
-			CreatedAt: time.Now().Add(-suite.tokenTTL),
+			CreatedAt: time.Now().Add(-authSuite.tokenTTL),
 		},
 		nil,
 	)
 
-	token, user, err := suite.authService.SignUp(ctx, dto)
+	token, user, err := authSuite.service.SignUp(ctx, dto)
 
 	assert.Empty(t, token)
 	assert.Empty(t, user)
@@ -89,10 +89,10 @@ func TestSignupExpiredCode(t *testing.T) {
 
 func TestSignUpUserExists(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	suite := NewAuthTestSuite(ctrl)
+	authSuite := NewAuthTestSuite(ctrl)
 	dto := mockSignUpPayload()
 	ctx := context.Background()
-	suite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(
+	authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(
 		&entity.SignUpCode{
 			Code:      dto.ConfirmationCode,
 			Email:     dto.Email,
@@ -100,11 +100,11 @@ func TestSignUpUserExists(t *testing.T) {
 		},
 		nil,
 	)
-	suite.mockUsersRepo.EXPECT().
+	authSuite.mockUsersRepo.EXPECT().
 		Insert(ctx, &entity.User{FirstName: dto.FirstName, LastName: dto.LastName, Email: dto.Email}).
 		Return(nil, storage.ErrAlreadyExists)
 
-	token, user, err := suite.authService.SignUp(ctx, dto)
+	token, user, err := authSuite.service.SignUp(ctx, dto)
 
 	assert.Empty(t, token)
 	assert.Empty(t, user)

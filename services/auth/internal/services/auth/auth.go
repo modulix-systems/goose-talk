@@ -12,20 +12,33 @@ import (
 )
 
 type AuthService struct {
-	usersRepo         gateways.UsersRepo
-	signUpCodeRepo    gateways.SignUpCodeRepo
-	signUpCodeTTL     time.Duration
-	authTokenProvider gateways.AuthTokenProvider
-	authTokenTTL      time.Duration
+	usersRepo            gateways.UsersRepo
+	notificationsServive gateways.NotificationsService
+	securityProvider     gateways.SecurityProvider
+	signUpCodeRepo       gateways.SignUpCodeRepo
+	signUpCodeTTL        time.Duration
+	authTokenProvider    gateways.AuthTokenProvider
+	authTokenTTL         time.Duration
 }
 
 func New(
 	usersRepo gateways.UsersRepo,
+	notificationsServive gateways.NotificationsService,
 	signUpCodeRepo gateways.SignUpCodeRepo,
 	authTokenProvider gateways.AuthTokenProvider,
 	signUpCodeTTL time.Duration,
-	authTokenTTL time.Duration) *AuthService {
-	return &AuthService{usersRepo, signUpCodeRepo, signUpCodeTTL, authTokenProvider, authTokenTTL}
+	authTokenTTL time.Duration,
+	securityProvider gateways.SecurityProvider,
+) *AuthService {
+	return &AuthService{
+		usersRepo:            usersRepo,
+		notificationsServive: notificationsServive,
+		signUpCodeRepo:       signUpCodeRepo,
+		signUpCodeTTL:        signUpCodeTTL,
+		authTokenProvider:    authTokenProvider,
+		authTokenTTL:         authTokenTTL,
+		securityProvider:     securityProvider,
+	}
 }
 
 func (s *AuthService) SignUp(
@@ -56,4 +69,30 @@ func (s *AuthService) SignUp(
 		return "", nil, err
 	}
 	return authToken, user, nil
+}
+
+func (s *AuthService) ConfirmEmail(ctx context.Context, email string) error {
+	isExists, err := s.usersRepo.CheckExistsWithEmail(ctx, email)
+	if err != nil {
+		return err
+	}
+	if isExists {
+		return ErrUserAlreadyExists
+	}
+	code := s.securityProvider.NewSecureToken(6)
+	if err = s.signUpCodeRepo.Insert(ctx, &entity.SignUpCode{Code: code, Email: email}); err != nil {
+		if errors.Is(err, storage.ErrAlreadyExists) {
+			signUpCode, err := s.signUpCodeRepo.GetByEmail(ctx, email)
+			if err != nil {
+				return err
+			}
+			code = signUpCode.Code
+		} else {
+			return err
+		}
+	}
+	if err = s.notificationsServive.SendSignUpConfirmationEmail(ctx, email, code); err != nil {
+		return err
+	}
+	return nil
 }
