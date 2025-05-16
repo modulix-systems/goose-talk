@@ -1,6 +1,8 @@
 package entity
 
-import "time"
+import (
+	"time"
+)
 
 type TwoFADeliveryMethod = int
 
@@ -21,6 +23,7 @@ type (
 	User struct {
 		ID         int
 		Username   string
+		Password   []byte `json:"-"`
 		Email      string
 		FirstName  string
 		LastName   string

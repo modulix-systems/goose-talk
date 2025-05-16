@@ -57,6 +57,21 @@ func (mr *MockUsersRepoMockRecorder) CheckExistsWithEmail(ctx, email any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckExistsWithEmail", reflect.TypeOf((*MockUsersRepo)(nil).CheckExistsWithEmail), ctx, email)
 }
 
+// GetByLogin mocks base method.
+func (m *MockUsersRepo) GetByLogin(ctx context.Context, login string) (*entity.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByLogin", ctx, login)
+	ret0, _ := ret[0].(*entity.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByLogin indicates an expected call of GetByLogin.
+func (mr *MockUsersRepoMockRecorder) GetByLogin(ctx, login any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByLogin", reflect.TypeOf((*MockUsersRepo)(nil).GetByLogin), ctx, login)
+}
+
 // Insert mocks base method.
 func (m *MockUsersRepo) Insert(ctx context.Context, user *entity.User) (*entity.User, error) {
 	m.ctrl.T.Helper()
@@ -201,6 +216,36 @@ func NewMockSecurityProvider(ctrl *gomock.Controller) *MockSecurityProvider {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockSecurityProvider) EXPECT() *MockSecurityProviderMockRecorder {
 	return m.recorder
+}
+
+// ComparePasswords mocks base method.
+func (m *MockSecurityProvider) ComparePasswords(hashed []byte, plain string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ComparePasswords", hashed, plain)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ComparePasswords indicates an expected call of ComparePasswords.
+func (mr *MockSecurityProviderMockRecorder) ComparePasswords(hashed, plain any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ComparePasswords", reflect.TypeOf((*MockSecurityProvider)(nil).ComparePasswords), hashed, plain)
+}
+
+// HashPassword mocks base method.
+func (m *MockSecurityProvider) HashPassword(password string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HashPassword", password)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// HashPassword indicates an expected call of HashPassword.
+func (mr *MockSecurityProviderMockRecorder) HashPassword(password any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HashPassword", reflect.TypeOf((*MockSecurityProvider)(nil).HashPassword), password)
 }
 
 // NewSecureToken mocks base method.

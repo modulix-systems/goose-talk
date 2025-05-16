@@ -11,4 +11,8 @@ type (
 		LastName         string
 		ConfirmationCode string
 	}
+	SignInSchema struct {
+		Login    string
+		Password string
+	}
 )

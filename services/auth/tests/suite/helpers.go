@@ -22,3 +22,7 @@ func MockDuration(s string) time.Duration {
 func ChooseRandom[T any](collection ...T) T {
 	return collection[rand.Intn(len(collection))]
 }
+
+func RandomPassword() string {
+	return gofakeit.Password(true, true, true, false, true, 8)
+}

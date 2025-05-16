@@ -41,6 +41,7 @@ func New(
 	}
 }
 
+// TODO: add password hashing
 func (s *AuthService) SignUp(
 	ctx context.Context,
 	dto *schemas.SignUpSchema,
@@ -103,4 +104,27 @@ func (s *AuthService) ConfirmEmail(ctx context.Context, email string) error {
 		return err
 	}
 	return nil
+}
+
+func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (string, *entity.User, error) {
+	user, err := s.usersRepo.GetByLogin(ctx, dto.Login)
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return "", nil, ErrInvalidCredentials
+		}
+		return "", nil, err
+	}
+	matched, err := s.securityProvider.ComparePasswords(user.Password, dto.Password)
+	if err != nil {
+		return "", nil, err
+	}
+	if !matched {
+		return "", nil, ErrInvalidCredentials
+	}
+	authToken, err := s.authTokenProvider.NewToken(s.authTokenTTL, map[string]any{"uid": user.ID})
+	if err != nil {
+		return "", nil, err
+	}
+	return authToken, user, nil
+
 }
