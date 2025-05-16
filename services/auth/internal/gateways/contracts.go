@@ -13,6 +13,7 @@ type (
 	UsersRepo interface {
 		Insert(ctx context.Context, user *entity.User) (*entity.User, error)
 		CheckExistsWithEmail(ctx context.Context, email string) (bool, error)
+		GetByLogin(ctx context.Context, login string) (*entity.User, error)
 	}
 	SignUpCodeRepo interface {
 		GetByEmail(ctx context.Context, email string) (*entity.SignUpCode, error)
@@ -24,6 +25,8 @@ type (
 	}
 	SecurityProvider interface {
 		NewSecureToken(len int) string
+		HashPassword(password string) (string, error)
+		ComparePasswords(hashed []byte, plain string) (bool, error)
 	}
 	NotificationsService interface {
 		SendSignUpConfirmationEmail(ctx context.Context, to string, code string) error
