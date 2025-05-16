@@ -2,6 +2,7 @@ package suite
 
 import (
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -16,4 +17,8 @@ func MockDuration(s string) time.Duration {
 		panic(err)
 	}
 	return duration
+}
+
+func ChooseRandom[T any](collection ...T) T {
+	return collection[rand.Intn(len(collection))]
 }

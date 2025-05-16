@@ -27,5 +27,6 @@ type (
 	}
 	NotificationsService interface {
 		SendSignUpConfirmationEmail(ctx context.Context, to string, code string) error
+		SendGreetingEmail(ctx context.Context, to string, name string) error
 	}
 )

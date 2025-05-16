@@ -68,6 +68,14 @@ func (s *AuthService) SignUp(
 	if err != nil {
 		return "", nil, err
 	}
+	displayName := dto.Username
+	if dto.FirstName != "" {
+		displayName = dto.FirstName
+		if dto.LastName != "" {
+			displayName = displayName + " " + dto.LastName
+		}
+	}
+	s.notificationsServive.SendGreetingEmail(ctx, user.Email, displayName)
 	return authToken, user, nil
 }
 

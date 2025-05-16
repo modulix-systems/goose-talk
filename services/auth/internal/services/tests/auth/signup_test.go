@@ -10,6 +10,7 @@ import (
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage"
 	"github.com/modulix-systems/goose-talk/internal/schemas"
 	"github.com/modulix-systems/goose-talk/internal/services/auth"
+	"github.com/modulix-systems/goose-talk/tests/suite"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -18,8 +19,8 @@ func mockSignUpPayload() *schemas.SignUpSchema {
 	return &schemas.SignUpSchema{
 		Username:         gofakeit.Username(),
 		Email:            gofakeit.Email(),
-		FirstName:        gofakeit.FirstName(),
-		LastName:         gofakeit.LastName(),
+		FirstName:        suite.ChooseRandom(gofakeit.FirstName(), ""),
+		LastName:         suite.ChooseRandom(gofakeit.LastName(), ""),
 		ConfirmationCode: "testcode",
 	}
 }
@@ -41,6 +42,14 @@ func TestSignupSuccess(t *testing.T) {
 	authSuite.mockUsersRepo.EXPECT().
 		Insert(ctx, &entity.User{FirstName: dto.FirstName, LastName: dto.LastName, Email: dto.Email}).
 		Return(&expectedUser, nil)
+	expectedName := dto.Username
+	if dto.FirstName != "" {
+		expectedName = dto.FirstName
+		if dto.LastName != "" {
+			expectedName = expectedName + " " + dto.LastName
+		}
+	}
+	authSuite.mockMailSender.EXPECT().SendGreetingEmail(ctx, dto.Email, expectedName)
 
 	token, user, err := authSuite.service.SignUp(ctx, dto)
 
