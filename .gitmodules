@@ -1,3 +1,6 @@
 [submodule "proto"]
 	path = proto
 	url = ./proto
+[submodule "goose-pb"]
+	path = goose-pb
+	url = ./goose-pb

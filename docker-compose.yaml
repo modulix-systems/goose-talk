@@ -5,7 +5,7 @@ volumes:
 services:
   postgres:
     image: postgres:17.1-alpine
-    container_name: talka-postgres
+    container_name: goose-postgres
     volumes: pgdata:/var/lib/postgresql
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
@@ -13,7 +13,7 @@ services:
       timeout: 5s
       retries: 5
   rabbitmq:
-    container_name: talka-rabbitmq
+    container_name: goose-rabbitmq
     image: rabbitmq:4.1-alpine
     volumes: rabbitmq_data:/var/lib/rabbitmq
   users:
