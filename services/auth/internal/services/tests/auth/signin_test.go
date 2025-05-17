@@ -179,6 +179,22 @@ func TestSignInNotFoundUser(t *testing.T) {
 	assert.Empty(t, user)
 }
 
+func TestSignInNotActiveUser(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	authSuite := NewAuthTestSuite(ctrl)
+	ctx := context.Background()
+	dto := mockSignInPayload()
+	mockUser := suite.MockUser()
+	mockUser.IsActive = false
+	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
+
+	token, user, err := authSuite.service.SignIn(ctx, dto)
+
+	assert.ErrorIs(t, err, auth.ErrDisabledAccount)
+	assert.Empty(t, token)
+	assert.Empty(t, user)
+}
+
 func TestSignInInvalidPassword(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)

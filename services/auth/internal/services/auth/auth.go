@@ -130,6 +130,9 @@ func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (st
 		}
 		return "", nil, err
 	}
+	if !user.IsActive {
+		return "", nil, ErrDisabledAccount
+	}
 	matched, err := s.securityProvider.ComparePasswords(user.Password, dto.Password)
 	if err != nil {
 		return "", nil, err
