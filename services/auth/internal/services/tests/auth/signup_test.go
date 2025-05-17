@@ -31,14 +31,16 @@ func TestSignupSuccess(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	dto := mockSignUpPayload()
 	expectedToken := "auth token"
-	hashedPassword := []byte("hashedpassword")
+	hashedPassword := []byte("hashedPassword")
+	hashedCode := []byte("hashedCode")
 	ctx := context.Background()
 	expectedUser := entity.User{ID: gofakeit.Number(1, 1000), Email: dto.Email, Password: hashedPassword}
 	authSuite.mockAuthTokenProvider.EXPECT().
 		NewToken(authSuite.tokenTTL, map[string]any{"uid": expectedUser.ID}).
 		Return(expectedToken, nil)
+	authSuite.mockSecurityProvider.EXPECT().ComparePasswords(hashedCode, dto.ConfirmationCode).Return(true, nil)
 	authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(
-		&entity.SignUpCode{Code: dto.ConfirmationCode, Email: dto.Email, CreatedAt: time.Now()},
+		&entity.OTP{Code: hashedCode, UserEmail: dto.Email, CreatedAt: time.Now(), UpdatedAt: time.Now()},
 		nil,
 	)
 	authSuite.mockSecurityProvider.EXPECT().HashPassword(dto.Password).Return(hashedPassword, nil)
@@ -83,11 +85,13 @@ func TestSignupExpiredCode(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	dto := mockSignUpPayload()
 	ctx := context.Background()
+	hashedCode := []byte("hashedCode")
 	authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(
-		&entity.SignUpCode{
-			Code:      dto.ConfirmationCode,
-			Email:     dto.Email,
-			CreatedAt: time.Now().Add(-authSuite.tokenTTL),
+		&entity.OTP{
+			Code:      hashedCode,
+			UserEmail: dto.Email,
+			CreatedAt: time.Now().Add(-authSuite.tokenTTL / 2),
+			UpdatedAt: time.Now().Add(-authSuite.tokenTTL),
 		},
 		nil,
 	)
@@ -104,15 +108,18 @@ func TestSignUpUserExists(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	dto := mockSignUpPayload()
 	ctx := context.Background()
+	hashedCode := []byte("hashedCode")
 	authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(
-		&entity.SignUpCode{
-			Code:      dto.ConfirmationCode,
-			Email:     dto.Email,
+		&entity.OTP{
+			Code:      hashedCode,
+			UserEmail: dto.Email,
 			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		},
 		nil,
 	)
 	hashedPassword := []byte("hashedPassword")
+	authSuite.mockSecurityProvider.EXPECT().ComparePasswords(hashedCode, dto.ConfirmationCode).Return(true, nil)
 	authSuite.mockSecurityProvider.EXPECT().HashPassword(dto.Password).Return(hashedPassword, nil)
 	authSuite.mockUsersRepo.EXPECT().
 		Insert(ctx, &entity.User{FirstName: dto.FirstName, LastName: dto.LastName, Email: dto.Email, Password: hashedPassword}).

@@ -15,8 +15,8 @@ type AuthService struct {
 	usersRepo            gateways.UsersRepo
 	notificationsServive gateways.NotificationsService
 	securityProvider     gateways.SecurityProvider
-	signUpCodeRepo       gateways.SignUpCodeRepo
-	signUpCodeTTL        time.Duration
+	otpRepo              gateways.OtpRepo
+	otpTTL               time.Duration
 	authTokenProvider    gateways.AuthTokenProvider
 	authTokenTTL         time.Duration
 }
@@ -24,17 +24,17 @@ type AuthService struct {
 func New(
 	usersRepo gateways.UsersRepo,
 	notificationsServive gateways.NotificationsService,
-	signUpCodeRepo gateways.SignUpCodeRepo,
+	otpRepo gateways.OtpRepo,
 	authTokenProvider gateways.AuthTokenProvider,
-	signUpCodeTTL time.Duration,
+	otpTTL time.Duration,
 	authTokenTTL time.Duration,
 	securityProvider gateways.SecurityProvider,
 ) *AuthService {
 	return &AuthService{
 		usersRepo:            usersRepo,
 		notificationsServive: notificationsServive,
-		signUpCodeRepo:       signUpCodeRepo,
-		signUpCodeTTL:        signUpCodeTTL,
+		otpRepo:              otpRepo,
+		otpTTL:               otpTTL,
 		authTokenProvider:    authTokenProvider,
 		authTokenTTL:         authTokenTTL,
 		securityProvider:     securityProvider,
@@ -45,15 +45,22 @@ func (s *AuthService) SignUp(
 	ctx context.Context,
 	dto *schemas.SignUpSchema,
 ) (string, *entity.User, error) {
-	code, err := s.signUpCodeRepo.GetByEmail(ctx, dto.Email)
+	hashedOtp, err := s.otpRepo.GetByEmail(ctx, dto.Email)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return "", nil, ErrInvalidSignUpCode
 		}
 		return "", nil, err
 	}
-	if time.Now().After(code.CreatedAt.Add(s.signUpCodeTTL)) {
+	if time.Now().After(hashedOtp.UpdatedAt.Add(s.otpTTL)) {
 		return "", nil, ErrExpiredSignUpCode
+	}
+	matched, err := s.securityProvider.ComparePasswords(hashedOtp.Code, dto.ConfirmationCode)
+	if err != nil {
+		return "", nil, err
+	}
+	if !matched {
+		return "", nil, ErrInvalidSignUpCode
 	}
 	hashedPassword, err := s.securityProvider.HashPassword(dto.Password)
 	if err != nil {
@@ -91,19 +98,12 @@ func (s *AuthService) ConfirmEmail(ctx context.Context, email string) error {
 	if isExists {
 		return ErrUserAlreadyExists
 	}
-	code := s.securityProvider.NewSecureToken(6)
-	if err = s.signUpCodeRepo.Insert(ctx, &entity.SignUpCode{Code: code, Email: email}); err != nil {
-		if errors.Is(err, storage.ErrAlreadyExists) {
-			signUpCode, err := s.signUpCodeRepo.GetByEmail(ctx, email)
-			if err != nil {
-				return err
-			}
-			code = signUpCode.Code
-		} else {
-			return err
-		}
+	hashedOtp := s.securityProvider.GenerateOTPCode(6)
+	hashedCode, err := s.securityProvider.HashPassword(hashedOtp)
+	if err = s.otpRepo.InsertOrUpdateCode(ctx, &entity.OTP{Code: hashedCode, UserEmail: email}); err != nil {
+		return err
 	}
-	if err = s.notificationsServive.SendSignUpConfirmationEmail(ctx, email, code); err != nil {
+	if err = s.notificationsServive.SendSignUpConfirmationEmail(ctx, email, hashedOtp); err != nil {
 		return err
 	}
 	return nil

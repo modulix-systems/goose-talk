@@ -6,7 +6,6 @@ import (
 
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/modulix-systems/goose-talk/internal/entity"
-	"github.com/modulix-systems/goose-talk/internal/gateways/storage"
 	"github.com/modulix-systems/goose-talk/internal/services/auth"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -16,13 +15,15 @@ func TestConfirmEmailSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	mockEmail := gofakeit.Email()
-	mockCode := "securetoken"
-	mockSignUpCode := &entity.SignUpCode{Code: mockCode, Email: mockEmail}
+	plainOTPCode := "securetoken"
+	hashedOTPCode := []byte(plainOTPCode)
+	mockSignUpCode := &entity.OTP{Code: hashedOTPCode, UserEmail: mockEmail}
 	ctx := context.Background()
 	authSuite.mockUsersRepo.EXPECT().CheckExistsWithEmail(ctx, mockEmail).Return(false, nil)
-	authSuite.mockCodeRepo.EXPECT().Insert(ctx, mockSignUpCode).Return(nil)
-	authSuite.mockMailSender.EXPECT().SendSignUpConfirmationEmail(ctx, mockEmail, mockSignUpCode.Code).Return(nil)
-	authSuite.mockSecurityProvider.EXPECT().NewSecureToken(6).Return(mockCode)
+	authSuite.mockCodeRepo.EXPECT().InsertOrUpdateCode(ctx, mockSignUpCode).Return(nil)
+	authSuite.mockMailSender.EXPECT().SendSignUpConfirmationEmail(ctx, mockEmail, plainOTPCode).Return(nil)
+	authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode(6).Return(plainOTPCode)
+	authSuite.mockSecurityProvider.EXPECT().HashPassword(plainOTPCode).Return(hashedOTPCode, nil)
 
 	err := authSuite.service.ConfirmEmail(ctx, mockEmail)
 
@@ -45,14 +46,14 @@ func TestConfirmEmailCodeAlreadyExists(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	mockEmail := gofakeit.Email()
-	mockSignUpCode := &entity.SignUpCode{Code: "secureToken", Email: mockEmail}
-	mockSignUpCodeFromDB := &entity.SignUpCode{Code: "anothersecuretoken", Email: mockEmail}
+	otpCode := "testcode"
+	mockOTP := &entity.OTP{Code: []byte(otpCode), UserEmail: mockEmail}
 	ctx := context.Background()
+	authSuite.mockSecurityProvider.EXPECT().HashPassword(otpCode).Return(mockOTP.Code, nil)
 	authSuite.mockUsersRepo.EXPECT().CheckExistsWithEmail(ctx, mockEmail).Return(false, nil)
-	authSuite.mockCodeRepo.EXPECT().Insert(ctx, mockSignUpCode).Return(storage.ErrAlreadyExists)
-	authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, mockEmail).Return(mockSignUpCodeFromDB, nil)
-	authSuite.mockMailSender.EXPECT().SendSignUpConfirmationEmail(ctx, mockEmail, mockSignUpCodeFromDB.Code).Return(nil)
-	authSuite.mockSecurityProvider.EXPECT().NewSecureToken(6).Return(mockSignUpCode.Code)
+	authSuite.mockCodeRepo.EXPECT().InsertOrUpdateCode(ctx, mockOTP).Return(nil)
+	authSuite.mockMailSender.EXPECT().SendSignUpConfirmationEmail(ctx, mockEmail, otpCode).Return(nil)
+	authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode(6).Return(otpCode)
 
 	err := authSuite.service.ConfirmEmail(ctx, mockEmail)
 

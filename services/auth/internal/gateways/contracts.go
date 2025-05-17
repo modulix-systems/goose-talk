@@ -15,16 +15,16 @@ type (
 		CheckExistsWithEmail(ctx context.Context, email string) (bool, error)
 		GetByLogin(ctx context.Context, login string) (*entity.User, error)
 	}
-	SignUpCodeRepo interface {
-		GetByEmail(ctx context.Context, email string) (*entity.SignUpCode, error)
-		Insert(ctx context.Context, code *entity.SignUpCode) error
+	OtpRepo interface {
+		GetByEmail(ctx context.Context, email string) (*entity.OTP, error)
+		InsertOrUpdateCode(ctx context.Context, otp *entity.OTP) error
 	}
 	AuthTokenProvider interface {
 		NewToken(expires time.Duration, claims map[string]any) (string, error)
 		ParseClaimsFromToken(token string) (map[string]any, error)
 	}
 	SecurityProvider interface {
-		NewSecureToken(len int) string
+		GenerateOTPCode(len int) string
 		HashPassword(password string) ([]byte, error)
 		ComparePasswords(hashed []byte, plain string) (bool, error)
 	}

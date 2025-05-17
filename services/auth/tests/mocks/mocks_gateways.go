@@ -112,10 +112,10 @@ func (m *MockSignUpCodeRepo) EXPECT() *MockSignUpCodeRepoMockRecorder {
 }
 
 // GetByEmail mocks base method.
-func (m *MockSignUpCodeRepo) GetByEmail(ctx context.Context, email string) (*entity.SignUpCode, error) {
+func (m *MockSignUpCodeRepo) GetByEmail(ctx context.Context, email string) (*entity.OTP, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByEmail", ctx, email)
-	ret0, _ := ret[0].(*entity.SignUpCode)
+	ret0, _ := ret[0].(*entity.OTP)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -126,18 +126,18 @@ func (mr *MockSignUpCodeRepoMockRecorder) GetByEmail(ctx, email any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByEmail", reflect.TypeOf((*MockSignUpCodeRepo)(nil).GetByEmail), ctx, email)
 }
 
-// Insert mocks base method.
-func (m *MockSignUpCodeRepo) Insert(ctx context.Context, code *entity.SignUpCode) error {
+// InsertOrUpdateCode mocks base method.
+func (m *MockSignUpCodeRepo) InsertOrUpdateCode(ctx context.Context, otp *entity.OTP) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Insert", ctx, code)
+	ret := m.ctrl.Call(m, "InsertOrUpdateCode", ctx, otp)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Insert indicates an expected call of Insert.
-func (mr *MockSignUpCodeRepoMockRecorder) Insert(ctx, code any) *gomock.Call {
+// InsertOrUpdateCode indicates an expected call of InsertOrUpdateCode.
+func (mr *MockSignUpCodeRepoMockRecorder) InsertOrUpdateCode(ctx, otp any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockSignUpCodeRepo)(nil).Insert), ctx, code)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertOrUpdateCode", reflect.TypeOf((*MockSignUpCodeRepo)(nil).InsertOrUpdateCode), ctx, otp)
 }
 
 // MockAuthTokenProvider is a mock of AuthTokenProvider interface.
@@ -233,6 +233,20 @@ func (mr *MockSecurityProviderMockRecorder) ComparePasswords(hashed, plain any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ComparePasswords", reflect.TypeOf((*MockSecurityProvider)(nil).ComparePasswords), hashed, plain)
 }
 
+// GenerateOTPCode mocks base method.
+func (m *MockSecurityProvider) GenerateOTPCode(len int) string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GenerateOTPCode", len)
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GenerateOTPCode indicates an expected call of GenerateOTPCode.
+func (mr *MockSecurityProviderMockRecorder) GenerateOTPCode(len any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateOTPCode", reflect.TypeOf((*MockSecurityProvider)(nil).GenerateOTPCode), len)
+}
+
 // HashPassword mocks base method.
 func (m *MockSecurityProvider) HashPassword(password string) ([]byte, error) {
 	m.ctrl.T.Helper()
@@ -246,20 +260,6 @@ func (m *MockSecurityProvider) HashPassword(password string) ([]byte, error) {
 func (mr *MockSecurityProviderMockRecorder) HashPassword(password any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HashPassword", reflect.TypeOf((*MockSecurityProvider)(nil).HashPassword), password)
-}
-
-// NewSecureToken mocks base method.
-func (m *MockSecurityProvider) NewSecureToken(len int) string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NewSecureToken", len)
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// NewSecureToken indicates an expected call of NewSecureToken.
-func (mr *MockSecurityProviderMockRecorder) NewSecureToken(len any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewSecureToken", reflect.TypeOf((*MockSecurityProvider)(nil).NewSecureToken), len)
 }
 
 // MockNotificationsService is a mock of NotificationsService interface.

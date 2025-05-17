@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func NewSecureToken(len int) string {
+func GenerateOTPCode(len int) string {
 	buf := make([]byte, len)
 	rand.Read(buf)
 	return fmt.Sprintf("%x", buf)

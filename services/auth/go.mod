@@ -20,6 +20,7 @@ require (
 require (
 	buf.build/gen/go/co3n/goose-proto/protocolbuffers/go v1.36.6-20250513172910-db61b69333b9.1 // indirect
 	github.com/BurntSushi/toml v1.5.0 // indirect
+	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/brianvoe/gofakeit/v7 v7.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
@@ -34,6 +35,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/pquerna/otp v1.5.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/net v0.40.0 // indirect
