@@ -28,7 +28,8 @@ func TestSignInSuccessNo2FA(t *testing.T) {
 	ctx := context.Background()
 	dto := mockSignInPayload()
 	expectedToken := "testtoken"
-	mockUser := &entity.User{ID: gofakeit.Number(1, 1000), Password: []byte("hashedPass")}
+	mockUser := suite.MockUser()
+	mockUser.TwoFactorAuth = nil
 	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
 	authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockUser.Password, dto.Password).Return(true, nil)
 	authSuite.mockAuthTokenProvider.EXPECT().
@@ -48,13 +49,8 @@ func TestSignInSuccess2FADisabled(t *testing.T) {
 	ctx := context.Background()
 	dto := mockSignInPayload()
 	expectedToken := "testtoken"
-	mockUser := &entity.User{
-		ID:       gofakeit.Number(1, 1000),
-		Password: []byte("hashedPass"),
-		TwoFactorAuth: &entity.TwoFactorAuth{
-			DeliveryMethod: entity.TWO_FA_EMAIL,
-		},
-	}
+	mockUser := suite.MockUser()
+	mockUser.TwoFactorAuth.Enabled = false
 	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
 	authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockUser.Password, dto.Password).Return(true, nil)
 	authSuite.mockAuthTokenProvider.EXPECT().
@@ -75,15 +71,10 @@ func TestSignInSuccess2FAByUserEmail(t *testing.T) {
 	dto := mockSignInPayload()
 	plainOTPCode := "securetoken"
 	hashedOTPCode := []byte(plainOTPCode)
-	mockUser := &entity.User{
-		ID:       gofakeit.Number(1, 1000),
-		Email:    gofakeit.Email(),
-		Password: []byte("hashedPass"),
-		TwoFactorAuth: &entity.TwoFactorAuth{
-			DeliveryMethod: entity.TWO_FA_EMAIL,
-			Enabled:        true,
-		},
-	}
+	mockUser := suite.MockUser()
+	mockUser.TwoFactorAuth.Enabled = true
+	mockUser.TwoFactorAuth.DeliveryMethod = entity.TWO_FA_EMAIL
+	mockUser.TwoFactorAuth.Contact = ""
 	mockOTP := &entity.OTP{Code: hashedOTPCode, UserEmail: mockUser.Email}
 	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
 	authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockUser.Password, dto.Password).Return(true, nil)
@@ -106,16 +97,9 @@ func TestSignInSuccess2FAByContactEmail(t *testing.T) {
 	dto := mockSignInPayload()
 	plainOTPCode := "securetoken"
 	hashedOTPCode := []byte(plainOTPCode)
-	mockUser := &entity.User{
-		ID:       gofakeit.Number(1, 1000),
-		Email:    gofakeit.Email(),
-		Password: []byte("hashedPass"),
-		TwoFactorAuth: &entity.TwoFactorAuth{
-			DeliveryMethod: entity.TWO_FA_EMAIL,
-			Enabled:        true,
-			Contact:        gofakeit.Email(),
-		},
-	}
+	mockUser := suite.MockUser()
+	mockUser.TwoFactorAuth.Enabled = true
+	mockUser.TwoFactorAuth.DeliveryMethod = entity.TWO_FA_EMAIL
 	mockOTP := &entity.OTP{Code: hashedOTPCode, UserEmail: mockUser.Email}
 	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
 	authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockUser.Password, dto.Password).Return(true, nil)
@@ -138,16 +122,9 @@ func TestSignInSuccess2FAByContactTG(t *testing.T) {
 	dto := mockSignInPayload()
 	plainOTPCode := "securetoken"
 	hashedOTPCode := []byte(plainOTPCode)
-	mockUser := &entity.User{
-		ID:       gofakeit.Number(1, 1000),
-		Email:    gofakeit.Email(),
-		Password: []byte("hashedPass"),
-		TwoFactorAuth: &entity.TwoFactorAuth{
-			DeliveryMethod: entity.TWO_FA_TELEGRAM,
-			Enabled:        true,
-			Contact:        "21412412", // mock chat id
-		},
-	}
+	mockUser := suite.MockUser()
+	mockUser.TwoFactorAuth.Enabled = true
+	mockUser.TwoFactorAuth.DeliveryMethod = entity.TWO_FA_TELEGRAM
 	mockOTP := &entity.OTP{Code: hashedOTPCode, UserEmail: mockUser.Email}
 	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
 	authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockUser.Password, dto.Password).Return(true, nil)
@@ -171,15 +148,9 @@ func TestSignIn2FAUnsupportedMethod(t *testing.T) {
 	plainOTPCode := "securetoken"
 	hashedOTPCode := []byte(plainOTPCode)
 	const unsupported2FAMethod entity.TwoFADeliveryMethod = -1
-	mockUser := &entity.User{
-		ID:       gofakeit.Number(1, 1000),
-		Email:    gofakeit.Email(),
-		Password: []byte("hashedPass"),
-		TwoFactorAuth: &entity.TwoFactorAuth{
-			DeliveryMethod: unsupported2FAMethod,
-			Enabled:        true,
-		},
-	}
+	mockUser := suite.MockUser()
+	mockUser.TwoFactorAuth.Enabled = true
+	mockUser.TwoFactorAuth.DeliveryMethod = unsupported2FAMethod
 	mockOTP := &entity.OTP{Code: hashedOTPCode, UserEmail: mockUser.Email}
 	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
 	authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockUser.Password, dto.Password).Return(true, nil)
@@ -213,7 +184,7 @@ func TestSignInInvalidPassword(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
 	dto := mockSignInPayload()
-	mockUser := &entity.User{ID: gofakeit.Number(1, 1000), Password: []byte("hashedPass")}
+	mockUser := suite.MockUser()
 	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
 	authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockUser.Password, dto.Password).Return(false, nil)
 

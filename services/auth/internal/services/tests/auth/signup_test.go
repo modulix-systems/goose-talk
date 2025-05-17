@@ -19,8 +19,8 @@ func mockSignUpPayload() *schemas.SignUpSchema {
 	return &schemas.SignUpSchema{
 		Username:         gofakeit.Username(),
 		Email:            gofakeit.Email(),
-		FirstName:        suite.ChooseRandom(gofakeit.FirstName(), ""),
-		LastName:         suite.ChooseRandom(gofakeit.LastName(), ""),
+		FirstName:        suite.RandomChoose(gofakeit.FirstName(), ""),
+		LastName:         suite.RandomChoose(gofakeit.LastName(), ""),
 		ConfirmationCode: "testcode",
 		Password:         suite.RandomPassword(),
 	}
