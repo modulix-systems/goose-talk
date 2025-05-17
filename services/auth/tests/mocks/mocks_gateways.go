@@ -234,10 +234,10 @@ func (mr *MockSecurityProviderMockRecorder) ComparePasswords(hashed, plain any) 
 }
 
 // HashPassword mocks base method.
-func (m *MockSecurityProvider) HashPassword(password string) (string, error) {
+func (m *MockSecurityProvider) HashPassword(password string) ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HashPassword", password)
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].([]byte)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -24,5 +24,5 @@ func ChooseRandom[T any](collection ...T) T {
 }
 
 func RandomPassword() string {
-	return gofakeit.Password(true, true, true, false, true, 8)
+	return gofakeit.Password(true, true, true, false, false, 8)
 }

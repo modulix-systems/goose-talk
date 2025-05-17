@@ -22,6 +22,7 @@ func mockSignUpPayload() *schemas.SignUpSchema {
 		FirstName:        suite.ChooseRandom(gofakeit.FirstName(), ""),
 		LastName:         suite.ChooseRandom(gofakeit.LastName(), ""),
 		ConfirmationCode: "testcode",
+		Password:         suite.RandomPassword(),
 	}
 }
 
@@ -30,8 +31,9 @@ func TestSignupSuccess(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	dto := mockSignUpPayload()
 	expectedToken := "auth token"
+	hashedPassword := []byte("hashedpassword")
 	ctx := context.Background()
-	expectedUser := entity.User{ID: gofakeit.Number(1, 1000), Email: dto.Email}
+	expectedUser := entity.User{ID: gofakeit.Number(1, 1000), Email: dto.Email, Password: hashedPassword}
 	authSuite.mockAuthTokenProvider.EXPECT().
 		NewToken(authSuite.tokenTTL, map[string]any{"uid": expectedUser.ID}).
 		Return(expectedToken, nil)
@@ -39,8 +41,9 @@ func TestSignupSuccess(t *testing.T) {
 		&entity.SignUpCode{Code: dto.ConfirmationCode, Email: dto.Email, CreatedAt: time.Now()},
 		nil,
 	)
+	authSuite.mockSecurityProvider.EXPECT().HashPassword(dto.Password).Return(hashedPassword, nil)
 	authSuite.mockUsersRepo.EXPECT().
-		Insert(ctx, &entity.User{FirstName: dto.FirstName, LastName: dto.LastName, Email: dto.Email}).
+		Insert(ctx, &entity.User{FirstName: dto.FirstName, LastName: dto.LastName, Email: dto.Email, Password: hashedPassword}).
 		Return(&expectedUser, nil)
 	expectedName := dto.Username
 	if dto.FirstName != "" {
@@ -109,8 +112,10 @@ func TestSignUpUserExists(t *testing.T) {
 		},
 		nil,
 	)
+	hashedPassword := []byte("hashedPassword")
+	authSuite.mockSecurityProvider.EXPECT().HashPassword(dto.Password).Return(hashedPassword, nil)
 	authSuite.mockUsersRepo.EXPECT().
-		Insert(ctx, &entity.User{FirstName: dto.FirstName, LastName: dto.LastName, Email: dto.Email}).
+		Insert(ctx, &entity.User{FirstName: dto.FirstName, LastName: dto.LastName, Email: dto.Email, Password: hashedPassword}).
 		Return(nil, storage.ErrAlreadyExists)
 
 	token, user, err := authSuite.service.SignUp(ctx, dto)

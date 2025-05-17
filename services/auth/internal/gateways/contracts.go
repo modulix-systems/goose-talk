@@ -25,7 +25,7 @@ type (
 	}
 	SecurityProvider interface {
 		NewSecureToken(len int) string
-		HashPassword(password string) (string, error)
+		HashPassword(password string) ([]byte, error)
 		ComparePasswords(hashed []byte, plain string) (bool, error)
 	}
 	NotificationsService interface {

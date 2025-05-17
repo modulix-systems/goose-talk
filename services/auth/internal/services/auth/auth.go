@@ -41,7 +41,6 @@ func New(
 	}
 }
 
-// TODO: add password hashing
 func (s *AuthService) SignUp(
 	ctx context.Context,
 	dto *schemas.SignUpSchema,
@@ -56,8 +55,12 @@ func (s *AuthService) SignUp(
 	if time.Now().After(code.CreatedAt.Add(s.signUpCodeTTL)) {
 		return "", nil, ErrExpiredSignUpCode
 	}
+	hashedPassword, err := s.securityProvider.HashPassword(dto.Password)
+	if err != nil {
+		return "", nil, err
+	}
 	user, err := s.usersRepo.Insert(
-		ctx, &entity.User{FirstName: dto.FirstName, LastName: dto.LastName, Email: dto.Email},
+		ctx, &entity.User{FirstName: dto.FirstName, LastName: dto.LastName, Email: dto.Email, Password: hashedPassword},
 	)
 	if err != nil {
 		if errors.Is(err, storage.ErrAlreadyExists) {
