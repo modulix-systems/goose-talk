@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/modulix-systems/goose-talk/internal/entity"
@@ -14,6 +15,7 @@ import (
 type AuthService struct {
 	usersRepo            gateways.UsersRepo
 	notificationsServive gateways.NotificationsService
+	tgApi                gateways.TelegramBotAPI
 	securityProvider     gateways.SecurityProvider
 	otpRepo              gateways.OtpRepo
 	otpTTL               time.Duration
@@ -29,6 +31,7 @@ func New(
 	otpTTL time.Duration,
 	authTokenTTL time.Duration,
 	securityProvider gateways.SecurityProvider,
+	tgApi gateways.TelegramBotAPI,
 ) *AuthService {
 	return &AuthService{
 		usersRepo:            usersRepo,
@@ -38,6 +41,7 @@ func New(
 		authTokenProvider:    authTokenProvider,
 		authTokenTTL:         authTokenTTL,
 		securityProvider:     securityProvider,
+		tgApi:                tgApi,
 	}
 }
 
@@ -138,12 +142,22 @@ func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (st
 		if err != nil {
 			return "", nil, err
 		}
-		toEmail := user.Email
-		if user.TwoFactorAuth.Contact != "" {
-			toEmail = user.TwoFactorAuth.Contact
-		}
-		if err = s.notificationsServive.Send2FAEmail(ctx, toEmail, otpCode); err != nil {
-			return "", nil, err
+		contact := user.TwoFactorAuth.Contact
+		switch user.TwoFactorAuth.DeliveryMethod {
+		case entity.TWO_FA_EMAIL:
+			toEmail := user.Email
+			if contact != "" {
+				toEmail = contact
+			}
+			if err = s.notificationsServive.Send2FAEmail(ctx, toEmail, otpCode); err != nil {
+				return "", nil, err
+			}
+		case entity.TWO_FA_TELEGRAM:
+			if err = s.tgApi.SendTextMsg(ctx, contact, fmt.Sprintf("Authorization code: %s", otpCode)); err != nil {
+				return "", nil, err
+			}
+		default:
+			return "", nil, ErrUnsupported2FAMethod
 		}
 		return "", user, nil
 	}

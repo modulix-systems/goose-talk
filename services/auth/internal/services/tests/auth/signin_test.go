@@ -2,6 +2,7 @@ package auth_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -128,6 +129,69 @@ func TestSignInSuccess2FAByContactEmail(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Empty(t, token)
 	assert.Equal(t, user.ID, mockUser.ID)
+}
+
+func TestSignInSuccess2FAByContactTG(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	authSuite := NewAuthTestSuite(ctrl)
+	ctx := context.Background()
+	dto := mockSignInPayload()
+	plainOTPCode := "securetoken"
+	hashedOTPCode := []byte(plainOTPCode)
+	mockUser := &entity.User{
+		ID:       gofakeit.Number(1, 1000),
+		Email:    gofakeit.Email(),
+		Password: []byte("hashedPass"),
+		TwoFactorAuth: &entity.TwoFactorAuth{
+			DeliveryMethod: entity.TWO_FA_TELEGRAM,
+			Enabled:        true,
+			Contact:        "21412412", // mock chat id
+		},
+	}
+	mockOTP := &entity.OTP{Code: hashedOTPCode, UserEmail: mockUser.Email}
+	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
+	authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockUser.Password, dto.Password).Return(true, nil)
+	authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode(6).Return(plainOTPCode)
+	authSuite.mockSecurityProvider.EXPECT().HashPassword(plainOTPCode).Return(hashedOTPCode, nil)
+	authSuite.mockCodeRepo.EXPECT().InsertOrUpdateCode(ctx, mockOTP).Return(nil)
+	authSuite.mockTgAPI.EXPECT().SendTextMsg(ctx, mockUser.TwoFactorAuth.Contact, fmt.Sprintf("Authorization code: %s", plainOTPCode)).Return(nil)
+
+	token, user, err := authSuite.service.SignIn(ctx, dto)
+
+	assert.NoError(t, err)
+	assert.Empty(t, token)
+	assert.Equal(t, user.ID, mockUser.ID)
+}
+
+func TestSignIn2FAUnsupportedMethod(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	authSuite := NewAuthTestSuite(ctrl)
+	ctx := context.Background()
+	dto := mockSignInPayload()
+	plainOTPCode := "securetoken"
+	hashedOTPCode := []byte(plainOTPCode)
+	const unsupported2FAMethod entity.TwoFADeliveryMethod = -1
+	mockUser := &entity.User{
+		ID:       gofakeit.Number(1, 1000),
+		Email:    gofakeit.Email(),
+		Password: []byte("hashedPass"),
+		TwoFactorAuth: &entity.TwoFactorAuth{
+			DeliveryMethod: unsupported2FAMethod,
+			Enabled:        true,
+		},
+	}
+	mockOTP := &entity.OTP{Code: hashedOTPCode, UserEmail: mockUser.Email}
+	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
+	authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockUser.Password, dto.Password).Return(true, nil)
+	authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode(6).Return(plainOTPCode)
+	authSuite.mockSecurityProvider.EXPECT().HashPassword(plainOTPCode).Return(hashedOTPCode, nil)
+	authSuite.mockCodeRepo.EXPECT().InsertOrUpdateCode(ctx, mockOTP).Return(nil)
+
+	token, user, err := authSuite.service.SignIn(ctx, dto)
+
+	assert.ErrorIs(t, err, auth.ErrUnsupported2FAMethod)
+	assert.Empty(t, token)
+	assert.Empty(t, user)
 }
 
 func TestSignInNotFoundUser(t *testing.T) {

@@ -33,4 +33,7 @@ type (
 		SendGreetingEmail(ctx context.Context, to string, name string) error
 		Send2FAEmail(ctx context.Context, to string, otp string) error
 	}
+	TelegramBotAPI interface {
+		SendTextMsg(ctx context.Context, chatId string, text string) error
+	}
 )

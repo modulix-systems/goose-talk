@@ -327,3 +327,41 @@ func (mr *MockNotificationsServiceMockRecorder) SendSignUpConfirmationEmail(ctx,
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendSignUpConfirmationEmail", reflect.TypeOf((*MockNotificationsService)(nil).SendSignUpConfirmationEmail), ctx, to, otp)
 }
+
+// MockTelegramBotAPI is a mock of TelegramBotAPI interface.
+type MockTelegramBotAPI struct {
+	ctrl     *gomock.Controller
+	recorder *MockTelegramBotAPIMockRecorder
+	isgomock struct{}
+}
+
+// MockTelegramBotAPIMockRecorder is the mock recorder for MockTelegramBotAPI.
+type MockTelegramBotAPIMockRecorder struct {
+	mock *MockTelegramBotAPI
+}
+
+// NewMockTelegramBotAPI creates a new mock instance.
+func NewMockTelegramBotAPI(ctrl *gomock.Controller) *MockTelegramBotAPI {
+	mock := &MockTelegramBotAPI{ctrl: ctrl}
+	mock.recorder = &MockTelegramBotAPIMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockTelegramBotAPI) EXPECT() *MockTelegramBotAPIMockRecorder {
+	return m.recorder
+}
+
+// SendTextMsg mocks base method.
+func (m *MockTelegramBotAPI) SendTextMsg(ctx context.Context, chatId, text string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendTextMsg", ctx, chatId, text)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendTextMsg indicates an expected call of SendTextMsg.
+func (mr *MockTelegramBotAPIMockRecorder) SendTextMsg(ctx, chatId, text any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendTextMsg", reflect.TypeOf((*MockTelegramBotAPI)(nil).SendTextMsg), ctx, chatId, text)
+}
