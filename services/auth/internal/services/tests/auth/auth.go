@@ -10,7 +10,7 @@ import (
 )
 
 type AuthTestSuite struct {
-	mockCodeRepo          *mocks.MockSignUpCodeRepo
+	mockCodeRepo          *mocks.MockOtpRepo
 	mockUsersRepo         *mocks.MockUsersRepo
 	mockAuthTokenProvider *mocks.MockAuthTokenProvider
 	mockMailSender        *mocks.MockNotificationsService
@@ -20,7 +20,7 @@ type AuthTestSuite struct {
 }
 
 func NewAuthTestSuite(ctrl *gomock.Controller) *AuthTestSuite {
-	mockCodeRepo := mocks.NewMockSignUpCodeRepo(ctrl)
+	mockCodeRepo := mocks.NewMockOtpRepo(ctrl)
 	mockUsersRepo := mocks.NewMockUsersRepo(ctrl)
 	tokenTTL := suite.MockDuration("")
 	mockAuthTokenProvider := mocks.NewMockAuthTokenProvider(ctrl)

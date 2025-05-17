@@ -17,10 +17,10 @@ func TestConfirmEmailSuccess(t *testing.T) {
 	mockEmail := gofakeit.Email()
 	plainOTPCode := "securetoken"
 	hashedOTPCode := []byte(plainOTPCode)
-	mockSignUpCode := &entity.OTP{Code: hashedOTPCode, UserEmail: mockEmail}
+	mockOTP := &entity.OTP{Code: hashedOTPCode, UserEmail: mockEmail}
 	ctx := context.Background()
 	authSuite.mockUsersRepo.EXPECT().CheckExistsWithEmail(ctx, mockEmail).Return(false, nil)
-	authSuite.mockCodeRepo.EXPECT().InsertOrUpdateCode(ctx, mockSignUpCode).Return(nil)
+	authSuite.mockCodeRepo.EXPECT().InsertOrUpdateCode(ctx, mockOTP).Return(nil)
 	authSuite.mockMailSender.EXPECT().SendSignUpConfirmationEmail(ctx, mockEmail, plainOTPCode).Return(nil)
 	authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode(6).Return(plainOTPCode)
 	authSuite.mockSecurityProvider.EXPECT().HashPassword(plainOTPCode).Return(hashedOTPCode, nil)

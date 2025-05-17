@@ -7,10 +7,10 @@ import (
 type TwoFADeliveryMethod = int
 
 const (
-	TELEGRAM TwoFADeliveryMethod = iota
-	EMAIL
-	SMS
-	TOTP_APP
+	TWO_FA_TELEGRAM TwoFADeliveryMethod = iota
+	TWO_FA_EMAIL
+	TWO_FA_SMS
+	TWO_FA_TOTP_APP
 )
 
 type (
@@ -25,20 +25,21 @@ type (
 		UpdatedAt time.Time
 	}
 	User struct {
-		ID         int
-		Username   string
-		Password   []byte `json:"-"`
-		Email      string
-		FirstName  string
-		LastName   string
-		PhotoUrl   string
-		Friends    []User
-		CreatedAt  time.Time `db:"created_at" json:"created_at"`
-		UpdatedAt  time.Time `db:"updated_at" json:"updated_at"`
-		LastSeenAt time.Time
-		IsActive   bool
-		BirthDate  time.Time
-		AboutMe    string
+		ID            int
+		Username      string
+		Password      []byte `json:"-"`
+		Email         string
+		FirstName     string
+		LastName      string
+		PhotoUrl      string
+		Friends       []User
+		CreatedAt     time.Time `db:"created_at" json:"created_at"`
+		UpdatedAt     time.Time `db:"updated_at" json:"updated_at"`
+		LastSeenAt    time.Time
+		IsActive      bool
+		BirthDate     time.Time
+		AboutMe       string
+		TwoFactorAuth *TwoFactorAuth
 	}
 	// TwoFactorAuth entity representing 2FA auth
 	TwoFactorAuth struct {
@@ -47,9 +48,9 @@ type (
 		// could be whether user's telegram, email address or phone number
 		// depending on DeliveryMethod.
 		// The field can be optional e.g for email because it can be taken from user's acc
-		contact string
-		// secret key required for otp generation
-		otpSecret string
+		Contact string
+		// base32 encoded secret key required for otp generation
+		OtpSecret string
 		// indicates whether user has 2fa enabled. By default false
 		Enabled bool
 	}

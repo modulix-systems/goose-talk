@@ -29,7 +29,8 @@ type (
 		ComparePasswords(hashed []byte, plain string) (bool, error)
 	}
 	NotificationsService interface {
-		SendSignUpConfirmationEmail(ctx context.Context, to string, code string) error
+		SendSignUpConfirmationEmail(ctx context.Context, to string, otp string) error
 		SendGreetingEmail(ctx context.Context, to string, name string) error
+		Send2FAEmail(ctx context.Context, to string, otp string) error
 	}
 )

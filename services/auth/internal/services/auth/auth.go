@@ -41,6 +41,15 @@ func New(
 	}
 }
 
+func (s *AuthService) createOTP(ctx context.Context, forEmail string) (string, error) {
+	otpCode := s.securityProvider.GenerateOTPCode(6)
+	hashedOtpCode, err := s.securityProvider.HashPassword(otpCode)
+	if err != nil {
+		return "", err
+	}
+	return otpCode, s.otpRepo.InsertOrUpdateCode(ctx, &entity.OTP{Code: hashedOtpCode, UserEmail: forEmail})
+}
+
 func (s *AuthService) SignUp(
 	ctx context.Context,
 	dto *schemas.SignUpSchema,
@@ -98,12 +107,12 @@ func (s *AuthService) ConfirmEmail(ctx context.Context, email string) error {
 	if isExists {
 		return ErrUserAlreadyExists
 	}
-	hashedOtp := s.securityProvider.GenerateOTPCode(6)
-	hashedCode, err := s.securityProvider.HashPassword(hashedOtp)
-	if err = s.otpRepo.InsertOrUpdateCode(ctx, &entity.OTP{Code: hashedCode, UserEmail: email}); err != nil {
+
+	otpCode, err := s.createOTP(ctx, email)
+	if err != nil {
 		return err
 	}
-	if err = s.notificationsServive.SendSignUpConfirmationEmail(ctx, email, hashedOtp); err != nil {
+	if err = s.notificationsServive.SendSignUpConfirmationEmail(ctx, email, otpCode); err != nil {
 		return err
 	}
 	return nil
@@ -123,6 +132,20 @@ func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (st
 	}
 	if !matched {
 		return "", nil, ErrInvalidCredentials
+	}
+	if user.TwoFactorAuth != nil && user.TwoFactorAuth.Enabled {
+		otpCode, err := s.createOTP(ctx, user.Email)
+		if err != nil {
+			return "", nil, err
+		}
+		toEmail := user.Email
+		if user.TwoFactorAuth.Contact != "" {
+			toEmail = user.TwoFactorAuth.Contact
+		}
+		if err = s.notificationsServive.Send2FAEmail(ctx, toEmail, otpCode); err != nil {
+			return "", nil, err
+		}
+		return "", user, nil
 	}
 	authToken, err := s.authTokenProvider.NewToken(s.authTokenTTL, map[string]any{"uid": user.ID})
 	if err != nil {

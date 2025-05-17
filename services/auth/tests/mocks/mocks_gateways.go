@@ -87,32 +87,32 @@ func (mr *MockUsersRepoMockRecorder) Insert(ctx, user any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockUsersRepo)(nil).Insert), ctx, user)
 }
 
-// MockSignUpCodeRepo is a mock of SignUpCodeRepo interface.
-type MockSignUpCodeRepo struct {
+// MockOtpRepo is a mock of OtpRepo interface.
+type MockOtpRepo struct {
 	ctrl     *gomock.Controller
-	recorder *MockSignUpCodeRepoMockRecorder
+	recorder *MockOtpRepoMockRecorder
 	isgomock struct{}
 }
 
-// MockSignUpCodeRepoMockRecorder is the mock recorder for MockSignUpCodeRepo.
-type MockSignUpCodeRepoMockRecorder struct {
-	mock *MockSignUpCodeRepo
+// MockOtpRepoMockRecorder is the mock recorder for MockOtpRepo.
+type MockOtpRepoMockRecorder struct {
+	mock *MockOtpRepo
 }
 
-// NewMockSignUpCodeRepo creates a new mock instance.
-func NewMockSignUpCodeRepo(ctrl *gomock.Controller) *MockSignUpCodeRepo {
-	mock := &MockSignUpCodeRepo{ctrl: ctrl}
-	mock.recorder = &MockSignUpCodeRepoMockRecorder{mock}
+// NewMockOtpRepo creates a new mock instance.
+func NewMockOtpRepo(ctrl *gomock.Controller) *MockOtpRepo {
+	mock := &MockOtpRepo{ctrl: ctrl}
+	mock.recorder = &MockOtpRepoMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockSignUpCodeRepo) EXPECT() *MockSignUpCodeRepoMockRecorder {
+func (m *MockOtpRepo) EXPECT() *MockOtpRepoMockRecorder {
 	return m.recorder
 }
 
 // GetByEmail mocks base method.
-func (m *MockSignUpCodeRepo) GetByEmail(ctx context.Context, email string) (*entity.OTP, error) {
+func (m *MockOtpRepo) GetByEmail(ctx context.Context, email string) (*entity.OTP, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByEmail", ctx, email)
 	ret0, _ := ret[0].(*entity.OTP)
@@ -121,13 +121,13 @@ func (m *MockSignUpCodeRepo) GetByEmail(ctx context.Context, email string) (*ent
 }
 
 // GetByEmail indicates an expected call of GetByEmail.
-func (mr *MockSignUpCodeRepoMockRecorder) GetByEmail(ctx, email any) *gomock.Call {
+func (mr *MockOtpRepoMockRecorder) GetByEmail(ctx, email any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByEmail", reflect.TypeOf((*MockSignUpCodeRepo)(nil).GetByEmail), ctx, email)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByEmail", reflect.TypeOf((*MockOtpRepo)(nil).GetByEmail), ctx, email)
 }
 
 // InsertOrUpdateCode mocks base method.
-func (m *MockSignUpCodeRepo) InsertOrUpdateCode(ctx context.Context, otp *entity.OTP) error {
+func (m *MockOtpRepo) InsertOrUpdateCode(ctx context.Context, otp *entity.OTP) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InsertOrUpdateCode", ctx, otp)
 	ret0, _ := ret[0].(error)
@@ -135,9 +135,9 @@ func (m *MockSignUpCodeRepo) InsertOrUpdateCode(ctx context.Context, otp *entity
 }
 
 // InsertOrUpdateCode indicates an expected call of InsertOrUpdateCode.
-func (mr *MockSignUpCodeRepoMockRecorder) InsertOrUpdateCode(ctx, otp any) *gomock.Call {
+func (mr *MockOtpRepoMockRecorder) InsertOrUpdateCode(ctx, otp any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertOrUpdateCode", reflect.TypeOf((*MockSignUpCodeRepo)(nil).InsertOrUpdateCode), ctx, otp)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertOrUpdateCode", reflect.TypeOf((*MockOtpRepo)(nil).InsertOrUpdateCode), ctx, otp)
 }
 
 // MockAuthTokenProvider is a mock of AuthTokenProvider interface.
@@ -286,6 +286,20 @@ func (m *MockNotificationsService) EXPECT() *MockNotificationsServiceMockRecorde
 	return m.recorder
 }
 
+// Send2FAEmail mocks base method.
+func (m *MockNotificationsService) Send2FAEmail(ctx context.Context, to, otp string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Send2FAEmail", ctx, to, otp)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Send2FAEmail indicates an expected call of Send2FAEmail.
+func (mr *MockNotificationsServiceMockRecorder) Send2FAEmail(ctx, to, otp any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send2FAEmail", reflect.TypeOf((*MockNotificationsService)(nil).Send2FAEmail), ctx, to, otp)
+}
+
 // SendGreetingEmail mocks base method.
 func (m *MockNotificationsService) SendGreetingEmail(ctx context.Context, to, name string) error {
 	m.ctrl.T.Helper()
@@ -301,15 +315,15 @@ func (mr *MockNotificationsServiceMockRecorder) SendGreetingEmail(ctx, to, name 
 }
 
 // SendSignUpConfirmationEmail mocks base method.
-func (m *MockNotificationsService) SendSignUpConfirmationEmail(ctx context.Context, to, code string) error {
+func (m *MockNotificationsService) SendSignUpConfirmationEmail(ctx context.Context, to, otp string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendSignUpConfirmationEmail", ctx, to, code)
+	ret := m.ctrl.Call(m, "SendSignUpConfirmationEmail", ctx, to, otp)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SendSignUpConfirmationEmail indicates an expected call of SendSignUpConfirmationEmail.
-func (mr *MockNotificationsServiceMockRecorder) SendSignUpConfirmationEmail(ctx, to, code any) *gomock.Call {
+func (mr *MockNotificationsServiceMockRecorder) SendSignUpConfirmationEmail(ctx, to, otp any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendSignUpConfirmationEmail", reflect.TypeOf((*MockNotificationsService)(nil).SendSignUpConfirmationEmail), ctx, to, code)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendSignUpConfirmationEmail", reflect.TypeOf((*MockNotificationsService)(nil).SendSignUpConfirmationEmail), ctx, to, otp)
 }
