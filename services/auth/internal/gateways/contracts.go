@@ -17,6 +17,7 @@ type (
 	}
 	OtpRepo interface {
 		GetByEmail(ctx context.Context, email string) (*entity.OTP, error)
+		DeleteByEmail(ctx context.Context, email string) error
 		InsertOrUpdateCode(ctx context.Context, otp *entity.OTP) error
 	}
 	AuthTokenProvider interface {
@@ -25,8 +26,8 @@ type (
 	}
 	SecurityProvider interface {
 		GenerateOTPCode() string
-		GenerateTOTPCode(secret string) string
-		ValidateTOTPCode(code string, secret string) bool
+		GenerateTOTP(secret string) string
+		ValidateTOTP(code string, secret string) bool
 		HashPassword(password string) ([]byte, error)
 		ComparePasswords(hashed []byte, plain string) (bool, error)
 	}

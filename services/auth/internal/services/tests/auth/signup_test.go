@@ -34,7 +34,6 @@ func TestSignupSuccess(t *testing.T) {
 	mockOTP := suite.MockOTP()
 	mockOTP.UserEmail = dto.Email
 	ctx := context.Background()
-	// expectedUser := entity.User{ID: gofakeit.Number(1, 1000), Email: dto.Email, Password: hashedPassword}
 	userToInsert := &entity.User{FirstName: dto.FirstName, LastName: dto.LastName, Email: dto.Email, Password: []byte(dto.Password)}
 	insertedUser := *userToInsert
 	insertedUser.ID = gofakeit.Number(1, 1000)
@@ -77,7 +76,7 @@ func TestSignupNotFoundCode(t *testing.T) {
 
 	assert.Empty(t, token)
 	assert.Empty(t, user)
-	assert.ErrorIs(t, err, auth.ErrInvalidSignUpCode)
+	assert.ErrorIs(t, err, auth.ErrInvalidOtp)
 }
 
 func TestSignupExpiredCode(t *testing.T) {
@@ -100,7 +99,7 @@ func TestSignupExpiredCode(t *testing.T) {
 
 	assert.Empty(t, token)
 	assert.Empty(t, user)
-	assert.ErrorIs(t, err, auth.ErrExpiredSignUpCode)
+	assert.ErrorIs(t, err, auth.ErrOtpExpired)
 }
 
 func TestSignUpUserExists(t *testing.T) {

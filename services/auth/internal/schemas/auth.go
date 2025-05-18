@@ -1,5 +1,7 @@
 package schemas
 
+import "github.com/modulix-systems/goose-talk/internal/entity"
+
 type (
 	SendConfirmationCodeSchema struct {
 		email string
@@ -16,8 +18,11 @@ type (
 		Login    string
 		Password string
 	}
-	VerifyOTPSchema struct {
-		Email string
-		Otp   string
+	Verify2FASchema struct {
+		TwoFATyp entity.TwoFADeliveryMethod
+		Email    string
+		Code     string
+		// SignInConfToken must be present only if TOTP 2fa type is used
+		SignInConfToken string
 	}
 )
