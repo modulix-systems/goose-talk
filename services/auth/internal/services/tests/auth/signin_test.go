@@ -164,7 +164,7 @@ func TestSignInSuccess2FAByTotp(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, authInfo.Token.Val, plainOTPCode)
-	assert.Equal(t, authInfo.Token.Typ, auth.LoginConfTokenType)
+	assert.Equal(t, authInfo.Token.Typ, auth.SignInConfTokenType)
 	assert.Equal(t, authInfo.User.ID, mockUser.ID)
 }
 

@@ -54,3 +54,10 @@ func MockUser() *entity.User {
 		},
 	}
 }
+
+func MockOTP() *entity.OTP {
+	return &entity.OTP{
+		Code: []byte(gofakeit.Numerify("######")), UserEmail: gofakeit.Email(),
+		CreatedAt: time.Now(), UpdatedAt: time.Now(),
+	}
+}
