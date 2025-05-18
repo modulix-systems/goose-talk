@@ -25,6 +25,8 @@ type (
 	}
 	SecurityProvider interface {
 		GenerateOTPCode(len int) string
+		GenerateTOTPCode(secret string) string
+		ValidateTOTPCode(code string, secret string) bool
 		HashPassword(password string) ([]byte, error)
 		ComparePasswords(hashed []byte, plain string) (bool, error)
 	}

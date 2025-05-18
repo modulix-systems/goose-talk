@@ -48,8 +48,9 @@ func MockUser() *entity.User {
 				entity.TWO_FA_TELEGRAM, entity.TWO_FA_EMAIL,
 				entity.TWO_FA_SMS, entity.TWO_FA_TOTP_APP,
 			),
-			Enabled: gofakeit.Bool(),
-			Contact: gofakeit.Email(),
+			Enabled:   gofakeit.Bool(),
+			Contact:   gofakeit.Email(),
+			OtpSecret: gofakeit.Sentence(3),
 		},
 	}
 }

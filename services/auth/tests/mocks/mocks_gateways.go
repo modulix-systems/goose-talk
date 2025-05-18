@@ -247,6 +247,20 @@ func (mr *MockSecurityProviderMockRecorder) GenerateOTPCode(len any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateOTPCode", reflect.TypeOf((*MockSecurityProvider)(nil).GenerateOTPCode), len)
 }
 
+// GenerateTOTPCode mocks base method.
+func (m *MockSecurityProvider) GenerateTOTPCode(secret string) string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GenerateTOTPCode", secret)
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GenerateTOTPCode indicates an expected call of GenerateTOTPCode.
+func (mr *MockSecurityProviderMockRecorder) GenerateTOTPCode(secret any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateTOTPCode", reflect.TypeOf((*MockSecurityProvider)(nil).GenerateTOTPCode), secret)
+}
+
 // HashPassword mocks base method.
 func (m *MockSecurityProvider) HashPassword(password string) ([]byte, error) {
 	m.ctrl.T.Helper()
@@ -260,6 +274,20 @@ func (m *MockSecurityProvider) HashPassword(password string) ([]byte, error) {
 func (mr *MockSecurityProviderMockRecorder) HashPassword(password any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HashPassword", reflect.TypeOf((*MockSecurityProvider)(nil).HashPassword), password)
+}
+
+// ValidateTOTPCode mocks base method.
+func (m *MockSecurityProvider) ValidateTOTPCode(code, secret string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidateTOTPCode", code, secret)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// ValidateTOTPCode indicates an expected call of ValidateTOTPCode.
+func (mr *MockSecurityProviderMockRecorder) ValidateTOTPCode(code, secret any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateTOTPCode", reflect.TypeOf((*MockSecurityProvider)(nil).ValidateTOTPCode), code, secret)
 }
 
 // MockNotificationsService is a mock of NotificationsService interface.

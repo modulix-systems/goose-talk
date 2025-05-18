@@ -122,28 +122,49 @@ func (s *AuthService) ConfirmEmail(ctx context.Context, email string) error {
 	return nil
 }
 
-func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (string, *entity.User, error) {
+// tokenType indicates semantic meaning of token value in authInfo
+type tokenType = int
+
+const (
+	// AuthTokenType indicates that token is authorization token and no 2fa is required
+	AuthTokenType tokenType = iota
+	// LoginConfTokenType indicates that token value is intended
+	// for sign in confirmation in further 2fa verification
+	LoginConfTokenType tokenType = iota
+)
+
+type signInToken struct {
+	Val string
+	Typ tokenType
+}
+
+type authInfo struct {
+	Token *signInToken
+	User  *entity.User
+}
+
+func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (*authInfo, error) {
 	user, err := s.usersRepo.GetByLogin(ctx, dto.Login)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return "", nil, ErrInvalidCredentials
+			return nil, ErrInvalidCredentials
 		}
-		return "", nil, err
+		return nil, err
 	}
 	if !user.IsActive {
-		return "", nil, ErrDisabledAccount
+		return nil, ErrDisabledAccount
 	}
 	matched, err := s.securityProvider.ComparePasswords(user.Password, dto.Password)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 	if !matched {
-		return "", nil, ErrInvalidCredentials
+		return nil, ErrInvalidCredentials
 	}
 	if user.TwoFactorAuth != nil && user.TwoFactorAuth.Enabled {
 		otpCode, err := s.createOTP(ctx, user.Email)
 		if err != nil {
-			return "", nil, err
+			return nil, err
 		}
 		contact := user.TwoFactorAuth.Contact
 		switch user.TwoFactorAuth.DeliveryMethod {
@@ -153,21 +174,22 @@ func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (st
 				toEmail = contact
 			}
 			if err = s.notificationsServive.Send2FAEmail(ctx, toEmail, otpCode); err != nil {
-				return "", nil, err
+				return nil, err
 			}
 		case entity.TWO_FA_TELEGRAM:
 			if err = s.tgApi.SendTextMsg(ctx, contact, fmt.Sprintf("Authorization code: %s", otpCode)); err != nil {
-				return "", nil, err
+				return nil, err
 			}
+		case entity.TWO_FA_TOTP_APP:
+			return &authInfo{User: user, Token: &signInToken{Val: otpCode, Typ: LoginConfTokenType}}, nil
 		default:
-			return "", nil, ErrUnsupported2FAMethod
+			return nil, ErrUnsupported2FAMethod
 		}
-		return "", user, nil
+		return &authInfo{User: user}, nil
 	}
-	authToken, err := s.authTokenProvider.NewToken(s.authTokenTTL, map[string]any{"uid": user.ID})
+	token, err := s.authTokenProvider.NewToken(s.authTokenTTL, map[string]any{"uid": user.ID})
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
-	return authToken, user, nil
-
+	return &authInfo{User: user, Token: &signInToken{Val: token, Typ: AuthTokenType}}, nil
 }

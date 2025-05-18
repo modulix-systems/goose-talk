@@ -16,4 +16,8 @@ type (
 		Login    string
 		Password string
 	}
+	VerifyOTPSchema struct {
+		Email string
+		Otp   string
+	}
 )
