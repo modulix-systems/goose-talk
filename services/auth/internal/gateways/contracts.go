@@ -24,7 +24,7 @@ type (
 		ParseClaimsFromToken(token string) (map[string]any, error)
 	}
 	SecurityProvider interface {
-		GenerateOTPCode(len int) string
+		GenerateOTPCode() string
 		GenerateTOTPCode(secret string) string
 		ValidateTOTPCode(code string, secret string) bool
 		HashPassword(password string) ([]byte, error)

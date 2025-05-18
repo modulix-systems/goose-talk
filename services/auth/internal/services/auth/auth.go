@@ -46,7 +46,7 @@ func New(
 }
 
 func (s *AuthService) createOTP(ctx context.Context, forEmail string) (string, error) {
-	otpCode := s.securityProvider.GenerateOTPCode(6)
+	otpCode := s.securityProvider.GenerateOTPCode()
 	hashedOtpCode, err := s.securityProvider.HashPassword(otpCode)
 	if err != nil {
 		return "", err

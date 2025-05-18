@@ -81,7 +81,7 @@ func TestSignInSuccess2FAByUserEmail(t *testing.T) {
 	mockOTP := &entity.OTP{Code: hashedOTPCode, UserEmail: mockUser.Email}
 	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
 	authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockUser.Password, dto.Password).Return(true, nil)
-	authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode(6).Return(plainOTPCode)
+	authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode().Return(plainOTPCode)
 	authSuite.mockSecurityProvider.EXPECT().HashPassword(plainOTPCode).Return(hashedOTPCode, nil)
 	authSuite.mockCodeRepo.EXPECT().InsertOrUpdateCode(ctx, mockOTP).Return(nil)
 	authSuite.mockMailSender.EXPECT().Send2FAEmail(ctx, mockUser.Email, plainOTPCode).Return(nil)
@@ -106,7 +106,7 @@ func TestSignInSuccess2FAByContactEmail(t *testing.T) {
 	mockOTP := &entity.OTP{Code: hashedOTPCode, UserEmail: mockUser.Email}
 	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
 	authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockUser.Password, dto.Password).Return(true, nil)
-	authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode(6).Return(plainOTPCode)
+	authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode().Return(plainOTPCode)
 	authSuite.mockSecurityProvider.EXPECT().HashPassword(plainOTPCode).Return(hashedOTPCode, nil)
 	authSuite.mockCodeRepo.EXPECT().InsertOrUpdateCode(ctx, mockOTP).Return(nil)
 	authSuite.mockMailSender.EXPECT().Send2FAEmail(ctx, mockUser.TwoFactorAuth.Contact, plainOTPCode).Return(nil)
@@ -132,7 +132,7 @@ func TestSignInSuccess2FAByContactTG(t *testing.T) {
 	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
 	authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockUser.Password, dto.Password).Return(true, nil)
 	authSuite.mockSecurityProvider.EXPECT().HashPassword(plainOTPCode).Return(hashedOTPCode, nil)
-	authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode(6).Return(plainOTPCode)
+	authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode().Return(plainOTPCode)
 	authSuite.mockCodeRepo.EXPECT().InsertOrUpdateCode(ctx, mockOTP).Return(nil)
 	authSuite.mockTgAPI.EXPECT().SendTextMsg(ctx, mockUser.TwoFactorAuth.Contact, fmt.Sprintf("Authorization code: %s", plainOTPCode)).Return(nil)
 
@@ -156,7 +156,7 @@ func TestSignInSuccess2FAByTotp(t *testing.T) {
 	mockOTP := &entity.OTP{Code: hashedOTPCode, UserEmail: mockUser.Email}
 	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
 	authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockUser.Password, dto.Password).Return(true, nil)
-	authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode(6).Return(plainOTPCode)
+	authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode().Return(plainOTPCode)
 	authSuite.mockSecurityProvider.EXPECT().HashPassword(plainOTPCode).Return(hashedOTPCode, nil)
 	authSuite.mockCodeRepo.EXPECT().InsertOrUpdateCode(ctx, mockOTP).Return(nil)
 
@@ -182,7 +182,7 @@ func TestSignIn2FAUnsupportedMethod(t *testing.T) {
 	mockOTP := &entity.OTP{Code: hashedOTPCode, UserEmail: mockUser.Email}
 	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
 	authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockUser.Password, dto.Password).Return(true, nil)
-	authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode(6).Return(plainOTPCode)
+	authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode().Return(plainOTPCode)
 	authSuite.mockSecurityProvider.EXPECT().HashPassword(plainOTPCode).Return(hashedOTPCode, nil)
 	authSuite.mockCodeRepo.EXPECT().InsertOrUpdateCode(ctx, mockOTP).Return(nil)
 

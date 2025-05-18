@@ -234,17 +234,17 @@ func (mr *MockSecurityProviderMockRecorder) ComparePasswords(hashed, plain any) 
 }
 
 // GenerateOTPCode mocks base method.
-func (m *MockSecurityProvider) GenerateOTPCode(len int) string {
+func (m *MockSecurityProvider) GenerateOTPCode() string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GenerateOTPCode", len)
+	ret := m.ctrl.Call(m, "GenerateOTPCode")
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
 // GenerateOTPCode indicates an expected call of GenerateOTPCode.
-func (mr *MockSecurityProviderMockRecorder) GenerateOTPCode(len any) *gomock.Call {
+func (mr *MockSecurityProviderMockRecorder) GenerateOTPCode() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateOTPCode", reflect.TypeOf((*MockSecurityProvider)(nil).GenerateOTPCode), len)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateOTPCode", reflect.TypeOf((*MockSecurityProvider)(nil).GenerateOTPCode))
 }
 
 // GenerateTOTPCode mocks base method.
