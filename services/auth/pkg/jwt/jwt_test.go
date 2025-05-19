@@ -27,6 +27,7 @@ func TestNewToken(t *testing.T) {
 	require.True(t, ok)
 	assert.Equal(t, tokenPayload["id"], claims["id"])
 	assert.Equal(t, float64(time.Now().Add(testTokenExp).Unix()), claims["exp"])
+	assert.Equal(t, float64(time.Now().Unix()), claims["iat"])
 	assert.True(t, tokenParsed.Valid)
 }
 

@@ -20,6 +20,8 @@ func (tp *TokenProvider) NewToken(expires time.Duration, claims map[string]any) 
 		panic("expires must be greater than 0")
 	}
 	claims["exp"] = time.Now().Add(expires).Unix()
+	// add issued at claim to ensure token uniqueness
+	claims["iat"] = time.Now().Unix()
 	token := jwt.NewWithClaims(jwt.GetSigningMethod(tp.SigningAlg), jwt.MapClaims(claims))
 	return token.SignedString([]byte(tp.SigningKey))
 }
