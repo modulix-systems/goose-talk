@@ -277,8 +277,19 @@ func (s *AuthService) DeactivateAccount(ctx context.Context, userId string) erro
 	return nil
 }
 
-// func (s *AuthService) CheckIsSessionActive(ctx context.Context, authToken string) (bool, error)
-//
-// func (s *AuthService) GetCurrentSession(ctx context.Context, authToken string) (*entity.UserSession, error)
-//
+func (s *AuthService) GetCurrentSession(ctx context.Context, authToken string) (*entity.UserSession, error) {
+	session, err := s.sessionsRepo.GetByToken(ctx, authToken)
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return nil, ErrSessionNotFound
+		}
+		return nil, err
+	}
+	if !session.IsActive() {
+		return nil, ErrSessionNotFound
+	}
+	return session, nil
+}
+
 // func (s *AuthService) GetAllActiveSessions(ctx context.Context, userId string) ([]entity.UserSession, error)
+// func (s *AuthService) DeactivateSession(ctx context.Context, sessionId string) error

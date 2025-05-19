@@ -44,6 +44,7 @@ func MockUserSession(active bool) *entity.UserSession {
 	}
 
 	return &entity.UserSession{
+		ID:            gofakeit.Number(1, 1000),
 		UserId:        gofakeit.Number(1, 1000),
 		Location:      gofakeit.City(),
 		IP:            gofakeit.IPv4Address(),

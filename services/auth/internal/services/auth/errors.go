@@ -14,4 +14,5 @@ var (
 	ErrInvalidCredentials   = errors.New("Invalid credentials")
 	ErrUnsupported2FAMethod = errors.New("Two factor authentication method associated with your account is not supported. Please use another one")
 	ErrDisabledAccount      = errors.New("Your account is disabled. Try to contact support to resolve this issue")
+	ErrSessionNotFound      = errors.New("No active session found")
 )

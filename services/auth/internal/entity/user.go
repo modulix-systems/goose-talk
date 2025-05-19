@@ -25,6 +25,7 @@ type (
 	// UserSession stores information about user's session within single device
 	// Allows to forbid access to user if his ip is not in a list of user's active sessions
 	UserSession struct {
+		ID       int
 		UserId   int
 		Location string
 		// IP serves role of unique session identifier
