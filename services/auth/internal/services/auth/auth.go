@@ -244,3 +244,17 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 	}
 	return token, nil
 }
+
+func (s *AuthService) DeactivateAccount(ctx context.Context, userId string) error {
+	user, err := s.usersRepo.UpdateIsActiveById(ctx, userId, false)
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return ErrUserNotFound
+		}
+		return err
+	}
+	if err := s.notificationsServive.SendAccDeactivationEmail(ctx, user.Email); err != nil {
+		return err
+	}
+	return nil
+}

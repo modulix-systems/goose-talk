@@ -14,6 +14,7 @@ type (
 		Insert(ctx context.Context, user *entity.User) (*entity.User, error)
 		CheckExistsWithEmail(ctx context.Context, email string) (bool, error)
 		GetByLogin(ctx context.Context, login string) (*entity.User, error)
+		UpdateIsActiveById(ctx context.Context, userId string, isActive bool) (*entity.User, error)
 	}
 	OtpRepo interface {
 		GetByEmail(ctx context.Context, email string) (*entity.OTP, error)
@@ -35,6 +36,7 @@ type (
 		SendSignUpConfirmationEmail(ctx context.Context, to string, otp string) error
 		SendGreetingEmail(ctx context.Context, to string, name string) error
 		Send2FAEmail(ctx context.Context, to string, otp string) error
+		SendAccDeactivationEmail(ctx context.Context, to string) error
 	}
 	TelegramBotAPI interface {
 		SendTextMsg(ctx context.Context, chatId string, text string) error

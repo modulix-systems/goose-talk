@@ -87,6 +87,21 @@ func (mr *MockUsersRepoMockRecorder) Insert(ctx, user any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockUsersRepo)(nil).Insert), ctx, user)
 }
 
+// UpdateIsActiveById mocks base method.
+func (m *MockUsersRepo) UpdateIsActiveById(ctx context.Context, userId string, isActive bool) (*entity.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateIsActiveById", ctx, userId, isActive)
+	ret0, _ := ret[0].(*entity.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateIsActiveById indicates an expected call of UpdateIsActiveById.
+func (mr *MockUsersRepoMockRecorder) UpdateIsActiveById(ctx, userId, isActive any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIsActiveById", reflect.TypeOf((*MockUsersRepo)(nil).UpdateIsActiveById), ctx, userId, isActive)
+}
+
 // MockOtpRepo is a mock of OtpRepo interface.
 type MockOtpRepo struct {
 	ctrl     *gomock.Controller
@@ -340,6 +355,20 @@ func (m *MockNotificationsService) Send2FAEmail(ctx context.Context, to, otp str
 func (mr *MockNotificationsServiceMockRecorder) Send2FAEmail(ctx, to, otp any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send2FAEmail", reflect.TypeOf((*MockNotificationsService)(nil).Send2FAEmail), ctx, to, otp)
+}
+
+// SendAccDeactivationEmail mocks base method.
+func (m *MockNotificationsService) SendAccDeactivationEmail(ctx context.Context, to string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendAccDeactivationEmail", ctx, to)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendAccDeactivationEmail indicates an expected call of SendAccDeactivationEmail.
+func (mr *MockNotificationsServiceMockRecorder) SendAccDeactivationEmail(ctx, to any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendAccDeactivationEmail", reflect.TypeOf((*MockNotificationsService)(nil).SendAccDeactivationEmail), ctx, to)
 }
 
 // SendGreetingEmail mocks base method.
