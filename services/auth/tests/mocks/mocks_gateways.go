@@ -102,6 +102,74 @@ func (mr *MockUsersRepoMockRecorder) UpdateIsActiveById(ctx, userId, isActive an
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIsActiveById", reflect.TypeOf((*MockUsersRepo)(nil).UpdateIsActiveById), ctx, userId, isActive)
 }
 
+// MockUserSessionsRepo is a mock of UserSessionsRepo interface.
+type MockUserSessionsRepo struct {
+	ctrl     *gomock.Controller
+	recorder *MockUserSessionsRepoMockRecorder
+	isgomock struct{}
+}
+
+// MockUserSessionsRepoMockRecorder is the mock recorder for MockUserSessionsRepo.
+type MockUserSessionsRepoMockRecorder struct {
+	mock *MockUserSessionsRepo
+}
+
+// NewMockUserSessionsRepo creates a new mock instance.
+func NewMockUserSessionsRepo(ctrl *gomock.Controller) *MockUserSessionsRepo {
+	mock := &MockUserSessionsRepo{ctrl: ctrl}
+	mock.recorder = &MockUserSessionsRepoMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockUserSessionsRepo) EXPECT() *MockUserSessionsRepoMockRecorder {
+	return m.recorder
+}
+
+// Delete mocks base method.
+func (m *MockUserSessionsRepo) Delete(ctx context.Context, ip string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", ctx, ip)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockUserSessionsRepoMockRecorder) Delete(ctx, ip any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockUserSessionsRepo)(nil).Delete), ctx, ip)
+}
+
+// GetByToken mocks base method.
+func (m *MockUserSessionsRepo) GetByToken(ctx context.Context, token string) (*entity.UserSession, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByToken", ctx, token)
+	ret0, _ := ret[0].(*entity.UserSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByToken indicates an expected call of GetByToken.
+func (mr *MockUserSessionsRepoMockRecorder) GetByToken(ctx, token any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByToken", reflect.TypeOf((*MockUserSessionsRepo)(nil).GetByToken), ctx, token)
+}
+
+// Insert mocks base method.
+func (m *MockUserSessionsRepo) Insert(ctx context.Context, session *entity.UserSession) (*entity.UserSession, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Insert", ctx, session)
+	ret0, _ := ret[0].(*entity.UserSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Insert indicates an expected call of Insert.
+func (mr *MockUserSessionsRepoMockRecorder) Insert(ctx, session any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockUserSessionsRepo)(nil).Insert), ctx, session)
+}
+
 // MockOtpRepo is a mock of OtpRepo interface.
 type MockOtpRepo struct {
 	ctrl     *gomock.Controller
@@ -435,4 +503,43 @@ func (m *MockTelegramBotAPI) SendTextMsg(ctx context.Context, chatId, text strin
 func (mr *MockTelegramBotAPIMockRecorder) SendTextMsg(ctx, chatId, text any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendTextMsg", reflect.TypeOf((*MockTelegramBotAPI)(nil).SendTextMsg), ctx, chatId, text)
+}
+
+// MockGeoIPApi is a mock of GeoIPApi interface.
+type MockGeoIPApi struct {
+	ctrl     *gomock.Controller
+	recorder *MockGeoIPApiMockRecorder
+	isgomock struct{}
+}
+
+// MockGeoIPApiMockRecorder is the mock recorder for MockGeoIPApi.
+type MockGeoIPApiMockRecorder struct {
+	mock *MockGeoIPApi
+}
+
+// NewMockGeoIPApi creates a new mock instance.
+func NewMockGeoIPApi(ctrl *gomock.Controller) *MockGeoIPApi {
+	mock := &MockGeoIPApi{ctrl: ctrl}
+	mock.recorder = &MockGeoIPApiMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockGeoIPApi) EXPECT() *MockGeoIPApiMockRecorder {
+	return m.recorder
+}
+
+// GetLocationByIP mocks base method.
+func (m *MockGeoIPApi) GetLocationByIP(ip string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLocationByIP", ip)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLocationByIP indicates an expected call of GetLocationByIP.
+func (mr *MockGeoIPApiMockRecorder) GetLocationByIP(ip any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLocationByIP", reflect.TypeOf((*MockGeoIPApi)(nil).GetLocationByIP), ip)
 }

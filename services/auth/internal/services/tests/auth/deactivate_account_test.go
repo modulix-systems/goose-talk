@@ -8,7 +8,7 @@ import (
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage"
 	"github.com/modulix-systems/goose-talk/internal/services/auth"
-	"github.com/modulix-systems/goose-talk/tests/suite"
+	"github.com/modulix-systems/goose-talk/tests/suite/helpers"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -17,7 +17,7 @@ func TestDeactivateAccSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
-	mockUser := suite.MockUser()
+	mockUser := helpers.MockUser()
 	userId := strconv.Itoa(mockUser.ID)
 	authSuite.mockUsersRepo.EXPECT().UpdateIsActiveById(ctx, userId, false).Return(mockUser, nil)
 	authSuite.mockMailSender.EXPECT().SendAccDeactivationEmail(ctx, mockUser.Email).Return(nil)

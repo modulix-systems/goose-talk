@@ -16,6 +16,11 @@ type (
 		GetByLogin(ctx context.Context, login string) (*entity.User, error)
 		UpdateIsActiveById(ctx context.Context, userId string, isActive bool) (*entity.User, error)
 	}
+	UserSessionsRepo interface {
+		Insert(ctx context.Context, session *entity.UserSession) (*entity.UserSession, error)
+		Delete(ctx context.Context, ip string) error
+		GetByToken(ctx context.Context, token string) (*entity.UserSession, error)
+	}
 	OtpRepo interface {
 		GetByEmail(ctx context.Context, email string) (*entity.OTP, error)
 		DeleteByEmail(ctx context.Context, email string) error
@@ -40,5 +45,8 @@ type (
 	}
 	TelegramBotAPI interface {
 		SendTextMsg(ctx context.Context, chatId string, text string) error
+	}
+	GeoIPApi interface {
+		GetLocationByIP(ip string) (string, error)
 	}
 )

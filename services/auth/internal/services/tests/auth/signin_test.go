@@ -17,10 +17,10 @@ import (
 
 func mockSignInPayload() *schemas.SignInSchema {
 	return &schemas.SignInSchema{
-		Login:    gofakeit.Username(),
-		Password: helpers.RandomPassword(),
-		// DeviceInfo: gofakeit.UserAgent(),
-		// ClientIP:   gofakeit.IPv4Address(),
+		Login:      gofakeit.Username(),
+		Password:   helpers.RandomPassword(),
+		DeviceInfo: gofakeit.UserAgent(),
+		ClientIP:   gofakeit.IPv4Address(),
 	}
 }
 
@@ -52,17 +52,18 @@ func TestSignInSuccessNo2FA(t *testing.T) {
 			default:
 				panic("Too many iterations")
 			}
-			// mockLocation := gofakeit.City()
-			// mockSession := helpers.MockUserSession(true)
-			// mockSession.UserId = mockUser.ID
+			mockLocation := gofakeit.City()
+			mockSession := helpers.MockUserSession(true)
+			mockSession.UserId = mockUser.ID
 			authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
-			// authSuite.mockGeoIPApi.EXPECT().GetLocationByIP(dto.ClientIP).Return(mockLocation, nil)
-			// authSuite.mockSessionsRepo.EXPECT().Insert(ctx, &entity.UserSession{
-			// 	UserId:     mockUser.ID,
-			// 	DeviceInfo: dto.DeviceInfo,
-			// 	IP:         dto.ClientIP,
-			// 	Location:   mockLocation,
-			// }).Return(mockSession, nil)
+			authSuite.mockGeoIPApi.EXPECT().GetLocationByIP(dto.ClientIP).Return(mockLocation, nil)
+			authSuite.mockSessionsRepo.EXPECT().Insert(ctx, &entity.UserSession{
+				UserId:      mockUser.ID,
+				DeviceInfo:  dto.DeviceInfo,
+				IP:          dto.ClientIP,
+				Location:    mockLocation,
+				AccessToken: expectedToken,
+			}).Return(mockSession, nil)
 			authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockUser.Password, dto.Password).Return(true, nil)
 			authSuite.mockAuthTokenProvider.EXPECT().
 				NewToken(authSuite.tokenTTL, map[string]any{"uid": mockUser.ID}).

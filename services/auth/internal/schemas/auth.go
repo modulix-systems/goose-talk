@@ -17,6 +17,10 @@ type (
 	SignInSchema struct {
 		Login    string
 		Password string
+		// DeviceInfo can be user-agent for browser or for example some platform info
+		// if request is coming from mobile app
+		DeviceInfo string
+		ClientIP   string
 	}
 	Verify2FASchema struct {
 		TwoFATyp entity.TwoFADeliveryMethod

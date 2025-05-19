@@ -10,7 +10,7 @@ import (
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage"
 	"github.com/modulix-systems/goose-talk/internal/schemas"
 	"github.com/modulix-systems/goose-talk/internal/services/auth"
-	"github.com/modulix-systems/goose-talk/tests/suite"
+	"github.com/modulix-systems/goose-talk/tests/suite/helpers"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -37,9 +37,9 @@ func TestVerify2FASuccess(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			dto := mockVerify2FAPayload(twoFaTyp)
 			expectedAuthToken := "authtoken"
-			mockOTP := suite.MockOTP()
+			mockOTP := helpers.MockOTP()
 			mockOTP.UserEmail = dto.Email
-			mockUser := suite.MockUser()
+			mockUser := helpers.MockUser()
 			mockUser.TwoFactorAuth.Enabled = true
 			authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(mockOTP, nil)
 			otpToCompare := dto.Code
@@ -81,7 +81,7 @@ func TestVerify2FAInvalidOTP(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
-	mockOTP := suite.MockOTP()
+	mockOTP := helpers.MockOTP()
 	for _, twoFaTyp := range entity.OtpDeliveryMethods {
 		name := "2FA over " + twoFaTyp.String()
 		t.Run(name, func(t *testing.T) {
@@ -105,8 +105,8 @@ func TestVerify2FADisabled(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
-	mockOTP := suite.MockOTP()
-	mockUser := suite.MockUser()
+	mockOTP := helpers.MockOTP()
+	mockUser := helpers.MockUser()
 	mockUser.TwoFactorAuth.Enabled = false
 	for _, twoFaTyp := range entity.OtpDeliveryMethods {
 		name := "2FA over " + twoFaTyp.String()
@@ -131,8 +131,8 @@ func TestVerify2FATotpAppInvalidTOTP(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
-	mockOTP := suite.MockOTP()
-	mockUser := suite.MockUser()
+	mockOTP := helpers.MockOTP()
+	mockUser := helpers.MockUser()
 	mockUser.TwoFactorAuth.Enabled = true
 	dto := mockVerify2FAPayload(entity.TWO_FA_TOTP_APP)
 	authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(mockOTP, nil)
@@ -149,7 +149,7 @@ func TestVerify2FAOtpExpired(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
-	mockOTP := suite.MockOTP()
+	mockOTP := helpers.MockOTP()
 	mockOTP.UpdatedAt = time.Now().Add(-authSuite.tokenTTL)
 	for _, twoFaTyp := range entity.OtpDeliveryMethods {
 		name := "2FA over " + twoFaTyp.String()
@@ -168,7 +168,7 @@ func TestVerify2FAUserNotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
-	mockOTP := suite.MockOTP()
+	mockOTP := helpers.MockOTP()
 	for _, twoFaTyp := range entity.OtpDeliveryMethods {
 		name := "2FA over " + twoFaTyp.String()
 		t.Run(name, func(t *testing.T) {
@@ -193,8 +193,8 @@ func TestVerify2FAUserNotActive(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
-	mockOTP := suite.MockOTP()
-	mockUser := suite.MockUser()
+	mockOTP := helpers.MockOTP()
+	mockUser := helpers.MockUser()
 	mockUser.TwoFactorAuth.Enabled = true
 	mockUser.IsActive = false
 	for _, twoFaTyp := range entity.OtpDeliveryMethods {

@@ -21,6 +21,8 @@ type AuthService struct {
 	otpTTL               time.Duration
 	authTokenProvider    gateways.AuthTokenProvider
 	authTokenTTL         time.Duration
+	sessionsRepo         gateways.UserSessionsRepo
+	geoIPApi             gateways.GeoIPApi
 }
 
 func New(
@@ -32,6 +34,8 @@ func New(
 	authTokenTTL time.Duration,
 	securityProvider gateways.SecurityProvider,
 	tgApi gateways.TelegramBotAPI,
+	sessionsRepo gateways.UserSessionsRepo,
+	geoIPApi gateways.GeoIPApi,
 ) *AuthService {
 	return &AuthService{
 		usersRepo:            usersRepo,
@@ -42,6 +46,8 @@ func New(
 		authTokenTTL:         authTokenTTL,
 		securityProvider:     securityProvider,
 		tgApi:                tgApi,
+		sessionsRepo:         sessionsRepo,
+		geoIPApi:             geoIPApi,
 	}
 }
 
@@ -139,8 +145,9 @@ type signInToken struct {
 }
 
 type authInfo struct {
-	Token *signInToken
-	User  *entity.User
+	Token   *signInToken
+	User    *entity.User
+	Session *entity.UserSession
 }
 
 func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (*authInfo, error) {
@@ -187,11 +194,22 @@ func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (*a
 		}
 		return &authInfo{User: user}, nil
 	}
+	userLocation, err := s.geoIPApi.GetLocationByIP(dto.ClientIP)
+	if err != nil {
+		return nil, err
+	}
 	token, err := s.authTokenProvider.NewToken(s.authTokenTTL, map[string]any{"uid": user.ID})
 	if err != nil {
 		return nil, err
 	}
-	return &authInfo{User: user, Token: &signInToken{Val: token, Typ: AuthTokenType}}, nil
+	session, err := s.sessionsRepo.Insert(ctx, &entity.UserSession{
+		UserId:      user.ID,
+		DeviceInfo:  dto.DeviceInfo,
+		IP:          dto.ClientIP,
+		Location:    userLocation,
+		AccessToken: token,
+	})
+	return &authInfo{User: user, Session: session, Token: &signInToken{Val: token, Typ: AuthTokenType}}, nil
 }
 
 func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchema) (string, error) {
@@ -258,3 +276,9 @@ func (s *AuthService) DeactivateAccount(ctx context.Context, userId string) erro
 	}
 	return nil
 }
+
+// func (s *AuthService) CheckIsSessionActive(ctx context.Context, authToken string) (bool, error)
+//
+// func (s *AuthService) GetCurrentSession(ctx context.Context, authToken string) (*entity.UserSession, error)
+//
+// func (s *AuthService) GetAllActiveSessions(ctx context.Context, userId string) ([]entity.UserSession, error)

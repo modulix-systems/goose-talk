@@ -10,7 +10,7 @@ import (
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage"
 	"github.com/modulix-systems/goose-talk/internal/schemas"
 	"github.com/modulix-systems/goose-talk/internal/services/auth"
-	"github.com/modulix-systems/goose-talk/tests/suite"
+	"github.com/modulix-systems/goose-talk/tests/suite/helpers"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -19,10 +19,10 @@ func mockSignUpPayload() *schemas.SignUpSchema {
 	return &schemas.SignUpSchema{
 		Username:         gofakeit.Username(),
 		Email:            gofakeit.Email(),
-		FirstName:        suite.RandomChoose(gofakeit.FirstName(), ""),
-		LastName:         suite.RandomChoose(gofakeit.LastName(), ""),
+		FirstName:        helpers.RandomChoose(gofakeit.FirstName(), ""),
+		LastName:         helpers.RandomChoose(gofakeit.LastName(), ""),
 		ConfirmationCode: gofakeit.Numerify("######"),
-		Password:         suite.RandomPassword(),
+		Password:         helpers.RandomPassword(),
 	}
 }
 
@@ -31,7 +31,7 @@ func TestSignupSuccess(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	dto := mockSignUpPayload()
 	expectedToken := "auth token"
-	mockOTP := suite.MockOTP()
+	mockOTP := helpers.MockOTP()
 	mockOTP.UserEmail = dto.Email
 	ctx := context.Background()
 	userToInsert := &entity.User{FirstName: dto.FirstName, LastName: dto.LastName, Email: dto.Email, Password: []byte(dto.Password)}
@@ -107,7 +107,7 @@ func TestSignUpUserExists(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	dto := mockSignUpPayload()
 	ctx := context.Background()
-	mockOTP := suite.MockOTP()
+	mockOTP := helpers.MockOTP()
 	mockOTP.UserEmail = dto.Email
 	authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(mockOTP, nil)
 	hashedPassword := []byte("hashedPassword")

@@ -1,32 +1,11 @@
-package suite
+package helpers
 
 import (
-	"fmt"
-	"math/rand"
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/modulix-systems/goose-talk/internal/entity"
 )
-
-func MockDuration(s string) time.Duration {
-	if s == "" {
-		s = fmt.Sprintf("%dh", gofakeit.Number(1, 100))
-	}
-	duration, err := time.ParseDuration(s)
-	if err != nil {
-		panic(err)
-	}
-	return duration
-}
-
-func RandomChoose[T any](collection ...T) T {
-	return collection[rand.Intn(len(collection))]
-}
-
-func RandomPassword() string {
-	return gofakeit.Password(true, true, true, false, false, 8)
-}
 
 func MockUser() *entity.User {
 	return &entity.User{
@@ -52,6 +31,27 @@ func MockUser() *entity.User {
 			Contact:    gofakeit.Email(),
 			TotpSecret: gofakeit.Sentence(3),
 		},
+	}
+}
+
+func MockUserSession(active bool) *entity.UserSession {
+	created := gofakeit.DateRange(time.Now().AddDate(0, -1, 0), time.Now())
+	lastSeen := gofakeit.DateRange(created, time.Now())
+
+	var deactivated time.Time
+	if !active {
+		deactivated = gofakeit.DateRange(lastSeen, time.Now())
+	}
+
+	return &entity.UserSession{
+		UserId:        gofakeit.Number(1, 1000),
+		Location:      gofakeit.City(),
+		IP:            gofakeit.IPv4Address(),
+		LastSeenAt:    lastSeen,
+		CreatedAt:     created,
+		DeviceInfo:    gofakeit.UserAgent(),
+		DeactivatedAt: deactivated,
+		AccessToken:   gofakeit.UUID(),
 	}
 }
 
