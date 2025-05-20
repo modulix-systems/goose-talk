@@ -15,4 +15,6 @@ var (
 	ErrUnsupported2FAMethod = errors.New("Two factor authentication method associated with your account is not supported. Please use another one")
 	ErrDisabledAccount      = errors.New("Your account is disabled. Try to contact support to resolve this issue")
 	ErrSessionNotFound      = errors.New("No active session found")
+	ErrExpiredAuthToken     = errors.New("Your auth token has expired. Please obtain a new one")
+	ErrInvalidAuthToken     = errors.New("Your auth token is malformed. Please obtain a new one")
 )

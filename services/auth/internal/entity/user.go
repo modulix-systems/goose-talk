@@ -35,7 +35,7 @@ type (
 		DeviceInfo string
 		// nil by default if session is active
 		DeactivatedAt time.Time
-		AccessToken   string
+		AccessToken   string // unique
 	}
 )
 

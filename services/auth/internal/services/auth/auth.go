@@ -291,5 +291,20 @@ func (s *AuthService) GetCurrentSession(ctx context.Context, authToken string) (
 	return session, nil
 }
 
-// func (s *AuthService) GetAllActiveSessions(ctx context.Context, userId string) ([]entity.UserSession, error)
+func (s *AuthService) GetActiveSessions(ctx context.Context, authToken string) ([]entity.UserSession, error) {
+	var sessions []entity.UserSession
+	tokenPayload, err := s.authTokenProvider.ParseClaimsFromToken(authToken)
+	if err != nil {
+		if errors.Is(err, gateways.ErrExpiredToken) {
+			return sessions, ErrExpiredAuthToken
+		}
+		return sessions, ErrInvalidAuthToken
+	}
+	sessions, err = s.sessionsRepo.GetAllForUser(ctx, tokenPayload["uid"].(string), true)
+	if err != nil {
+		return sessions, err
+	}
+	return sessions, nil
+}
+
 // func (s *AuthService) DeactivateSession(ctx context.Context, sessionId string) error

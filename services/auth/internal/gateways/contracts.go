@@ -3,9 +3,14 @@ package gateways
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/modulix-systems/goose-talk/internal/entity"
+)
+
+var (
+	ErrExpiredToken = errors.New("Expired token")
 )
 
 //go:generate mockgen -source=contracts.go -destination=../../tests/mocks/mocks_gateways.go -package=mocks
@@ -20,6 +25,7 @@ type (
 		Insert(ctx context.Context, session *entity.UserSession) (*entity.UserSession, error)
 		Delete(ctx context.Context, ip string) error
 		GetByToken(ctx context.Context, token string) (*entity.UserSession, error)
+		GetAllForUser(ctx context.Context, userId string, activeOnly bool) ([]entity.UserSession, error)
 	}
 	OtpRepo interface {
 		GetByEmail(ctx context.Context, email string) (*entity.OTP, error)

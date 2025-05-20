@@ -140,6 +140,21 @@ func (mr *MockUserSessionsRepoMockRecorder) Delete(ctx, ip any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockUserSessionsRepo)(nil).Delete), ctx, ip)
 }
 
+// GetAllForUser mocks base method.
+func (m *MockUserSessionsRepo) GetAllForUser(ctx context.Context, userId string, activeOnly bool) ([]entity.UserSession, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllForUser", ctx, userId, activeOnly)
+	ret0, _ := ret[0].([]entity.UserSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllForUser indicates an expected call of GetAllForUser.
+func (mr *MockUserSessionsRepoMockRecorder) GetAllForUser(ctx, userId, activeOnly any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllForUser", reflect.TypeOf((*MockUserSessionsRepo)(nil).GetAllForUser), ctx, userId, activeOnly)
+}
+
 // GetByToken mocks base method.
 func (m *MockUserSessionsRepo) GetByToken(ctx context.Context, token string) (*entity.UserSession, error) {
 	m.ctrl.T.Helper()
