@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/modulix-systems/goose-talk/internal/entity"
+	"github.com/modulix-systems/goose-talk/internal/schemas"
 )
 
 var (
@@ -19,14 +20,15 @@ type (
 		Insert(ctx context.Context, user *entity.User) (*entity.User, error)
 		CheckExistsWithEmail(ctx context.Context, email string) (bool, error)
 		GetByLogin(ctx context.Context, login string) (*entity.User, error)
-		UpdateIsActiveById(ctx context.Context, userId string, isActive bool) (*entity.User, error)
+		UpdateIsActiveById(ctx context.Context, userId int, isActive bool) (*entity.User, error)
 	}
 	UserSessionsRepo interface {
 		Insert(ctx context.Context, session *entity.UserSession) (*entity.UserSession, error)
 		Delete(ctx context.Context, ip string) error
 		GetByToken(ctx context.Context, token string) (*entity.UserSession, error)
-		GetAllForUser(ctx context.Context, userId string, activeOnly bool) ([]entity.UserSession, error)
-		UpdateIsActiveById(ctx context.Context, sessionId string, isActive bool) error
+		GetAllForUser(ctx context.Context, userId int, activeOnly bool) ([]entity.UserSession, error)
+		UpdateById(ctx context.Context, sessionId int, payload *schemas.SessionUpdatePayload) (*entity.UserSession, error)
+		UpdateForUserById(ctx context.Context, userId int, sessionId int, deactivatedAt time.Time) error
 	}
 	OtpRepo interface {
 		GetByEmail(ctx context.Context, email string) (*entity.OTP, error)

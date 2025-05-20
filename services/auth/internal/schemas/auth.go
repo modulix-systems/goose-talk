@@ -1,6 +1,10 @@
 package schemas
 
-import "github.com/modulix-systems/goose-talk/internal/entity"
+import (
+	"time"
+
+	"github.com/modulix-systems/goose-talk/internal/entity"
+)
 
 type (
 	SendConfirmationCodeSchema struct {
@@ -28,5 +32,10 @@ type (
 		Code     string
 		// SignInConfToken must be present only if TOTP 2fa type is used
 		SignInConfToken string
+	}
+	SessionUpdatePayload struct {
+		AccessToken   string
+		DeactivatedAt time.Time
+		LastSeenAt    time.Time
 	}
 )

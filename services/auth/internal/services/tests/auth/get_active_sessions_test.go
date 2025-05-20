@@ -3,7 +3,6 @@ package auth_test
 import (
 	"context"
 	"errors"
-	"strconv"
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -19,7 +18,7 @@ func TestGetActiveSessionsSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	mockSessions := []entity.UserSession{*helpers.MockUserSession(true), *helpers.MockUserSession(true)}
-	mockUserId := strconv.Itoa(gofakeit.Number(1, 1000))
+	mockUserId := gofakeit.Number(1, 1000)
 	ctx := context.Background()
 	mockAuthToken := gofakeit.UUID()
 	authSuite.mockAuthTokenProvider.EXPECT().ParseClaimsFromToken(mockAuthToken).Return(map[string]any{"uid": mockUserId}, nil)

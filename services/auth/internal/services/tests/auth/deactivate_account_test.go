@@ -2,7 +2,6 @@ package auth_test
 
 import (
 	"context"
-	"strconv"
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -18,11 +17,10 @@ func TestDeactivateAccSuccess(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
 	mockUser := helpers.MockUser()
-	userId := strconv.Itoa(mockUser.ID)
-	authSuite.mockUsersRepo.EXPECT().UpdateIsActiveById(ctx, userId, false).Return(mockUser, nil)
+	authSuite.mockUsersRepo.EXPECT().UpdateIsActiveById(ctx, mockUser.ID, false).Return(mockUser, nil)
 	authSuite.mockMailSender.EXPECT().SendAccDeactivationEmail(ctx, mockUser.Email).Return(nil)
 
-	err := authSuite.service.DeactivateAccount(ctx, userId)
+	err := authSuite.service.DeactivateAccount(ctx, mockUser.ID)
 
 	assert.NoError(t, err)
 }
@@ -31,7 +29,7 @@ func TestDeactivateAccUserNotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
-	userId := strconv.Itoa(gofakeit.Number(1, 100))
+	userId := gofakeit.Number(1, 100)
 	authSuite.mockUsersRepo.EXPECT().UpdateIsActiveById(ctx, userId, false).Return(nil, storage.ErrNotFound)
 
 	err := authSuite.service.DeactivateAccount(ctx, userId)

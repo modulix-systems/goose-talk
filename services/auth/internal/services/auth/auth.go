@@ -263,7 +263,7 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 	return token, nil
 }
 
-func (s *AuthService) DeactivateAccount(ctx context.Context, userId string) error {
+func (s *AuthService) DeactivateAccount(ctx context.Context, userId int) error {
 	user, err := s.usersRepo.UpdateIsActiveById(ctx, userId, false)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
@@ -277,7 +277,32 @@ func (s *AuthService) DeactivateAccount(ctx context.Context, userId string) erro
 	return nil
 }
 
-func (s *AuthService) GetCurrentSession(ctx context.Context, authToken string) (*entity.UserSession, error) {
+func (s *AuthService) GetActiveSessions(ctx context.Context, authToken string) ([]entity.UserSession, error) {
+	var sessions []entity.UserSession
+	tokenPayload, err := s.authTokenProvider.ParseClaimsFromToken(authToken)
+	if err != nil {
+		if errors.Is(err, gateways.ErrExpiredToken) {
+			return sessions, ErrExpiredAuthToken
+		}
+		return sessions, ErrInvalidAuthToken
+	}
+	sessions, err = s.sessionsRepo.GetAllForUser(ctx, tokenPayload["uid"].(int), true)
+	if err != nil {
+		return sessions, err
+	}
+	return sessions, nil
+}
+
+func (s *AuthService) DeactivateSession(ctx context.Context, userId int, sessionId int) error {
+	if err := s.sessionsRepo.UpdateForUserById(ctx, userId, sessionId, time.Now()); err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return ErrSessionNotFound
+		}
+	}
+	return nil
+}
+
+func (s *AuthService) PingSession(ctx context.Context, authToken string) (*entity.UserSession, error) {
 	session, err := s.sessionsRepo.GetByToken(ctx, authToken)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
@@ -288,30 +313,20 @@ func (s *AuthService) GetCurrentSession(ctx context.Context, authToken string) (
 	if !session.IsActive() {
 		return nil, ErrSessionNotFound
 	}
-	return session, nil
-}
-
-func (s *AuthService) GetActiveSessions(ctx context.Context, authToken string) ([]entity.UserSession, error) {
-	var sessions []entity.UserSession
-	tokenPayload, err := s.authTokenProvider.ParseClaimsFromToken(authToken)
-	if err != nil {
-		if errors.Is(err, gateways.ErrExpiredToken) {
-			return sessions, ErrExpiredAuthToken
+	updatePayload := &schemas.SessionUpdatePayload{LastSeenAt: time.Now()}
+	// if token expired - deactivate session
+	if _, err = s.authTokenProvider.ParseClaimsFromToken(authToken); err != nil {
+		if !errors.Is(err, gateways.ErrExpiredToken) {
+			return nil, err
 		}
-		return sessions, ErrInvalidAuthToken
+		updatePayload = &schemas.SessionUpdatePayload{DeactivatedAt: time.Now()}
 	}
-	sessions, err = s.sessionsRepo.GetAllForUser(ctx, tokenPayload["uid"].(string), true)
+	session, err = s.sessionsRepo.UpdateById(ctx, session.ID, updatePayload)
 	if err != nil {
-		return sessions, err
-	}
-	return sessions, nil
-}
-
-func (s *AuthService) DeactivateSession(ctx context.Context, sessionId string) error {
-	if err := s.sessionsRepo.UpdateIsActiveById(ctx, sessionId, false); err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return ErrSessionNotFound
+			return nil, ErrSessionNotFound
 		}
+		return nil, err
 	}
-	return nil
+	return session, nil
 }
