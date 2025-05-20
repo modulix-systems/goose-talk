@@ -307,4 +307,11 @@ func (s *AuthService) GetActiveSessions(ctx context.Context, authToken string) (
 	return sessions, nil
 }
 
-// func (s *AuthService) DeactivateSession(ctx context.Context, sessionId string) error
+func (s *AuthService) DeactivateSession(ctx context.Context, sessionId string) error {
+	if err := s.sessionsRepo.UpdateIsActiveById(ctx, sessionId, false); err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return ErrSessionNotFound
+		}
+	}
+	return nil
+}

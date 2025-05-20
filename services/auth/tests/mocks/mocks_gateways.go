@@ -185,6 +185,20 @@ func (mr *MockUserSessionsRepoMockRecorder) Insert(ctx, session any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockUserSessionsRepo)(nil).Insert), ctx, session)
 }
 
+// UpdateIsActiveById mocks base method.
+func (m *MockUserSessionsRepo) UpdateIsActiveById(ctx context.Context, sessionId string, isActive bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateIsActiveById", ctx, sessionId, isActive)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateIsActiveById indicates an expected call of UpdateIsActiveById.
+func (mr *MockUserSessionsRepoMockRecorder) UpdateIsActiveById(ctx, sessionId, isActive any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateIsActiveById", reflect.TypeOf((*MockUserSessionsRepo)(nil).UpdateIsActiveById), ctx, sessionId, isActive)
+}
+
 // MockOtpRepo is a mock of OtpRepo interface.
 type MockOtpRepo struct {
 	ctrl     *gomock.Controller

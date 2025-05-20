@@ -26,6 +26,7 @@ type (
 		Delete(ctx context.Context, ip string) error
 		GetByToken(ctx context.Context, token string) (*entity.UserSession, error)
 		GetAllForUser(ctx context.Context, userId string, activeOnly bool) ([]entity.UserSession, error)
+		UpdateIsActiveById(ctx context.Context, sessionId string, isActive bool) error
 	}
 	OtpRepo interface {
 		GetByEmail(ctx context.Context, email string) (*entity.OTP, error)
