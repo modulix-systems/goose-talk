@@ -29,6 +29,7 @@ type (
 		GetAllForUser(ctx context.Context, userId int, activeOnly bool) ([]entity.UserSession, error)
 		UpdateById(ctx context.Context, sessionId int, payload *schemas.SessionUpdatePayload) (*entity.UserSession, error)
 		UpdateForUserById(ctx context.Context, userId int, sessionId int, deactivatedAt time.Time) error
+		GetByParamsMatch(ctx context.Context, ip string, deviceInfo string) (*entity.UserSession, error)
 	}
 	OtpRepo interface {
 		GetByEmail(ctx context.Context, email string) (*entity.OTP, error)

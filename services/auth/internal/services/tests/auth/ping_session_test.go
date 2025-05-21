@@ -49,7 +49,8 @@ func TestPingSessionSuccess(t *testing.T) {
 		authSuite.mockSessionsRepo.EXPECT().UpdateById(
 			ctx, mockSession.ID, gomock.Any()).
 			DoAndReturn(func(ctx context.Context, sessionId int, payload *schemas.SessionUpdatePayload) (*entity.UserSession, error) {
-				assert.WithinDuration(t, payload.DeactivatedAt, time.Now(), time.Second)
+				assert.NotNil(t, payload.DeactivatedAt)
+				assert.WithinDuration(t, *payload.DeactivatedAt, time.Now(), time.Second)
 				assert.Empty(t, payload.LastSeenAt)
 				assert.Empty(t, payload.AccessToken)
 				return mockSession, nil

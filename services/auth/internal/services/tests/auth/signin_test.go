@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/modulix-systems/goose-talk/internal/entity"
@@ -12,6 +13,7 @@ import (
 	"github.com/modulix-systems/goose-talk/internal/services/auth"
 	"github.com/modulix-systems/goose-talk/tests/suite/helpers"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -40,30 +42,67 @@ func TestSignInSuccessNo2FA(t *testing.T) {
 	ctx := context.Background()
 	dto := mockSignInPayload()
 	expectedToken := "testtoken"
-	testCases := []string{"2fa is nil", "2fa disabled"}
-	for i, name := range testCases {
-		t.Run(name, func(t *testing.T) {
+	testCases := []struct {
+		name          string
+		sessionExists bool
+		twoFAIncluded bool
+	}{
+		{
+			name:          "2fa is nil",
+			sessionExists: true,
+			twoFAIncluded: false,
+		},
+		{
+			name:          "2fa disabled",
+			sessionExists: true,
+			twoFAIncluded: true,
+		},
+		{
+			name:          "2fa is nil new auth session",
+			sessionExists: false,
+			twoFAIncluded: false,
+		},
+		{
+			name:          "2fa disabled new auth session",
+			sessionExists: false,
+			twoFAIncluded: true,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			mockUser := helpers.MockUser()
-			switch i {
-			case 0:
+			mockUser.TwoFactorAuth.Enabled = false
+			if !tc.twoFAIncluded {
 				mockUser.TwoFactorAuth = nil
-			case 1:
-				mockUser.TwoFactorAuth.Enabled = false
-			default:
-				panic("Too many iterations")
 			}
 			mockLocation := gofakeit.City()
 			mockSession := helpers.MockUserSession(true)
 			mockSession.UserId = mockUser.ID
 			authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
 			authSuite.mockGeoIPApi.EXPECT().GetLocationByIP(dto.ClientIP).Return(mockLocation, nil)
-			authSuite.mockSessionsRepo.EXPECT().Insert(ctx, &entity.UserSession{
-				UserId:      mockUser.ID,
-				DeviceInfo:  dto.DeviceInfo,
-				IP:          dto.ClientIP,
-				Location:    mockLocation,
-				AccessToken: expectedToken,
-			}).Return(mockSession, nil)
+			if tc.sessionExists {
+				authSuite.mockSessionsRepo.EXPECT().GetByParamsMatch(ctx, dto.ClientIP, dto.DeviceInfo).Return(mockSession, nil)
+				authSuite.mockSessionsRepo.EXPECT().UpdateById(
+					ctx, mockSession.ID,
+					gomock.Any()).
+					DoAndReturn(func(ctx context.Context, sessionId int, payload *schemas.SessionUpdatePayload) (*entity.UserSession, error) {
+						require.NotNil(t, payload)
+						assert.NotNil(t, payload.DeactivatedAt)
+						assert.Equal(t, *payload.DeactivatedAt, time.Time{})
+						assert.WithinDuration(t, time.Now(), payload.LastSeenAt, time.Second)
+						assert.Equal(t, payload.AccessToken, expectedToken)
+						return mockSession, nil
+					})
+			} else {
+				authSuite.mockSessionsRepo.EXPECT().GetByParamsMatch(ctx, dto.ClientIP, dto.DeviceInfo).Return(nil, storage.ErrNotFound)
+				authSuite.mockSessionsRepo.EXPECT().Insert(ctx, &entity.UserSession{
+					UserId:      mockUser.ID,
+					DeviceInfo:  dto.DeviceInfo,
+					IP:          dto.ClientIP,
+					Location:    mockLocation,
+					AccessToken: expectedToken,
+				}).Return(mockSession, nil)
+			}
 			authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockUser.Password, dto.Password).Return(true, nil)
 			authSuite.mockAuthTokenProvider.EXPECT().
 				NewToken(authSuite.tokenTTL, map[string]any{"uid": mockUser.ID}).

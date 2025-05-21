@@ -35,7 +35,7 @@ type (
 	}
 	SessionUpdatePayload struct {
 		AccessToken   string
-		DeactivatedAt time.Time
+		DeactivatedAt *time.Time
 		LastSeenAt    time.Time
 	}
 )

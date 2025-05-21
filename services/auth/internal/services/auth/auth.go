@@ -202,13 +202,30 @@ func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (*a
 	if err != nil {
 		return nil, err
 	}
-	session, err := s.sessionsRepo.Insert(ctx, &entity.UserSession{
-		UserId:      user.ID,
-		DeviceInfo:  dto.DeviceInfo,
-		IP:          dto.ClientIP,
-		Location:    userLocation,
-		AccessToken: token,
-	})
+	// Try to find matching session by set of params, if it wasn't found - create new one
+	// or update otherwise
+	session, err := s.sessionsRepo.GetByParamsMatch(ctx, dto.ClientIP, dto.DeviceInfo)
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			session, err = s.sessionsRepo.Insert(ctx, &entity.UserSession{
+				UserId:      user.ID,
+				DeviceInfo:  dto.DeviceInfo,
+				IP:          dto.ClientIP,
+				Location:    userLocation,
+				AccessToken: token,
+			})
+			if err != nil {
+				return nil, err
+			}
+			return &authInfo{User: user, Session: session, Token: &signInToken{Val: token, Typ: AuthTokenType}}, nil
+		}
+		return nil, err
+	}
+	// activate session back if it was deactivated and update it's token
+	session, err = s.sessionsRepo.UpdateById(ctx, session.ID, &schemas.SessionUpdatePayload{DeactivatedAt: &time.Time{}, LastSeenAt: time.Now(), AccessToken: token})
+	if err != nil {
+		return nil, err
+	}
 	return &authInfo{User: user, Session: session, Token: &signInToken{Val: token, Typ: AuthTokenType}}, nil
 }
 
@@ -313,13 +330,14 @@ func (s *AuthService) PingSession(ctx context.Context, authToken string) (*entit
 	if !session.IsActive() {
 		return nil, ErrSessionNotFound
 	}
-	updatePayload := &schemas.SessionUpdatePayload{LastSeenAt: time.Now()}
+	now := time.Now()
+	updatePayload := &schemas.SessionUpdatePayload{LastSeenAt: now}
 	// if token expired - deactivate session
 	if _, err = s.authTokenProvider.ParseClaimsFromToken(authToken); err != nil {
 		if !errors.Is(err, gateways.ErrExpiredToken) {
 			return nil, err
 		}
-		updatePayload = &schemas.SessionUpdatePayload{DeactivatedAt: time.Now()}
+		updatePayload = &schemas.SessionUpdatePayload{DeactivatedAt: &now}
 	}
 	session, err = s.sessionsRepo.UpdateById(ctx, session.ID, updatePayload)
 	if err != nil {

@@ -156,6 +156,21 @@ func (mr *MockUserSessionsRepoMockRecorder) GetAllForUser(ctx, userId, activeOnl
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllForUser", reflect.TypeOf((*MockUserSessionsRepo)(nil).GetAllForUser), ctx, userId, activeOnly)
 }
 
+// GetByParamsMatch mocks base method.
+func (m *MockUserSessionsRepo) GetByParamsMatch(ctx context.Context, ip, deviceInfo string) (*entity.UserSession, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByParamsMatch", ctx, ip, deviceInfo)
+	ret0, _ := ret[0].(*entity.UserSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByParamsMatch indicates an expected call of GetByParamsMatch.
+func (mr *MockUserSessionsRepoMockRecorder) GetByParamsMatch(ctx, ip, deviceInfo any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByParamsMatch", reflect.TypeOf((*MockUserSessionsRepo)(nil).GetByParamsMatch), ctx, ip, deviceInfo)
+}
+
 // GetByToken mocks base method.
 func (m *MockUserSessionsRepo) GetByToken(ctx context.Context, token string) (*entity.UserSession, error) {
 	m.ctrl.T.Helper()
