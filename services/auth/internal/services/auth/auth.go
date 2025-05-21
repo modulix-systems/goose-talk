@@ -57,7 +57,36 @@ func (s *AuthService) createOTP(ctx context.Context, forEmail string) (string, e
 	if err != nil {
 		return "", err
 	}
-	return otpCode, s.otpRepo.InsertOrUpdateCode(ctx, &entity.OTP{Code: hashedOtpCode, UserEmail: forEmail})
+	return otpCode, s.otpRepo.InsertOrUpdateCode(
+		ctx,
+		&entity.OTP{Code: hashedOtpCode, UserEmail: forEmail},
+	)
+}
+
+func (s *AuthService) createOrUpdateSession(ctx context.Context, user *entity.User, sessionEnt *entity.UserSession) (*entity.UserSession, error) {
+	// Try to find matching session by set of params, if it wasn't found - create new one
+	// or update otherwise
+	session, err := s.sessionsRepo.GetByParamsMatch(ctx, sessionEnt.IP, sessionEnt.DeviceInfo, user.ID)
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			session, err = s.sessionsRepo.Insert(ctx, sessionEnt)
+			if err != nil {
+				return nil, err
+			}
+			return session, nil
+		}
+		return nil, err
+	}
+	// activate session back if it was deactivated and update it's token
+	return s.sessionsRepo.UpdateById(
+		ctx,
+		session.ID,
+		&schemas.SessionUpdatePayload{
+			DeactivatedAt: &time.Time{},
+			LastSeenAt:    time.Now(),
+			AccessToken:   session.AccessToken,
+		},
+	)
 }
 
 func (s *AuthService) SignUp(
@@ -86,7 +115,13 @@ func (s *AuthService) SignUp(
 		return "", nil, err
 	}
 	user, err := s.usersRepo.Insert(
-		ctx, &entity.User{FirstName: dto.FirstName, LastName: dto.LastName, Email: dto.Email, Password: hashedPassword},
+		ctx,
+		&entity.User{
+			FirstName: dto.FirstName,
+			LastName:  dto.LastName,
+			Email:     dto.Email,
+			Password:  hashedPassword,
+		},
 	)
 	if err != nil {
 		if errors.Is(err, storage.ErrAlreadyExists) {
@@ -188,7 +223,10 @@ func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (*a
 				return nil, err
 			}
 		case entity.TWO_FA_TOTP_APP:
-			return &authInfo{User: user, Token: &signInToken{Val: otpCode, Typ: SignInConfTokenType}}, nil
+			return &authInfo{
+				User:  user,
+				Token: &signInToken{Val: otpCode, Typ: SignInConfTokenType},
+			}, nil
 		default:
 			return nil, ErrUnsupported2FAMethod
 		}
@@ -202,31 +240,21 @@ func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (*a
 	if err != nil {
 		return nil, err
 	}
-	// Try to find matching session by set of params, if it wasn't found - create new one
-	// or update otherwise
-	session, err := s.sessionsRepo.GetByParamsMatch(ctx, dto.ClientIP, dto.DeviceInfo)
-	if err != nil {
-		if errors.Is(err, storage.ErrNotFound) {
-			session, err = s.sessionsRepo.Insert(ctx, &entity.UserSession{
-				UserId:      user.ID,
-				DeviceInfo:  dto.DeviceInfo,
-				IP:          dto.ClientIP,
-				Location:    userLocation,
-				AccessToken: token,
-			})
-			if err != nil {
-				return nil, err
-			}
-			return &authInfo{User: user, Session: session, Token: &signInToken{Val: token, Typ: AuthTokenType}}, nil
-		}
-		return nil, err
-	}
-	// activate session back if it was deactivated and update it's token
-	session, err = s.sessionsRepo.UpdateById(ctx, session.ID, &schemas.SessionUpdatePayload{DeactivatedAt: &time.Time{}, LastSeenAt: time.Now(), AccessToken: token})
+	session, err := s.createOrUpdateSession(ctx, user, &entity.UserSession{
+		UserId:      user.ID,
+		DeviceInfo:  dto.DeviceInfo,
+		IP:          dto.ClientIP,
+		Location:    userLocation,
+		AccessToken: token,
+	})
 	if err != nil {
 		return nil, err
 	}
-	return &authInfo{User: user, Session: session, Token: &signInToken{Val: token, Typ: AuthTokenType}}, nil
+	return &authInfo{
+		User:    user,
+		Session: session,
+		Token:   &signInToken{Val: token, Typ: AuthTokenType},
+	}, nil
 }
 
 func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchema) (string, error) {
@@ -277,6 +305,20 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 	if err != nil {
 		return "", err
 	}
+	userLocation, err := s.geoIPApi.GetLocationByIP(dto.ClientIP)
+	if err != nil {
+		return "", err
+	}
+	_, err = s.createOrUpdateSession(ctx, user, &entity.UserSession{
+		UserId:      user.ID,
+		DeviceInfo:  dto.DeviceInfo,
+		IP:          dto.ClientIP,
+		Location:    userLocation,
+		AccessToken: token,
+	})
+	if err != nil {
+		return "", err
+	}
 	return token, nil
 }
 
@@ -294,7 +336,10 @@ func (s *AuthService) DeactivateAccount(ctx context.Context, userId int) error {
 	return nil
 }
 
-func (s *AuthService) GetActiveSessions(ctx context.Context, authToken string) ([]entity.UserSession, error) {
+func (s *AuthService) GetActiveSessions(
+	ctx context.Context,
+	authToken string,
+) ([]entity.UserSession, error) {
 	var sessions []entity.UserSession
 	tokenPayload, err := s.authTokenProvider.ParseClaimsFromToken(authToken)
 	if err != nil {
@@ -319,7 +364,10 @@ func (s *AuthService) DeactivateSession(ctx context.Context, userId int, session
 	return nil
 }
 
-func (s *AuthService) PingSession(ctx context.Context, authToken string) (*entity.UserSession, error) {
+func (s *AuthService) PingSession(
+	ctx context.Context,
+	authToken string,
+) (*entity.UserSession, error) {
 	session, err := s.sessionsRepo.GetByToken(ctx, authToken)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {

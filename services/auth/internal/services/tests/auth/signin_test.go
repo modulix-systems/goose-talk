@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/modulix-systems/goose-talk/internal/entity"
@@ -13,7 +12,6 @@ import (
 	"github.com/modulix-systems/goose-talk/internal/services/auth"
 	"github.com/modulix-systems/goose-talk/tests/suite/helpers"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -26,11 +24,19 @@ func mockSignInPayload() *schemas.SignInSchema {
 	}
 }
 
-func setSignInWith2FAExpectations(ctx context.Context, authSuite *AuthTestSuite, dto *schemas.SignInSchema, mockUser *entity.User, plainOTPCode string) {
+func setSignInWith2FAExpectations(
+	ctx context.Context,
+	authSuite *AuthTestSuite,
+	dto *schemas.SignInSchema,
+	mockUser *entity.User,
+	plainOTPCode string,
+) {
 	hashedOTPCode := []byte(plainOTPCode)
 	mockOTP := &entity.OTP{Code: hashedOTPCode, UserEmail: mockUser.Email}
 	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
-	authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockUser.Password, dto.Password).Return(true, nil)
+	authSuite.mockSecurityProvider.EXPECT().
+		ComparePasswords(mockUser.Password, dto.Password).
+		Return(true, nil)
 	authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode().Return(plainOTPCode)
 	authSuite.mockSecurityProvider.EXPECT().HashPassword(plainOTPCode).Return(hashedOTPCode, nil)
 	authSuite.mockCodeRepo.EXPECT().InsertOrUpdateCode(ctx, mockOTP).Return(nil)
@@ -75,35 +81,14 @@ func TestSignInSuccessNo2FA(t *testing.T) {
 			if !tc.twoFAIncluded {
 				mockUser.TwoFactorAuth = nil
 			}
-			mockLocation := gofakeit.City()
-			mockSession := helpers.MockUserSession(true)
+			mockSession := helpers.MockUserSession(gofakeit.Bool())
 			mockSession.UserId = mockUser.ID
+			mockSession.AccessToken = expectedToken
 			authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
-			authSuite.mockGeoIPApi.EXPECT().GetLocationByIP(dto.ClientIP).Return(mockLocation, nil)
-			if tc.sessionExists {
-				authSuite.mockSessionsRepo.EXPECT().GetByParamsMatch(ctx, dto.ClientIP, dto.DeviceInfo).Return(mockSession, nil)
-				authSuite.mockSessionsRepo.EXPECT().UpdateById(
-					ctx, mockSession.ID,
-					gomock.Any()).
-					DoAndReturn(func(ctx context.Context, sessionId int, payload *schemas.SessionUpdatePayload) (*entity.UserSession, error) {
-						require.NotNil(t, payload)
-						assert.NotNil(t, payload.DeactivatedAt)
-						assert.Equal(t, *payload.DeactivatedAt, time.Time{})
-						assert.WithinDuration(t, time.Now(), payload.LastSeenAt, time.Second)
-						assert.Equal(t, payload.AccessToken, expectedToken)
-						return mockSession, nil
-					})
-			} else {
-				authSuite.mockSessionsRepo.EXPECT().GetByParamsMatch(ctx, dto.ClientIP, dto.DeviceInfo).Return(nil, storage.ErrNotFound)
-				authSuite.mockSessionsRepo.EXPECT().Insert(ctx, &entity.UserSession{
-					UserId:      mockUser.ID,
-					DeviceInfo:  dto.DeviceInfo,
-					IP:          dto.ClientIP,
-					Location:    mockLocation,
-					AccessToken: expectedToken,
-				}).Return(mockSession, nil)
-			}
-			authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockUser.Password, dto.Password).Return(true, nil)
+			setAuthSessionExpectations(t, ctx, authSuite, mockUser.ID, mockSession, tc.sessionExists, dto.DeviceInfo, dto.ClientIP, expectedToken)
+			authSuite.mockSecurityProvider.EXPECT().
+				ComparePasswords(mockUser.Password, dto.Password).
+				Return(true, nil)
 			authSuite.mockAuthTokenProvider.EXPECT().
 				NewToken(authSuite.tokenTTL, map[string]any{"uid": mockUser.ID}).
 				Return(expectedToken, nil)
@@ -149,7 +134,9 @@ func TestSignInSuccess2FAByContactEmail(t *testing.T) {
 	mockUser.TwoFactorAuth.Enabled = true
 	mockUser.TwoFactorAuth.DeliveryMethod = entity.TWO_FA_EMAIL
 	setSignInWith2FAExpectations(ctx, authSuite, dto, mockUser, plainOTPCode)
-	authSuite.mockMailSender.EXPECT().Send2FAEmail(ctx, mockUser.TwoFactorAuth.Contact, plainOTPCode).Return(nil)
+	authSuite.mockMailSender.EXPECT().
+		Send2FAEmail(ctx, mockUser.TwoFactorAuth.Contact, plainOTPCode).
+		Return(nil)
 
 	authInfo, err := authSuite.service.SignIn(ctx, dto)
 
@@ -168,7 +155,9 @@ func TestSignInSuccess2FAByContactTG(t *testing.T) {
 	mockUser.TwoFactorAuth.Enabled = true
 	mockUser.TwoFactorAuth.DeliveryMethod = entity.TWO_FA_TELEGRAM
 	setSignInWith2FAExpectations(ctx, authSuite, dto, mockUser, plainOTPCode)
-	authSuite.mockTgAPI.EXPECT().SendTextMsg(ctx, mockUser.TwoFactorAuth.Contact, fmt.Sprintf("Authorization code: %s", plainOTPCode)).Return(nil)
+	authSuite.mockTgAPI.EXPECT().
+		SendTextMsg(ctx, mockUser.TwoFactorAuth.Contact, fmt.Sprintf("Authorization code: %s", plainOTPCode)).
+		Return(nil)
 
 	authInfo, err := authSuite.service.SignIn(ctx, dto)
 
@@ -250,7 +239,9 @@ func TestSignInInvalidPassword(t *testing.T) {
 	dto := mockSignInPayload()
 	mockUser := helpers.MockUser()
 	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
-	authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockUser.Password, dto.Password).Return(false, nil)
+	authSuite.mockSecurityProvider.EXPECT().
+		ComparePasswords(mockUser.Password, dto.Password).
+		Return(false, nil)
 
 	authInfo, err := authSuite.service.SignIn(ctx, dto)
 

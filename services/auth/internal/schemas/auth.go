@@ -27,9 +27,11 @@ type (
 		ClientIP   string
 	}
 	Verify2FASchema struct {
-		TwoFATyp entity.TwoFADeliveryMethod
-		Email    string
-		Code     string
+		DeviceInfo string
+		ClientIP   string
+		TwoFATyp   entity.TwoFADeliveryMethod
+		Email      string
+		Code       string
 		// SignInConfToken must be present only if TOTP 2fa type is used
 		SignInConfToken string
 	}

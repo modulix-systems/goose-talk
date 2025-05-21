@@ -1,11 +1,19 @@
 package auth_test
 
 import (
+	"context"
+	"testing"
 	"time"
 
+	"github.com/brianvoe/gofakeit/v7"
+	"github.com/modulix-systems/goose-talk/internal/entity"
+	"github.com/modulix-systems/goose-talk/internal/gateways/storage"
+	"github.com/modulix-systems/goose-talk/internal/schemas"
 	"github.com/modulix-systems/goose-talk/internal/services/auth"
 	"github.com/modulix-systems/goose-talk/tests/mocks"
 	"github.com/modulix-systems/goose-talk/tests/suite/helpers"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -56,4 +64,36 @@ func NewAuthTestSuite(ctrl *gomock.Controller) *AuthTestSuite {
 		service:               service,
 		mockGeoIPApi:          mockGeoIPApi,
 	}
+}
+
+func setAuthSessionExpectations(t *testing.T, ctx context.Context, authSuite *AuthTestSuite, userId int, mockSession *entity.UserSession, sessionExists bool, deviceInfo string, ip string, authToken string) {
+	t.Helper()
+	mockLocation := gofakeit.City()
+	authSuite.mockGeoIPApi.EXPECT().GetLocationByIP(ip).Return(mockLocation, nil)
+	if sessionExists {
+		authSuite.mockSessionsRepo.EXPECT().
+			GetByParamsMatch(ctx, ip, deviceInfo, userId).
+			Return(mockSession, nil)
+		authSuite.mockSessionsRepo.EXPECT().UpdateById(
+			ctx, mockSession.ID,
+			gomock.Any()).
+			DoAndReturn(func(ctx context.Context, sessionId int, payload *schemas.SessionUpdatePayload) (*entity.UserSession, error) {
+				require.NotNil(t, payload)
+				assert.NotNil(t, payload.DeactivatedAt)
+				assert.Equal(t, *payload.DeactivatedAt, time.Time{})
+				assert.WithinDuration(t, time.Now(), payload.LastSeenAt, time.Second)
+				assert.Equal(t, authToken, payload.AccessToken)
+				return mockSession, nil
+			})
+	} else {
+		authSuite.mockSessionsRepo.EXPECT().GetByParamsMatch(ctx, ip, deviceInfo, userId).Return(nil, storage.ErrNotFound)
+		authSuite.mockSessionsRepo.EXPECT().Insert(ctx, &entity.UserSession{
+			UserId:      userId,
+			DeviceInfo:  deviceInfo,
+			IP:          ip,
+			Location:    mockLocation,
+			AccessToken: authToken,
+		}).Return(mockSession, nil)
+	}
+
 }

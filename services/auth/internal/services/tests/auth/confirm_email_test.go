@@ -21,7 +21,9 @@ func TestConfirmEmailSuccess(t *testing.T) {
 	ctx := context.Background()
 	authSuite.mockUsersRepo.EXPECT().CheckExistsWithEmail(ctx, mockEmail).Return(false, nil)
 	authSuite.mockCodeRepo.EXPECT().InsertOrUpdateCode(ctx, mockOTP).Return(nil)
-	authSuite.mockMailSender.EXPECT().SendSignUpConfirmationEmail(ctx, mockEmail, plainOTPCode).Return(nil)
+	authSuite.mockMailSender.EXPECT().
+		SendSignUpConfirmationEmail(ctx, mockEmail, plainOTPCode).
+		Return(nil)
 	authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode().Return(plainOTPCode)
 	authSuite.mockSecurityProvider.EXPECT().HashPassword(plainOTPCode).Return(hashedOTPCode, nil)
 
@@ -52,7 +54,9 @@ func TestConfirmEmailCodeAlreadyExists(t *testing.T) {
 	authSuite.mockSecurityProvider.EXPECT().HashPassword(otpCode).Return(mockOTP.Code, nil)
 	authSuite.mockUsersRepo.EXPECT().CheckExistsWithEmail(ctx, mockEmail).Return(false, nil)
 	authSuite.mockCodeRepo.EXPECT().InsertOrUpdateCode(ctx, mockOTP).Return(nil)
-	authSuite.mockMailSender.EXPECT().SendSignUpConfirmationEmail(ctx, mockEmail, otpCode).Return(nil)
+	authSuite.mockMailSender.EXPECT().
+		SendSignUpConfirmationEmail(ctx, mockEmail, otpCode).
+		Return(nil)
 	authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode().Return(otpCode)
 
 	err := authSuite.service.ConfirmEmail(ctx, mockEmail)

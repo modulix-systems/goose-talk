@@ -17,7 +17,9 @@ func TestDeactivateAccSuccess(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
 	mockUser := helpers.MockUser()
-	authSuite.mockUsersRepo.EXPECT().UpdateIsActiveById(ctx, mockUser.ID, false).Return(mockUser, nil)
+	authSuite.mockUsersRepo.EXPECT().
+		UpdateIsActiveById(ctx, mockUser.ID, false).
+		Return(mockUser, nil)
 	authSuite.mockMailSender.EXPECT().SendAccDeactivationEmail(ctx, mockUser.Email).Return(nil)
 
 	err := authSuite.service.DeactivateAccount(ctx, mockUser.ID)
@@ -30,7 +32,9 @@ func TestDeactivateAccUserNotFound(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
 	userId := gofakeit.Number(1, 100)
-	authSuite.mockUsersRepo.EXPECT().UpdateIsActiveById(ctx, userId, false).Return(nil, storage.ErrNotFound)
+	authSuite.mockUsersRepo.EXPECT().
+		UpdateIsActiveById(ctx, userId, false).
+		Return(nil, storage.ErrNotFound)
 
 	err := authSuite.service.DeactivateAccount(ctx, userId)
 

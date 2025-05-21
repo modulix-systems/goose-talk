@@ -14,8 +14,8 @@ type (
 		LastName      string
 		PhotoUrl      string
 		Friends       []User
-		CreatedAt     time.Time `db:"created_at" json:"created_at"`
-		UpdatedAt     time.Time `db:"updated_at" json:"updated_at"`
+		CreatedAt     time.Time `json:"created_at" db:"created_at"`
+		UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
 		LastSeenAt    time.Time
 		IsActive      bool
 		BirthDate     time.Time

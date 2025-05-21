@@ -17,9 +17,11 @@ import (
 
 func mockVerify2FAPayload(twoFaTyp entity.TwoFADeliveryMethod) *schemas.Verify2FASchema {
 	schema := &schemas.Verify2FASchema{
-		TwoFATyp: twoFaTyp,
-		Code:     "123456",
-		Email:    gofakeit.Email(),
+		TwoFATyp:   twoFaTyp,
+		Code:       "123456",
+		Email:      gofakeit.Email(),
+		ClientIP:   gofakeit.IPv4Address(),
+		DeviceInfo: gofakeit.UserAgent(),
 	}
 	if twoFaTyp == entity.TWO_FA_TOTP_APP {
 		schema.SignInConfToken = "456789"
@@ -32,22 +34,50 @@ func TestVerify2FASuccess(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 
 	ctx := context.Background()
-	for _, twoFaTyp := range entity.OtpDeliveryMethods {
-		name := "2FA over " + twoFaTyp.String()
-		t.Run(name, func(t *testing.T) {
-			dto := mockVerify2FAPayload(twoFaTyp)
+	testCases := []struct {
+		name          string
+		twoFaTyp      entity.TwoFADeliveryMethod
+		sessionExists bool
+	}{
+		{
+			name:          "2FA over " + entity.TWO_FA_EMAIL.String(),
+			twoFaTyp:      entity.TWO_FA_EMAIL,
+			sessionExists: gofakeit.Bool(),
+		},
+		{
+			name:          "2FA over " + entity.TWO_FA_TELEGRAM.String(),
+			twoFaTyp:      entity.TWO_FA_TELEGRAM,
+			sessionExists: gofakeit.Bool(),
+		},
+		{
+			name:          "2FA over " + entity.TWO_FA_TOTP_APP.String(),
+			twoFaTyp:      entity.TWO_FA_TOTP_APP,
+			sessionExists: gofakeit.Bool(),
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			dto := mockVerify2FAPayload(tc.twoFaTyp)
 			expectedAuthToken := "authtoken"
 			mockOTP := helpers.MockOTP()
 			mockOTP.UserEmail = dto.Email
 			mockUser := helpers.MockUser()
 			mockUser.TwoFactorAuth.Enabled = true
+			mockSession := helpers.MockUserSession(gofakeit.Bool())
+			mockSession.UserId = mockUser.ID
+			mockSession.AccessToken = expectedAuthToken
 			authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(mockOTP, nil)
 			otpToCompare := dto.Code
-			if twoFaTyp == entity.TWO_FA_TOTP_APP {
+			if tc.twoFaTyp == entity.TWO_FA_TOTP_APP {
 				otpToCompare = dto.SignInConfToken
-				authSuite.mockSecurityProvider.EXPECT().ValidateTOTP(dto.Code, mockUser.TwoFactorAuth.TotpSecret).Return(true)
+				authSuite.mockSecurityProvider.EXPECT().
+					ValidateTOTP(dto.Code, mockUser.TwoFactorAuth.TotpSecret).
+					Return(true)
 			}
-			authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockOTP.Code, otpToCompare).Return(true, nil)
+			authSuite.mockSecurityProvider.EXPECT().
+				ComparePasswords(mockOTP.Code, otpToCompare).
+				Return(true, nil)
+			setAuthSessionExpectations(t, ctx, authSuite, mockUser.ID, mockSession, tc.sessionExists, dto.DeviceInfo, dto.ClientIP, expectedAuthToken)
 			authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Email).Return(mockUser, nil)
 			authSuite.mockAuthTokenProvider.EXPECT().
 				NewToken(authSuite.tokenTTL, map[string]any{"uid": mockUser.ID}).
@@ -67,7 +97,9 @@ func TestVerify2FAOtpNotFound(t *testing.T) {
 		name := "2FA over " + twoFaTyp.String()
 		t.Run(name, func(t *testing.T) {
 			dto := mockVerify2FAPayload(twoFaTyp)
-			authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(nil, storage.ErrNotFound)
+			authSuite.mockCodeRepo.EXPECT().
+				GetByEmail(ctx, dto.Email).
+				Return(nil, storage.ErrNotFound)
 
 			authToken, err := authSuite.service.Verify2FA(ctx, dto)
 			assert.ErrorIs(t, err, auth.ErrInvalidOtp)
@@ -91,7 +123,9 @@ func TestVerify2FAInvalidOTP(t *testing.T) {
 			if twoFaTyp == entity.TWO_FA_TOTP_APP {
 				otpToCompare = dto.SignInConfToken
 			}
-			authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockOTP.Code, otpToCompare).Return(false, nil)
+			authSuite.mockSecurityProvider.EXPECT().
+				ComparePasswords(mockOTP.Code, otpToCompare).
+				Return(false, nil)
 
 			authToken, err := authSuite.service.Verify2FA(ctx, dto)
 			assert.ErrorIs(t, err, auth.ErrInvalidOtp)
@@ -117,7 +151,9 @@ func TestVerify2FADisabled(t *testing.T) {
 				otpToCompare = dto.SignInConfToken
 			}
 			authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(mockOTP, nil)
-			authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockOTP.Code, otpToCompare).Return(true, nil)
+			authSuite.mockSecurityProvider.EXPECT().
+				ComparePasswords(mockOTP.Code, otpToCompare).
+				Return(true, nil)
 			authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Email).Return(mockUser, nil)
 
 			authToken, err := authSuite.service.Verify2FA(ctx, dto)
@@ -136,9 +172,13 @@ func TestVerify2FATotpAppInvalidTOTP(t *testing.T) {
 	mockUser.TwoFactorAuth.Enabled = true
 	dto := mockVerify2FAPayload(entity.TWO_FA_TOTP_APP)
 	authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(mockOTP, nil)
-	authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockOTP.Code, dto.SignInConfToken).Return(true, nil)
+	authSuite.mockSecurityProvider.EXPECT().
+		ComparePasswords(mockOTP.Code, dto.SignInConfToken).
+		Return(true, nil)
 	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Email).Return(mockUser, nil)
-	authSuite.mockSecurityProvider.EXPECT().ValidateTOTP(dto.Code, mockUser.TwoFactorAuth.TotpSecret).Return(false)
+	authSuite.mockSecurityProvider.EXPECT().
+		ValidateTOTP(dto.Code, mockUser.TwoFactorAuth.TotpSecret).
+		Return(false)
 
 	authToken, err := authSuite.service.Verify2FA(ctx, dto)
 	assert.ErrorIs(t, err, auth.ErrInvalidOrExpiredTOTP)
@@ -178,8 +218,12 @@ func TestVerify2FAUserNotFound(t *testing.T) {
 			if twoFaTyp == entity.TWO_FA_TOTP_APP {
 				otpToCompare = dto.SignInConfToken
 			}
-			authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockOTP.Code, otpToCompare).Return(true, nil)
-			authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Email).Return(nil, storage.ErrNotFound)
+			authSuite.mockSecurityProvider.EXPECT().
+				ComparePasswords(mockOTP.Code, otpToCompare).
+				Return(true, nil)
+			authSuite.mockUsersRepo.EXPECT().
+				GetByLogin(ctx, dto.Email).
+				Return(nil, storage.ErrNotFound)
 			authSuite.mockCodeRepo.EXPECT().DeleteByEmail(ctx, dto.Email).Return(nil)
 
 			authToken, err := authSuite.service.Verify2FA(ctx, dto)
@@ -206,7 +250,9 @@ func TestVerify2FAUserNotActive(t *testing.T) {
 			if twoFaTyp == entity.TWO_FA_TOTP_APP {
 				otpToCompare = dto.SignInConfToken
 			}
-			authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockOTP.Code, otpToCompare).Return(true, nil)
+			authSuite.mockSecurityProvider.EXPECT().
+				ComparePasswords(mockOTP.Code, otpToCompare).
+				Return(true, nil)
 			authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Email).Return(mockUser, nil)
 
 			authToken, err := authSuite.service.Verify2FA(ctx, dto)

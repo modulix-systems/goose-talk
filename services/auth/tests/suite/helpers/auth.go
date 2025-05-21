@@ -16,12 +16,15 @@ func MockUser() *entity.User {
 		CreatedAt:  gofakeit.Date(),
 		UpdatedAt:  gofakeit.Date(),
 		LastSeenAt: gofakeit.Date(),
-		BirthDate:  gofakeit.DateRange(time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC), time.Now().AddDate(-18, 0, 0)),
-		PhotoUrl:   gofakeit.URL(),
-		AboutMe:    gofakeit.Sentence(10),
-		IsActive:   true,
-		Email:      gofakeit.Email(),
-		Password:   []byte(RandomPassword()),
+		BirthDate: gofakeit.DateRange(
+			time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC),
+			time.Now().AddDate(-18, 0, 0),
+		),
+		PhotoUrl: gofakeit.URL(),
+		AboutMe:  gofakeit.Sentence(10),
+		IsActive: true,
+		Email:    gofakeit.Email(),
+		Password: []byte(RandomPassword()),
 		TwoFactorAuth: &entity.TwoFactorAuth{
 			DeliveryMethod: RandomChoose(
 				entity.TWO_FA_TELEGRAM, entity.TWO_FA_EMAIL,

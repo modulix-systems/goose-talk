@@ -31,7 +31,9 @@ func TestPingSessionSuccess(t *testing.T) {
 		assert.NoError(t, err)
 	}
 	t.Run("success with valid token", func(t *testing.T) {
-		authSuite.mockAuthTokenProvider.EXPECT().ParseClaimsFromToken(mockToken).Return(map[string]any{"uid": "123"}, nil)
+		authSuite.mockAuthTokenProvider.EXPECT().
+			ParseClaimsFromToken(mockToken).
+			Return(map[string]any{"uid": "123"}, nil)
 		authSuite.mockSessionsRepo.EXPECT().GetByToken(ctx, mockToken).Return(mockSession, nil)
 		authSuite.mockSessionsRepo.EXPECT().UpdateById(
 			ctx, mockSession.ID, gomock.Any()).
@@ -44,7 +46,9 @@ func TestPingSessionSuccess(t *testing.T) {
 		actAndAssert()
 	})
 	t.Run("success with expired token", func(t *testing.T) {
-		authSuite.mockAuthTokenProvider.EXPECT().ParseClaimsFromToken(mockToken).Return(nil, gateways.ErrExpiredToken)
+		authSuite.mockAuthTokenProvider.EXPECT().
+			ParseClaimsFromToken(mockToken).
+			Return(nil, gateways.ErrExpiredToken)
 		authSuite.mockSessionsRepo.EXPECT().GetByToken(ctx, mockToken).Return(mockSession, nil)
 		authSuite.mockSessionsRepo.EXPECT().UpdateById(
 			ctx, mockSession.ID, gomock.Any()).
