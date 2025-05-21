@@ -41,13 +41,14 @@ type (
 	}
 	// TwoFactorAuth entity representing 2FA auth
 	TwoFactorAuth struct {
+		// user can have only one related 2fa entity
 		UserId         int
 		DeliveryMethod TwoFADeliveryMethod
-		// could be whether user's telegram, email address or phone number
-		// depending on DeliveryMethod.
+		// could be whether user's telegram, email address, etc
+		// or even optional (if required info is already present in user'entity) depending on DeliveryMethod.
 		// The field can be optional e.g for email because it can be taken from user's acc
 		Contact string
-		// base32 encoded secret key required for otp generation
+		// secret key required for otp generation if TOTP delivery method is used
 		TotpSecret string
 		// indicates whether user has 2fa enabled. By default false
 		Enabled bool

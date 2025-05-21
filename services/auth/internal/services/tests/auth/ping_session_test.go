@@ -63,25 +63,6 @@ func TestPingSessionSuccess(t *testing.T) {
 	})
 }
 
-// func TestPingSessionSuccessExpiredToken(t *testing.T) {
-// 	ctrl := gomock.NewController(t)
-// 	authSuite := NewAuthTestSuite(ctrl)
-// 	ctx := context.Background()
-// 	mockToken := gofakeit.UUID()
-// 	mockSession := helpers.MockUserSession(true)
-// 	mockSession.AccessToken = mockToken
-// 	authSuite.mockAuthTokenProvider.EXPECT().ParseClaimsFromToken(mockToken).Return(nil, gateways.ErrExpiredToken)
-// 	authSuite.mockSessionsRepo.EXPECT().GetByToken(ctx, mockToken).Return(mockSession, nil)
-// 	authSuite.mockSessionsRepo.EXPECT().UpdateById(
-// 		ctx, mockSession.ID, &schemas.SessionUpdatePayload{DeactivatedAt: time.Now()}).
-// 		Return(mockSession, nil)
-//
-// 	session, err := authSuite.service.PingSession(ctx, mockToken)
-// 	require.NotNil(t, session)
-// 	assert.Equal(t, session.ID, mockSession.ID)
-// 	assert.NoError(t, err)
-// }
-
 func TestPingSessionNotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)

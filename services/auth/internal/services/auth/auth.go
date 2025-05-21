@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/modulix-systems/goose-talk/internal/entity"
@@ -320,6 +321,75 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 		return "", err
 	}
 	return token, nil
+}
+
+// func (s *AuthService) Confirm2FA(ctx context.Context, dto *schemas.Confirm2FASchema) (*entity.TwoFactorAuth, error)
+
+func (s *AuthService) tgSendOtpOnMsg(otpCode string, msgCode string) {
+	ctx := context.Background()
+	startTime := time.Now()
+	attemptsLeft := 100
+	for attemptsLeft > 0 {
+		msg, err := s.tgApi.GetLatestMsg(ctx)
+		if err != nil {
+			return
+		}
+		if msg.DateSent.After(startTime) {
+			msgParts := strings.Split(msg.Text, " ")
+			if len(msgParts) > 1 && msgParts[1] == msgCode {
+				s.tgApi.SendTextMsg(ctx, msg.ChatId, fmt.Sprintf("Authorization code: %s", otpCode))
+			}
+		}
+		time.Sleep(time.Second)
+		attemptsLeft--
+	}
+}
+
+type TwoFAConnectInfo struct {
+	Link       string
+	TotpSecret string
+}
+
+func (s *AuthService) Add2FA(ctx context.Context, dto *schemas.Add2FASchema) (*TwoFAConnectInfo, error) {
+	targetEmail := dto.UserEmail
+	user, err := s.usersRepo.GetByLogin(ctx, targetEmail)
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return nil, ErrUserNotFound
+		}
+		return nil, err
+	}
+	if user.TwoFactorAuth != nil {
+		return nil, Err2FaAlreadyAdded
+	}
+	switch dto.Typ {
+	case entity.TWO_FA_EMAIL:
+		if dto.Contact != "" {
+			targetEmail = dto.Contact
+		}
+		otpCode, err := s.createOTP(ctx, targetEmail)
+		if err != nil {
+			return nil, err
+		}
+		if err = s.notificationsServive.Send2FAEmail(ctx, targetEmail, otpCode); err != nil {
+			return nil, err
+		}
+		return nil, nil
+	case entity.TWO_FA_TELEGRAM:
+		otpCode, err := s.createOTP(ctx, targetEmail)
+		if err != nil {
+			return nil, err
+		}
+		tgMsgCode := s.securityProvider.GenerateOTPCode()
+		link := s.tgApi.GetStartLinkWithCode(tgMsgCode)
+		go s.tgSendOtpOnMsg(otpCode, tgMsgCode)
+		return &TwoFAConnectInfo{Link: link}, nil
+	case entity.TWO_FA_TOTP_APP:
+		link, secret := s.securityProvider.GenerateTOTPEnrollUrlWithSecret(targetEmail)
+		return &TwoFAConnectInfo{Link: link, TotpSecret: secret}, nil
+	default:
+		return nil, ErrUnsupported2FAMethod
+	}
 }
 
 func (s *AuthService) DeactivateAccount(ctx context.Context, userId int) error {

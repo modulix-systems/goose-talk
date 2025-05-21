@@ -15,6 +15,7 @@ import (
 	time "time"
 
 	entity "github.com/modulix-systems/goose-talk/internal/entity"
+	gateways "github.com/modulix-systems/goose-talk/internal/gateways"
 	schemas "github.com/modulix-systems/goose-talk/internal/schemas"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -404,18 +405,19 @@ func (mr *MockSecurityProviderMockRecorder) GenerateOTPCode() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateOTPCode", reflect.TypeOf((*MockSecurityProvider)(nil).GenerateOTPCode))
 }
 
-// GenerateTOTP mocks base method.
-func (m *MockSecurityProvider) GenerateTOTP(secret string) string {
+// GenerateTOTPEnrollUrlWithSecret mocks base method.
+func (m *MockSecurityProvider) GenerateTOTPEnrollUrlWithSecret(accName string) (string, string) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GenerateTOTP", secret)
+	ret := m.ctrl.Call(m, "GenerateTOTPEnrollUrlWithSecret", accName)
 	ret0, _ := ret[0].(string)
-	return ret0
+	ret1, _ := ret[1].(string)
+	return ret0, ret1
 }
 
-// GenerateTOTP indicates an expected call of GenerateTOTP.
-func (mr *MockSecurityProviderMockRecorder) GenerateTOTP(secret any) *gomock.Call {
+// GenerateTOTPEnrollUrlWithSecret indicates an expected call of GenerateTOTPEnrollUrlWithSecret.
+func (mr *MockSecurityProviderMockRecorder) GenerateTOTPEnrollUrlWithSecret(accName any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateTOTP", reflect.TypeOf((*MockSecurityProvider)(nil).GenerateTOTP), secret)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateTOTPEnrollUrlWithSecret", reflect.TypeOf((*MockSecurityProvider)(nil).GenerateTOTPEnrollUrlWithSecret), accName)
 }
 
 // HashPassword mocks base method.
@@ -549,6 +551,35 @@ func NewMockTelegramBotAPI(ctrl *gomock.Controller) *MockTelegramBotAPI {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockTelegramBotAPI) EXPECT() *MockTelegramBotAPIMockRecorder {
 	return m.recorder
+}
+
+// GetLatestMsg mocks base method.
+func (m *MockTelegramBotAPI) GetLatestMsg(ctx context.Context) (*gateways.TelegramMsg, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLatestMsg", ctx)
+	ret0, _ := ret[0].(*gateways.TelegramMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLatestMsg indicates an expected call of GetLatestMsg.
+func (mr *MockTelegramBotAPIMockRecorder) GetLatestMsg(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestMsg", reflect.TypeOf((*MockTelegramBotAPI)(nil).GetLatestMsg), ctx)
+}
+
+// GetStartLinkWithCode mocks base method.
+func (m *MockTelegramBotAPI) GetStartLinkWithCode(code string) string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetStartLinkWithCode", code)
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetStartLinkWithCode indicates an expected call of GetStartLinkWithCode.
+func (mr *MockTelegramBotAPIMockRecorder) GetStartLinkWithCode(code any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStartLinkWithCode", reflect.TypeOf((*MockTelegramBotAPI)(nil).GetStartLinkWithCode), code)
 }
 
 // SendTextMsg mocks base method.

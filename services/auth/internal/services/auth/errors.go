@@ -19,6 +19,7 @@ var (
 	ErrUnsupported2FAMethod = errors.New(
 		"Two factor authentication method associated with your account is not supported. Please use another one",
 	)
+	Err2FaAlreadyAdded = errors.New("Two factor authentication is already associated with your account.")
 	ErrDisabledAccount = errors.New(
 		"Your account is disabled. Try to contact support to resolve this issue",
 	)

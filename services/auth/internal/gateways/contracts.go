@@ -60,7 +60,7 @@ type (
 	}
 	SecurityProvider interface {
 		GenerateOTPCode() string
-		GenerateTOTP(secret string) string
+		GenerateTOTPEnrollUrlWithSecret(accName string) (string, string)
 		ValidateTOTP(code string, secret string) bool
 		HashPassword(password string) ([]byte, error)
 		ComparePasswords(hashed []byte, plain string) (bool, error)
@@ -71,8 +71,15 @@ type (
 		Send2FAEmail(ctx context.Context, to string, otp string) error
 		SendAccDeactivationEmail(ctx context.Context, to string) error
 	}
+	TelegramMsg struct {
+		DateSent time.Time
+		Text     string
+		ChatId   string
+	}
 	TelegramBotAPI interface {
 		SendTextMsg(ctx context.Context, chatId string, text string) error
+		GetStartLinkWithCode(code string) string
+		GetLatestMsg(ctx context.Context) (*TelegramMsg, error)
 	}
 	GeoIPApi interface {
 		GetLocationByIP(ip string) (string, error)

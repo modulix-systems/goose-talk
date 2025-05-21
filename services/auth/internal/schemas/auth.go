@@ -40,4 +40,15 @@ type (
 		DeactivatedAt *time.Time
 		LastSeenAt    time.Time
 	}
+	Add2FASchema struct {
+		UserEmail string
+		Typ       entity.TwoFADeliveryMethod
+		Contact   string
+	}
+	Confirm2FASchema struct {
+		UserEmail        string
+		Typ              entity.TwoFADeliveryMethod
+		Contact          string
+		ConfirmationCode string
+	}
 )
