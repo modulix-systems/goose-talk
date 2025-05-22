@@ -32,7 +32,7 @@ func MockUser() *entity.User {
 			),
 			Enabled:    gofakeit.Bool(),
 			Contact:    gofakeit.Email(),
-			TotpSecret: gofakeit.Sentence(3),
+			TotpSecret: []byte(gofakeit.Sentence(3)),
 		},
 	}
 }

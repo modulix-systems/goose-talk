@@ -51,7 +51,8 @@ type (
 		// The field can be optional e.g for email because it can be taken from user's acc
 		Contact string
 		// secret key required for otp generation if TOTP delivery method is used
-		TotpSecret string
+		// stored as encrypted set of bytes
+		TotpSecret []byte
 		// indicates whether user has 2fa enabled. By default false
 		Enabled bool
 	}

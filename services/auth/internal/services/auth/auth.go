@@ -308,7 +308,11 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 		return "", Err2FANotEnabled
 	}
 	if dto.TwoFATyp == entity.TWO_FA_TOTP_APP {
-		isValid := s.securityProvider.ValidateTOTP(dto.Code, user.TwoFactorAuth.TotpSecret)
+		decryptedSecret, err := s.securityProvider.DecryptSymmetric(user.TwoFactorAuth.TotpSecret)
+		if err != nil {
+			return "", err
+		}
+		isValid := s.securityProvider.ValidateTOTP(dto.Code, decryptedSecret)
 		if !isValid {
 			return "", ErrOTPInvalidOrExpired
 		}
@@ -335,11 +339,21 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 }
 
 func (s *AuthService) Confirm2FaAddition(ctx context.Context, dto *schemas.Confirm2FASchema) (*entity.TwoFactorAuth, error) {
+	ent := &entity.TwoFactorAuth{
+		UserId:         dto.UserId,
+		DeliveryMethod: dto.Typ,
+		Enabled:        true,
+	}
 	if dto.Typ == entity.TWO_FA_TOTP_APP {
 		isValid := s.securityProvider.ValidateTOTP(dto.ConfirmationCode, dto.TotpSecret)
 		if !isValid {
 			return nil, ErrOTPInvalidOrExpired
 		}
+		encryptedSecret, err := s.securityProvider.EncryptSymmetric(dto.TotpSecret)
+		if err != nil {
+			return nil, err
+		}
+		ent.TotpSecret = encryptedSecret
 	} else {
 		otp, err := s.otpRepo.GetByUserId(ctx, dto.UserId)
 		if err != nil {
@@ -358,12 +372,6 @@ func (s *AuthService) Confirm2FaAddition(ctx context.Context, dto *schemas.Confi
 		if !matched {
 			return nil, ErrOTPInvalidOrExpired
 		}
-	}
-	ent := &entity.TwoFactorAuth{
-		UserId:         dto.UserId,
-		DeliveryMethod: dto.Typ,
-		TotpSecret:     dto.TotpSecret,
-		Enabled:        true,
 	}
 	if dto.Typ == entity.TWO_FA_EMAIL || dto.Typ == entity.TWO_FA_SMS {
 		ent.Contact = dto.Contact

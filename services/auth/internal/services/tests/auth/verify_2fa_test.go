@@ -70,8 +70,11 @@ func TestVerify2FASuccess(t *testing.T) {
 			otpToCompare := dto.Code
 			if tc.twoFaTyp == entity.TWO_FA_TOTP_APP {
 				otpToCompare = dto.SignInConfToken
+				encryptedTotpSecret := mockUser.TwoFactorAuth.TotpSecret
+				plainTotpSecret := string(encryptedTotpSecret)
+				authSuite.mockSecurityProvider.EXPECT().DecryptSymmetric(encryptedTotpSecret).Return(plainTotpSecret, nil)
 				authSuite.mockSecurityProvider.EXPECT().
-					ValidateTOTP(dto.Code, mockUser.TwoFactorAuth.TotpSecret).
+					ValidateTOTP(dto.Code, plainTotpSecret).
 					Return(true)
 			}
 			authSuite.mockSecurityProvider.EXPECT().
@@ -176,8 +179,11 @@ func TestVerify2FATotpAppInvalidTOTP(t *testing.T) {
 		ComparePasswords(mockOTP.Code, dto.SignInConfToken).
 		Return(true, nil)
 	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Email).Return(mockUser, nil)
+	encryptedTotpSecret := mockUser.TwoFactorAuth.TotpSecret
+	plainTotpSecret := string(encryptedTotpSecret)
+	authSuite.mockSecurityProvider.EXPECT().DecryptSymmetric(encryptedTotpSecret).Return(plainTotpSecret, nil)
 	authSuite.mockSecurityProvider.EXPECT().
-		ValidateTOTP(dto.Code, mockUser.TwoFactorAuth.TotpSecret).
+		ValidateTOTP(dto.Code, plainTotpSecret).
 		Return(false)
 
 	authToken, err := authSuite.service.Verify2FA(ctx, dto)

@@ -70,6 +70,8 @@ type (
 		ValidateTOTP(code string, secret string) bool
 		HashPassword(password string) ([]byte, error)
 		ComparePasswords(hashed []byte, plain string) (bool, error)
+		EncryptSymmetric(plaintext string) ([]byte, error)
+		DecryptSymmetric(encrypted []byte) (string, error)
 	}
 	NotificationsService interface {
 		SendSignUpConfirmationEmail(ctx context.Context, to string, otp string) error

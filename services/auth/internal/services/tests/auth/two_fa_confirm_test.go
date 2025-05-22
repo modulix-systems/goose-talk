@@ -55,14 +55,15 @@ func TestConfirm2FASuccess(t *testing.T) {
 			ConfirmationCode: confirmationCode,
 			Contact:          tc.contact,
 		}
-		if tc.twoFaTyp == entity.TWO_FA_TOTP_APP {
-			dto.TotpSecret = gofakeit.UUID()
-		}
 		mock2FA := &entity.TwoFactorAuth{
 			UserId:         mockUser.ID,
 			DeliveryMethod: dto.Typ,
-			TotpSecret:     dto.TotpSecret,
 			Enabled:        true,
+		}
+		encryptedTotpSecret := []byte(dto.TotpSecret)
+		if tc.twoFaTyp == entity.TWO_FA_TOTP_APP {
+			dto.TotpSecret = gofakeit.UUID()
+			mock2FA.TotpSecret = encryptedTotpSecret
 		}
 		// accept contact dto field only if typ is email or sms
 		if tc.twoFaTyp == entity.TWO_FA_EMAIL || tc.twoFaTyp == entity.TWO_FA_SMS {
@@ -75,6 +76,7 @@ func TestConfirm2FASuccess(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			if tc.twoFaTyp == entity.TWO_FA_TOTP_APP {
 				authSuite.mockSecurityProvider.EXPECT().ValidateTOTP(dto.ConfirmationCode, dto.TotpSecret).Return(true)
+				authSuite.mockSecurityProvider.EXPECT().EncryptSymmetric(dto.TotpSecret).Return(encryptedTotpSecret, nil)
 			} else {
 				authSuite.mockCodeRepo.EXPECT().GetByUserId(ctx, dto.UserId).Return(mockOTP, nil)
 				authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockOTP.Code, dto.ConfirmationCode).Return(true, nil)

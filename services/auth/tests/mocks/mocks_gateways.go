@@ -474,6 +474,36 @@ func (mr *MockSecurityProviderMockRecorder) ComparePasswords(hashed, plain any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ComparePasswords", reflect.TypeOf((*MockSecurityProvider)(nil).ComparePasswords), hashed, plain)
 }
 
+// DecryptSymmetric mocks base method.
+func (m *MockSecurityProvider) DecryptSymmetric(encrypted []byte) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DecryptSymmetric", encrypted)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DecryptSymmetric indicates an expected call of DecryptSymmetric.
+func (mr *MockSecurityProviderMockRecorder) DecryptSymmetric(encrypted any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DecryptSymmetric", reflect.TypeOf((*MockSecurityProvider)(nil).DecryptSymmetric), encrypted)
+}
+
+// EncryptSymmetric mocks base method.
+func (m *MockSecurityProvider) EncryptSymmetric(plaintext string) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EncryptSymmetric", plaintext)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EncryptSymmetric indicates an expected call of EncryptSymmetric.
+func (mr *MockSecurityProviderMockRecorder) EncryptSymmetric(plaintext any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EncryptSymmetric", reflect.TypeOf((*MockSecurityProvider)(nil).EncryptSymmetric), plaintext)
+}
+
 // GenerateOTPCode mocks base method.
 func (m *MockSecurityProvider) GenerateOTPCode() string {
 	m.ctrl.T.Helper()
