@@ -76,6 +76,7 @@ type (
 		SendGreetingEmail(ctx context.Context, to string, name string) error
 		Send2FAEmail(ctx context.Context, to string, otp string) error
 		SendAccDeactivationEmail(ctx context.Context, to string) error
+		SendSignInNewDeviceEmail(ctx context.Context, to string, newSession *entity.UserSession) error
 	}
 	TelegramMsg struct {
 		DateSent time.Time

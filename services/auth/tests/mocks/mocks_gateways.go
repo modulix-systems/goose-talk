@@ -598,6 +598,20 @@ func (mr *MockNotificationsServiceMockRecorder) SendGreetingEmail(ctx, to, name 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendGreetingEmail", reflect.TypeOf((*MockNotificationsService)(nil).SendGreetingEmail), ctx, to, name)
 }
 
+// SendSignInNewDeviceEmail mocks base method.
+func (m *MockNotificationsService) SendSignInNewDeviceEmail(ctx context.Context, to string, newSession *entity.UserSession) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendSignInNewDeviceEmail", ctx, to, newSession)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendSignInNewDeviceEmail indicates an expected call of SendSignInNewDeviceEmail.
+func (mr *MockNotificationsServiceMockRecorder) SendSignInNewDeviceEmail(ctx, to, newSession any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendSignInNewDeviceEmail", reflect.TypeOf((*MockNotificationsService)(nil).SendSignInNewDeviceEmail), ctx, to, newSession)
+}
+
 // SendSignUpConfirmationEmail mocks base method.
 func (m *MockNotificationsService) SendSignUpConfirmationEmail(ctx context.Context, to, otp string) error {
 	m.ctrl.T.Helper()

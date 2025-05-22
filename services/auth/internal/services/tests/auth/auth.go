@@ -70,13 +70,13 @@ func NewAuthTestSuite(ctrl *gomock.Controller) *AuthTestSuite {
 	}
 }
 
-func setAuthSessionExpectations(t *testing.T, ctx context.Context, authSuite *AuthTestSuite, userId int, mockSession *entity.UserSession, sessionExists bool, deviceInfo string, ip string, authToken string) {
+func setAuthSessionExpectations(t *testing.T, ctx context.Context, authSuite *AuthTestSuite, mockUser *entity.User, mockSession *entity.UserSession, sessionExists bool, deviceInfo string, ip string, authToken string) {
 	t.Helper()
 	mockLocation := gofakeit.City()
 	authSuite.mockGeoIPApi.EXPECT().GetLocationByIP(ip).Return(mockLocation, nil)
 	if sessionExists {
 		authSuite.mockSessionsRepo.EXPECT().
-			GetByParamsMatch(ctx, ip, deviceInfo, userId).
+			GetByParamsMatch(ctx, ip, deviceInfo, mockUser.ID).
 			Return(mockSession, nil)
 		authSuite.mockSessionsRepo.EXPECT().UpdateById(
 			ctx, mockSession.ID,
@@ -90,14 +90,15 @@ func setAuthSessionExpectations(t *testing.T, ctx context.Context, authSuite *Au
 				return mockSession, nil
 			})
 	} else {
-		authSuite.mockSessionsRepo.EXPECT().GetByParamsMatch(ctx, ip, deviceInfo, userId).Return(nil, storage.ErrNotFound)
+		authSuite.mockSessionsRepo.EXPECT().GetByParamsMatch(ctx, ip, deviceInfo, mockUser.ID).Return(nil, storage.ErrNotFound)
 		authSuite.mockSessionsRepo.EXPECT().Insert(ctx, &entity.UserSession{
-			UserId:      userId,
+			UserId:      mockUser.ID,
 			DeviceInfo:  deviceInfo,
 			IP:          ip,
 			Location:    mockLocation,
 			AccessToken: authToken,
 		}).Return(mockSession, nil)
+		authSuite.mockMailSender.EXPECT().SendSignInNewDeviceEmail(ctx, mockUser.Email, mockSession)
 	}
 
 }

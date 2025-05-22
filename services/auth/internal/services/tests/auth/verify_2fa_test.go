@@ -77,7 +77,7 @@ func TestVerify2FASuccess(t *testing.T) {
 			authSuite.mockSecurityProvider.EXPECT().
 				ComparePasswords(mockOTP.Code, otpToCompare).
 				Return(true, nil)
-			setAuthSessionExpectations(t, ctx, authSuite, mockUser.ID, mockSession, tc.sessionExists, dto.DeviceInfo, dto.ClientIP, expectedAuthToken)
+			setAuthSessionExpectations(t, ctx, authSuite, mockUser, mockSession, tc.sessionExists, dto.DeviceInfo, dto.ClientIP, expectedAuthToken)
 			authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Email).Return(mockUser, nil)
 			authSuite.mockAuthTokenProvider.EXPECT().
 				NewToken(authSuite.tokenTTL, map[string]any{"uid": mockUser.ID}).

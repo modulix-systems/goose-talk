@@ -72,7 +72,9 @@ func (s *AuthService) createOTP(ctx context.Context, email string, userId int) (
 	)
 }
 
-func (s *AuthService) createOrUpdateSession(ctx context.Context, user *entity.User, sessionEnt *entity.UserSession) (*entity.UserSession, error) {
+// newAuthSession inserts a new session on updates existing one based on set of params
+// if new session was inserted - sends 'warning' email
+func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, sessionEnt *entity.UserSession) (*entity.UserSession, error) {
 	// Try to find matching session by set of params, if it wasn't found - create new one
 	// or update otherwise
 	session, err := s.sessionsRepo.GetByParamsMatch(ctx, sessionEnt.IP, sessionEnt.DeviceInfo, user.ID)
@@ -82,6 +84,7 @@ func (s *AuthService) createOrUpdateSession(ctx context.Context, user *entity.Us
 			if err != nil {
 				return nil, err
 			}
+			s.notificationsServive.SendSignInNewDeviceEmail(ctx, user.Email, session)
 			return session, nil
 		}
 		return nil, err
@@ -249,7 +252,7 @@ func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (*a
 	if err != nil {
 		return nil, err
 	}
-	session, err := s.createOrUpdateSession(ctx, user, &entity.UserSession{
+	session, err := s.newAuthSession(ctx, user, &entity.UserSession{
 		UserId:      user.ID,
 		DeviceInfo:  dto.DeviceInfo,
 		IP:          dto.ClientIP,
@@ -318,7 +321,7 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 	if err != nil {
 		return "", err
 	}
-	_, err = s.createOrUpdateSession(ctx, user, &entity.UserSession{
+	_, err = s.newAuthSession(ctx, user, &entity.UserSession{
 		UserId:      user.ID,
 		DeviceInfo:  dto.DeviceInfo,
 		IP:          dto.ClientIP,
