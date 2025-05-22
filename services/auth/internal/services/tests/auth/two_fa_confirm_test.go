@@ -55,6 +55,9 @@ func TestConfirm2FASuccess(t *testing.T) {
 			ConfirmationCode: confirmationCode,
 			Contact:          tc.contact,
 		}
+		if tc.twoFaTyp == entity.TWO_FA_TOTP_APP {
+			dto.TotpSecret = gofakeit.UUID()
+		}
 		mock2FA := &entity.TwoFactorAuth{
 			UserId:         mockUser.ID,
 			DeliveryMethod: dto.Typ,
@@ -71,7 +74,6 @@ func TestConfirm2FASuccess(t *testing.T) {
 		}
 		t.Run(name, func(t *testing.T) {
 			if tc.twoFaTyp == entity.TWO_FA_TOTP_APP {
-				dto.TotpSecret = gofakeit.UUID()
 				authSuite.mockSecurityProvider.EXPECT().ValidateTOTP(dto.ConfirmationCode, dto.TotpSecret).Return(true)
 			} else {
 				authSuite.mockCodeRepo.EXPECT().GetByUserId(ctx, dto.UserId).Return(mockOTP, nil)
@@ -79,7 +81,7 @@ func TestConfirm2FASuccess(t *testing.T) {
 			}
 			authSuite.mock2FARepo.EXPECT().Insert(ctx, mock2FA).Return(mock2FA, nil)
 
-			res, err := authSuite.service.Confirm2FA(ctx, dto)
+			res, err := authSuite.service.Confirm2FaAddition(ctx, dto)
 			assert.NoError(t, err)
 			assert.Equal(t, mockUser.ID, res.UserId)
 			assert.Equal(t, tc.twoFaTyp, res.DeliveryMethod)
@@ -92,7 +94,7 @@ func TestConfirm2FAInvalidOTP(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
 	actAndAssert := func(dto *schemas.Confirm2FASchema) {
-		res, err := authSuite.service.Confirm2FA(ctx, dto)
+		res, err := authSuite.service.Confirm2FaAddition(ctx, dto)
 		assert.ErrorIs(t, err, auth.ErrOTPInvalidOrExpired)
 		assert.Empty(t, res)
 	}

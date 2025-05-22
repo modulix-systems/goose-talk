@@ -331,7 +331,7 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 	return token, nil
 }
 
-func (s *AuthService) Confirm2FA(ctx context.Context, dto *schemas.Confirm2FASchema) (*entity.TwoFactorAuth, error) {
+func (s *AuthService) Confirm2FaAddition(ctx context.Context, dto *schemas.Confirm2FASchema) (*entity.TwoFactorAuth, error) {
 	if dto.Typ == entity.TWO_FA_TOTP_APP {
 		isValid := s.securityProvider.ValidateTOTP(dto.ConfirmationCode, dto.TotpSecret)
 		if !isValid {
@@ -359,6 +359,7 @@ func (s *AuthService) Confirm2FA(ctx context.Context, dto *schemas.Confirm2FASch
 	ent := &entity.TwoFactorAuth{
 		UserId:         dto.UserId,
 		DeliveryMethod: dto.Typ,
+		TotpSecret:     dto.TotpSecret,
 		Enabled:        true,
 	}
 	if dto.Typ == entity.TWO_FA_EMAIL || dto.Typ == entity.TWO_FA_SMS {

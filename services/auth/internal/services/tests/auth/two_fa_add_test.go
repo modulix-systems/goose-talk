@@ -51,7 +51,6 @@ func TestAdd2FASuccess(t *testing.T) {
 		}
 	})
 	t.Run("Add 2fa by tg", func(t *testing.T) {
-		// TODO: Contact field should be updated when user sends msg
 		linkCode := gofakeit.Numerify("######")
 		expectedLink := "https://example.com?" + linkCode
 		mockTgMsg := &gateways.TelegramMsg{
