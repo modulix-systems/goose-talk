@@ -37,12 +37,12 @@ func TestAdd2FASuccess(t *testing.T) {
 				if email == "" {
 					email = mockUser.Email
 				}
-				mockOTP := &entity.OTP{UserEmail: email, Code: []byte(plainOTPCode)}
+				mockOTP := &entity.OTP{UserId: mockUser.ID, Code: []byte(plainOTPCode)}
 				authSuite.mockMailSender.EXPECT().Send2FAEmail(ctx, email, plainOTPCode)
-				authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, mockUser.Email).Return(mockUser, nil)
+				authSuite.mockUsersRepo.EXPECT().GetByID(ctx, mockUser.ID).Return(mockUser, nil)
 				setOTPExpectations(mockOTP)
 
-				connInfo, err := authSuite.service.Add2FA(ctx, &schemas.Add2FASchema{UserEmail: mockUser.Email, Typ: entity.TWO_FA_EMAIL, Contact: contact})
+				connInfo, err := authSuite.service.Add2FA(ctx, &schemas.Add2FASchema{UserId: mockUser.ID, Typ: entity.TWO_FA_EMAIL, Contact: contact})
 
 				assert.Empty(t, connInfo)
 				assert.NoError(t, err)
@@ -59,8 +59,8 @@ func TestAdd2FASuccess(t *testing.T) {
 			Text:     "/start " + linkCode,
 			DateSent: time.Now().Add(time.Second),
 		}
-		mockOTP := &entity.OTP{UserEmail: mockUser.Email, Code: []byte(plainOTPCode)}
-		authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, mockUser.Email).Return(mockUser, nil)
+		mockOTP := &entity.OTP{UserId: mockUser.ID, Code: []byte(plainOTPCode)}
+		authSuite.mockUsersRepo.EXPECT().GetByID(ctx, mockUser.ID).Return(mockUser, nil)
 		setOTPExpectations(mockOTP)
 		authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode().Return(linkCode)
 		authSuite.mockTgAPI.EXPECT().GetStartLinkWithCode(linkCode).Return(expectedLink)
@@ -68,7 +68,7 @@ func TestAdd2FASuccess(t *testing.T) {
 		authSuite.mock2FARepo.EXPECT().UpdateContactForUser(ctx, mockUser.ID, mockTgMsg.ChatId).Return(nil)
 		authSuite.mockTgAPI.EXPECT().SendTextMsg(ctx, mockTgMsg.ChatId, fmt.Sprintf("Authorization code: %s", plainOTPCode))
 
-		connInfo, err := authSuite.service.Add2FA(ctx, &schemas.Add2FASchema{UserEmail: mockUser.Email, Typ: entity.TWO_FA_TELEGRAM})
+		connInfo, err := authSuite.service.Add2FA(ctx, &schemas.Add2FASchema{UserId: mockUser.ID, Typ: entity.TWO_FA_TELEGRAM})
 		// wait some time for goroutine to complete
 		time.Sleep(500 * time.Millisecond)
 
@@ -81,10 +81,10 @@ func TestAdd2FASuccess(t *testing.T) {
 	t.Run("Add 2fa by totp", func(t *testing.T) {
 		expectedSecret := gofakeit.UUID()
 		expectedLink := gofakeit.URL()
-		authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, mockUser.Email).Return(mockUser, nil)
+		authSuite.mockUsersRepo.EXPECT().GetByID(ctx, mockUser.ID).Return(mockUser, nil)
 		authSuite.mockSecurityProvider.EXPECT().GenerateTOTPEnrollUrlWithSecret(mockUser.Email).Return(expectedLink, expectedSecret)
 
-		connInfo, err := authSuite.service.Add2FA(ctx, &schemas.Add2FASchema{UserEmail: mockUser.Email, Typ: entity.TWO_FA_TOTP_APP})
+		connInfo, err := authSuite.service.Add2FA(ctx, &schemas.Add2FASchema{UserId: mockUser.ID, Typ: entity.TWO_FA_TOTP_APP})
 
 		require.NotNil(t, connInfo)
 		assert.Equal(t, expectedLink, connInfo.Link)
@@ -100,9 +100,9 @@ func TestAdd2FAUnsupportedTyp(t *testing.T) {
 	mockUser := helpers.MockUser()
 	mockUser.TwoFactorAuth = nil
 	const unsupported2FAMethod entity.TwoFADeliveryMethod = -1
-	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, mockUser.Email).Return(mockUser, nil)
+	authSuite.mockUsersRepo.EXPECT().GetByID(ctx, mockUser.ID).Return(mockUser, nil)
 
-	connInfo, err := authSuite.service.Add2FA(ctx, &schemas.Add2FASchema{UserEmail: mockUser.Email, Typ: unsupported2FAMethod})
+	connInfo, err := authSuite.service.Add2FA(ctx, &schemas.Add2FASchema{UserId: mockUser.ID, Typ: unsupported2FAMethod})
 
 	assert.Empty(t, connInfo)
 	assert.ErrorIs(t, err, auth.ErrUnsupported2FAMethod)
@@ -113,9 +113,9 @@ func TestAdd2FaAlreadyExists(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
 	mockUser := helpers.MockUser()
-	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, mockUser.Email).Return(mockUser, nil)
+	authSuite.mockUsersRepo.EXPECT().GetByID(ctx, mockUser.ID).Return(mockUser, nil)
 
-	connInfo, err := authSuite.service.Add2FA(ctx, &schemas.Add2FASchema{UserEmail: mockUser.Email, Typ: helpers.RandomChoose(entity.OtpDeliveryMethods...)})
+	connInfo, err := authSuite.service.Add2FA(ctx, &schemas.Add2FASchema{UserId: mockUser.ID, Typ: helpers.RandomChoose(entity.OtpDeliveryMethods...)})
 
 	assert.Empty(t, connInfo)
 	assert.ErrorIs(t, err, auth.Err2FaAlreadyAdded)
@@ -126,9 +126,9 @@ func TestAdd2FaUserNotFound(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
 	mockUser := helpers.MockUser()
-	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, mockUser.Email).Return(nil, storage.ErrNotFound)
+	authSuite.mockUsersRepo.EXPECT().GetByID(ctx, mockUser.ID).Return(nil, storage.ErrNotFound)
 
-	connInfo, err := authSuite.service.Add2FA(ctx, &schemas.Add2FASchema{UserEmail: mockUser.Email, Typ: helpers.RandomChoose(entity.OtpDeliveryMethods...)})
+	connInfo, err := authSuite.service.Add2FA(ctx, &schemas.Add2FASchema{UserId: mockUser.ID, Typ: helpers.RandomChoose(entity.OtpDeliveryMethods...)})
 
 	assert.Empty(t, connInfo)
 	assert.ErrorIs(t, err, auth.ErrUserNotFound)

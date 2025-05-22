@@ -59,6 +59,21 @@ func (mr *MockUsersRepoMockRecorder) CheckExistsWithEmail(ctx, email any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckExistsWithEmail", reflect.TypeOf((*MockUsersRepo)(nil).CheckExistsWithEmail), ctx, email)
 }
 
+// GetByID mocks base method.
+func (m *MockUsersRepo) GetByID(ctx context.Context, id int) (*entity.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByID", ctx, id)
+	ret0, _ := ret[0].(*entity.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByID indicates an expected call of GetByID.
+func (mr *MockUsersRepoMockRecorder) GetByID(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockUsersRepo)(nil).GetByID), ctx, id)
+}
+
 // GetByLogin mocks base method.
 func (m *MockUsersRepo) GetByLogin(ctx context.Context, login string) (*entity.User, error) {
 	m.ctrl.T.Helper()
@@ -282,6 +297,21 @@ func (m *MockOtpRepo) GetByEmail(ctx context.Context, email string) (*entity.OTP
 func (mr *MockOtpRepoMockRecorder) GetByEmail(ctx, email any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByEmail", reflect.TypeOf((*MockOtpRepo)(nil).GetByEmail), ctx, email)
+}
+
+// GetByUserId mocks base method.
+func (m *MockOtpRepo) GetByUserId(ctx context.Context, userId int) (*entity.OTP, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByUserId", ctx, userId)
+	ret0, _ := ret[0].(*entity.OTP)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByUserId indicates an expected call of GetByUserId.
+func (mr *MockOtpRepoMockRecorder) GetByUserId(ctx, userId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByUserId", reflect.TypeOf((*MockOtpRepo)(nil).GetByUserId), ctx, userId)
 }
 
 // InsertOrUpdateCode mocks base method.

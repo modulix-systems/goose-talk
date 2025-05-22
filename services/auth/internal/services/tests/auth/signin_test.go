@@ -32,7 +32,7 @@ func setSignInWith2FAExpectations(
 	plainOTPCode string,
 ) {
 	hashedOTPCode := []byte(plainOTPCode)
-	mockOTP := &entity.OTP{Code: hashedOTPCode, UserEmail: mockUser.Email}
+	mockOTP := &entity.OTP{Code: hashedOTPCode, UserId: mockUser.ID}
 	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
 	authSuite.mockSecurityProvider.EXPECT().
 		ComparePasswords(mockUser.Password, dto.Password).

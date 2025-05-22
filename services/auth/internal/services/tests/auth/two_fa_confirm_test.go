@@ -50,7 +50,7 @@ func TestConfirm2FASuccess(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		dto := &schemas.Confirm2FASchema{
-			UserEmail:        mockUser.Email,
+			UserId:           mockUser.ID,
 			Typ:              tc.twoFaTyp,
 			ConfirmationCode: confirmationCode,
 			Contact:          tc.contact,
@@ -65,10 +65,6 @@ func TestConfirm2FASuccess(t *testing.T) {
 		if tc.twoFaTyp == entity.TWO_FA_EMAIL || tc.twoFaTyp == entity.TWO_FA_SMS {
 			mock2FA.Contact = dto.Contact
 		}
-		targetEmail := dto.UserEmail
-		if dto.Contact != "" {
-			targetEmail = dto.Contact
-		}
 		name := "2 fa over " + tc.twoFaTyp.String()
 		if tc.contact != "" {
 			name += " with contact"
@@ -78,10 +74,9 @@ func TestConfirm2FASuccess(t *testing.T) {
 				dto.TotpSecret = gofakeit.UUID()
 				authSuite.mockSecurityProvider.EXPECT().ValidateTOTP(dto.ConfirmationCode, dto.TotpSecret).Return(true)
 			} else {
-				authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, targetEmail).Return(mockOTP, nil)
+				authSuite.mockCodeRepo.EXPECT().GetByUserId(ctx, dto.UserId).Return(mockOTP, nil)
 				authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockOTP.Code, dto.ConfirmationCode).Return(true, nil)
 			}
-			authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, mockUser.Email).Return(mockUser, nil)
 			authSuite.mock2FARepo.EXPECT().Insert(ctx, mock2FA).Return(mock2FA, nil)
 
 			res, err := authSuite.service.Confirm2FA(ctx, dto)
@@ -106,7 +101,7 @@ func TestConfirm2FAInvalidOTP(t *testing.T) {
 		mockOTP := helpers.MockOTP()
 		confirmationCode := string(mockOTP.Code)
 		dto := &schemas.Confirm2FASchema{
-			UserEmail:        mockUser.Email,
+			UserId:           mockUser.ID,
 			Typ:              twoFaTyp,
 			ConfirmationCode: confirmationCode,
 		}
@@ -120,17 +115,17 @@ func TestConfirm2FAInvalidOTP(t *testing.T) {
 				return
 			}
 			t.Run("not found otp", func(t *testing.T) {
-				authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.UserEmail).Return(nil, storage.ErrNotFound)
+				authSuite.mockCodeRepo.EXPECT().GetByUserId(ctx, dto.UserId).Return(nil, storage.ErrNotFound)
 				actAndAssert(dto)
 			})
 			t.Run("not matched code", func(t *testing.T) {
-				authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.UserEmail).Return(mockOTP, nil)
+				authSuite.mockCodeRepo.EXPECT().GetByUserId(ctx, dto.UserId).Return(mockOTP, nil)
 				authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockOTP.Code, dto.ConfirmationCode).Return(false, nil)
 				actAndAssert(dto)
 			})
 			t.Run("expired otp", func(t *testing.T) {
 				mockOTP.UpdatedAt = time.Now().Add(-authSuite.tokenTTL)
-				authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.UserEmail).Return(mockOTP, nil)
+				authSuite.mockCodeRepo.EXPECT().GetByUserId(ctx, dto.UserId).Return(mockOTP, nil)
 				actAndAssert(dto)
 			})
 		})

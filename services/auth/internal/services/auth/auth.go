@@ -55,7 +55,12 @@ func New(
 	}
 }
 
-func (s *AuthService) createOTP(ctx context.Context, forEmail string) (string, error) {
+// createOTP generates, hashes and saves hashed otp token to database
+// returning plain code and insertion error for caller to handle
+func (s *AuthService) createOTP(ctx context.Context, email string, userId int) (string, error) {
+	if email == "" && userId == 0 {
+		panic("createOTP: email or userId must be provided")
+	}
 	otpCode := s.securityProvider.GenerateOTPCode()
 	hashedOtpCode, err := s.securityProvider.HashPassword(otpCode)
 	if err != nil {
@@ -63,7 +68,7 @@ func (s *AuthService) createOTP(ctx context.Context, forEmail string) (string, e
 	}
 	return otpCode, s.otpRepo.InsertOrUpdateCode(
 		ctx,
-		&entity.OTP{Code: hashedOtpCode, UserEmail: forEmail},
+		&entity.OTP{Code: hashedOtpCode, UserEmail: email, UserId: userId},
 	)
 }
 
@@ -157,7 +162,7 @@ func (s *AuthService) ConfirmEmail(ctx context.Context, email string) error {
 		return ErrUserAlreadyExists
 	}
 
-	otpCode, err := s.createOTP(ctx, email)
+	otpCode, err := s.createOTP(ctx, email, 0)
 	if err != nil {
 		return err
 	}
@@ -208,7 +213,7 @@ func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (*a
 		return nil, ErrInvalidCredentials
 	}
 	if user.Is2FAEnabled() {
-		otpCode, err := s.createOTP(ctx, user.Email)
+		otpCode, err := s.createOTP(ctx, "", user.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -327,17 +332,13 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 }
 
 func (s *AuthService) Confirm2FA(ctx context.Context, dto *schemas.Confirm2FASchema) (*entity.TwoFactorAuth, error) {
-	targetEmail := dto.UserEmail
-	if dto.Contact != "" {
-		targetEmail = dto.Contact
-	}
 	if dto.Typ == entity.TWO_FA_TOTP_APP {
 		isValid := s.securityProvider.ValidateTOTP(dto.ConfirmationCode, dto.TotpSecret)
 		if !isValid {
 			return nil, ErrOTPInvalidOrExpired
 		}
 	} else {
-		otp, err := s.otpRepo.GetByEmail(ctx, targetEmail)
+		otp, err := s.otpRepo.GetByUserId(ctx, dto.UserId)
 		if err != nil {
 			if errors.Is(err, storage.ErrNotFound) {
 				return nil, ErrOTPInvalidOrExpired
@@ -355,12 +356,8 @@ func (s *AuthService) Confirm2FA(ctx context.Context, dto *schemas.Confirm2FASch
 			return nil, ErrOTPInvalidOrExpired
 		}
 	}
-	user, err := s.usersRepo.GetByLogin(ctx, dto.UserEmail)
-	if err != nil {
-		return nil, err
-	}
 	ent := &entity.TwoFactorAuth{
-		UserId:         user.ID,
+		UserId:         dto.UserId,
 		DeliveryMethod: dto.Typ,
 		Enabled:        true,
 	}
@@ -407,8 +404,7 @@ type TwoFAConnectInfo struct {
 }
 
 func (s *AuthService) Add2FA(ctx context.Context, dto *schemas.Add2FASchema) (*TwoFAConnectInfo, error) {
-	targetEmail := dto.UserEmail
-	user, err := s.usersRepo.GetByLogin(ctx, targetEmail)
+	user, err := s.usersRepo.GetByID(ctx, dto.UserId)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return nil, ErrUserNotFound
@@ -420,19 +416,20 @@ func (s *AuthService) Add2FA(ctx context.Context, dto *schemas.Add2FASchema) (*T
 	}
 	switch dto.Typ {
 	case entity.TWO_FA_EMAIL:
+		emailRecipient := user.Email
 		if dto.Contact != "" {
-			targetEmail = dto.Contact
+			emailRecipient = dto.Contact
 		}
-		otpCode, err := s.createOTP(ctx, targetEmail)
+		otpCode, err := s.createOTP(ctx, "", dto.UserId)
 		if err != nil {
 			return nil, err
 		}
-		if err = s.notificationsServive.Send2FAEmail(ctx, targetEmail, otpCode); err != nil {
+		if err = s.notificationsServive.Send2FAEmail(ctx, emailRecipient, otpCode); err != nil {
 			return nil, err
 		}
 		return nil, nil
 	case entity.TWO_FA_TELEGRAM:
-		otpCode, err := s.createOTP(ctx, targetEmail)
+		otpCode, err := s.createOTP(ctx, "", dto.UserId)
 		if err != nil {
 			return nil, err
 		}
@@ -441,7 +438,7 @@ func (s *AuthService) Add2FA(ctx context.Context, dto *schemas.Add2FASchema) (*T
 		go s.tgSendOtpOnMsgAndUpdateContact(user.ID, otpCode, tgMsgCode)
 		return &TwoFAConnectInfo{Link: link}, nil
 	case entity.TWO_FA_TOTP_APP:
-		link, secret := s.securityProvider.GenerateTOTPEnrollUrlWithSecret(targetEmail)
+		link, secret := s.securityProvider.GenerateTOTPEnrollUrlWithSecret(user.Email)
 		return &TwoFAConnectInfo{Link: link, TotpSecret: secret}, nil
 	default:
 		return nil, ErrUnsupported2FAMethod

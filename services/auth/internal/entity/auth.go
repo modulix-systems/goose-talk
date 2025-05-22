@@ -29,13 +29,15 @@ func (m TwoFADeliveryMethod) String() string {
 var OtpDeliveryMethods = []TwoFADeliveryMethod{TWO_FA_EMAIL, TWO_FA_TELEGRAM, TWO_FA_TOTP_APP}
 
 type (
-	// OTP represents storage for email verifications codes
-	// Only one code can be present for one email.
+	// OTP represents storage for verifications codes
+	// Only one code can be present for one user/email.
 	// In case if token already exists and requested for the same email again - it gets updated.
-	// So UpdatedAt should be used to check ttl expiration
+	// Therefore to check ttl expiration - UpdatedAt should be used
+	// UserEmail and UserId are optional but at least one of them must be present
 	OTP struct {
 		Code      []byte
 		UserEmail string
+		UserId    int
 		CreatedAt time.Time
 		UpdatedAt time.Time
 	}

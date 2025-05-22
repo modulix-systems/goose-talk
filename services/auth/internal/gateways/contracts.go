@@ -20,6 +20,7 @@ type (
 		Insert(ctx context.Context, user *entity.User) (*entity.User, error)
 		CheckExistsWithEmail(ctx context.Context, email string) (bool, error)
 		GetByLogin(ctx context.Context, login string) (*entity.User, error)
+		GetByID(ctx context.Context, id int) (*entity.User, error)
 		UpdateIsActiveById(ctx context.Context, userId int, isActive bool) (*entity.User, error)
 	}
 	UserSessionsRepo interface {
@@ -51,6 +52,7 @@ type (
 	}
 	OtpRepo interface {
 		GetByEmail(ctx context.Context, email string) (*entity.OTP, error)
+		GetByUserId(ctx context.Context, userId int) (*entity.OTP, error)
 		DeleteByEmail(ctx context.Context, email string) error
 		InsertOrUpdateCode(ctx context.Context, otp *entity.OTP) error
 	}
