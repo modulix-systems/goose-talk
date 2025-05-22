@@ -175,26 +175,10 @@ func (s *AuthService) ConfirmEmail(ctx context.Context, email string) error {
 	return nil
 }
 
-// tokenType indicates semantic meaning of token value in authInfo
-type tokenType = int
-
-const (
-	// AuthTokenType indicates that token is authorization token and no 2fa is required
-	AuthTokenType tokenType = iota
-	// SignInConfTokenType indicates that token value is intended
-	// for sign in confirmation in further 2fa verification
-	SignInConfTokenType tokenType = iota
-)
-
-type signInToken struct {
-	Val string
-	Typ tokenType
-}
-
 type authInfo struct {
-	Token   *signInToken
-	User    *entity.User
-	Session *entity.UserSession
+	SignInConfTokenType string
+	User                *entity.User
+	Session             *entity.UserSession
 }
 
 func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (*authInfo, error) {
@@ -236,8 +220,8 @@ func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (*a
 			}
 		case entity.TWO_FA_TOTP_APP:
 			return &authInfo{
-				User:  user,
-				Token: &signInToken{Val: otpCode, Typ: SignInConfTokenType},
+				User:                user,
+				SignInConfTokenType: otpCode,
 			}, nil
 		default:
 			return nil, ErrUnsupported2FAMethod
@@ -265,7 +249,6 @@ func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (*a
 	return &authInfo{
 		User:    user,
 		Session: session,
-		Token:   &signInToken{Val: token, Typ: AuthTokenType},
 	}, nil
 }
 
@@ -530,4 +513,17 @@ func (s *AuthService) PingSession(
 		return nil, err
 	}
 	return session, nil
+}
+
+type loginToken struct {
+	Val string
+	TTL time.Duration
+}
+
+func (s *AuthService) ExportLoginToken(ctx context.Context) (*loginToken, error) {
+	return nil, nil
+}
+
+func (s *AuthService) AcceptLoginToken(ctx context.Context, userId int, token string) (*entity.UserSession, error) {
+	return nil, nil
 }

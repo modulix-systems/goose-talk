@@ -97,8 +97,7 @@ func TestSignInSuccessNo2FA(t *testing.T) {
 
 			assert.NoError(t, err)
 			assert.NotNil(t, authInfo)
-			assert.Equal(t, authInfo.Token.Val, expectedToken)
-			assert.Equal(t, authInfo.Token.Typ, auth.AuthTokenType)
+			assert.Equal(t, authInfo.Session.AccessToken, expectedToken)
 			assert.Equal(t, authInfo.User.ID, mockUser.ID)
 		})
 	}
@@ -120,7 +119,7 @@ func TestSignInSuccess2FAByUserEmail(t *testing.T) {
 	authInfo, err := authSuite.service.SignIn(ctx, dto)
 
 	assert.NoError(t, err)
-	assert.Empty(t, authInfo.Token)
+	assert.Empty(t, authInfo.Session)
 	assert.Equal(t, authInfo.User.ID, mockUser.ID)
 }
 
@@ -141,7 +140,7 @@ func TestSignInSuccess2FAByContactEmail(t *testing.T) {
 	authInfo, err := authSuite.service.SignIn(ctx, dto)
 
 	assert.NoError(t, err)
-	assert.Empty(t, authInfo.Token)
+	assert.Empty(t, authInfo.Session)
 	assert.Equal(t, authInfo.User.ID, mockUser.ID)
 }
 
@@ -162,7 +161,7 @@ func TestSignInSuccess2FAByContactTG(t *testing.T) {
 	authInfo, err := authSuite.service.SignIn(ctx, dto)
 
 	assert.NoError(t, err)
-	assert.Empty(t, authInfo.Token)
+	assert.Empty(t, authInfo.Session)
 	assert.Equal(t, authInfo.User.ID, mockUser.ID)
 }
 
@@ -180,8 +179,7 @@ func TestSignInSuccess2FAByTotp(t *testing.T) {
 	authInfo, err := authSuite.service.SignIn(ctx, dto)
 
 	assert.NoError(t, err)
-	assert.Equal(t, authInfo.Token.Val, plainOTPCode)
-	assert.Equal(t, authInfo.Token.Typ, auth.SignInConfTokenType)
+	assert.Equal(t, authInfo.SignInConfTokenType, plainOTPCode)
 	assert.Equal(t, authInfo.User.ID, mockUser.ID)
 }
 
