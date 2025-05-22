@@ -337,6 +337,20 @@ func (mr *MockTwoFactorAuthRepoMockRecorder) Insert(ctx, ent any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockTwoFactorAuthRepo)(nil).Insert), ctx, ent)
 }
 
+// UpdateContactForUser mocks base method.
+func (m *MockTwoFactorAuthRepo) UpdateContactForUser(ctx context.Context, userId int, contact string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateContactForUser", ctx, userId, contact)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateContactForUser indicates an expected call of UpdateContactForUser.
+func (mr *MockTwoFactorAuthRepoMockRecorder) UpdateContactForUser(ctx, userId, contact any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateContactForUser", reflect.TypeOf((*MockTwoFactorAuthRepo)(nil).UpdateContactForUser), ctx, userId, contact)
+}
+
 // MockAuthTokenProvider is a mock of AuthTokenProvider interface.
 type MockAuthTokenProvider struct {
 	ctrl     *gomock.Controller

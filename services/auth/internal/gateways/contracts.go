@@ -56,6 +56,7 @@ type (
 	}
 	TwoFactorAuthRepo interface {
 		Insert(ctx context.Context, ent *entity.TwoFactorAuth) (*entity.TwoFactorAuth, error)
+		UpdateContactForUser(ctx context.Context, userId int, contact string) error
 	}
 	AuthTokenProvider interface {
 		NewToken(expires time.Duration, claims map[string]any) (string, error)

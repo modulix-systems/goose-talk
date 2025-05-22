@@ -374,7 +374,7 @@ func (s *AuthService) Confirm2FA(ctx context.Context, dto *schemas.Confirm2FASch
 	return twoFactorAuth, nil
 }
 
-func (s *AuthService) tgSendOtpOnMsg(otpCode string, msgCode string) {
+func (s *AuthService) tgSendOtpOnMsgAndUpdateContact(userId int, otpCode string, msgCode string) {
 	ctx := context.Background()
 	startTime := time.Now()
 	attemptsLeft := 100
@@ -386,7 +386,14 @@ func (s *AuthService) tgSendOtpOnMsg(otpCode string, msgCode string) {
 		if msg.DateSent.After(startTime) {
 			msgParts := strings.Split(msg.Text, " ")
 			if len(msgParts) > 1 && msgParts[1] == msgCode {
-				s.tgApi.SendTextMsg(ctx, msg.ChatId, fmt.Sprintf("Authorization code: %s", otpCode))
+				err := s.twoFactorAuthRepo.UpdateContactForUser(ctx, userId, msg.ChatId)
+				if err != nil {
+					println(err)
+				}
+				err = s.tgApi.SendTextMsg(ctx, msg.ChatId, fmt.Sprintf("Authorization code: %s", otpCode))
+				if err != nil {
+					println(err)
+				}
 			}
 		}
 		time.Sleep(time.Second)
@@ -431,7 +438,7 @@ func (s *AuthService) Add2FA(ctx context.Context, dto *schemas.Add2FASchema) (*T
 		}
 		tgMsgCode := s.securityProvider.GenerateOTPCode()
 		link := s.tgApi.GetStartLinkWithCode(tgMsgCode)
-		go s.tgSendOtpOnMsg(otpCode, tgMsgCode)
+		go s.tgSendOtpOnMsgAndUpdateContact(user.ID, otpCode, tgMsgCode)
 		return &TwoFAConnectInfo{Link: link}, nil
 	case entity.TWO_FA_TOTP_APP:
 		link, secret := s.securityProvider.GenerateTOTPEnrollUrlWithSecret(targetEmail)

@@ -65,6 +65,7 @@ func TestAdd2FASuccess(t *testing.T) {
 		authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode().Return(linkCode)
 		authSuite.mockTgAPI.EXPECT().GetStartLinkWithCode(linkCode).Return(expectedLink)
 		authSuite.mockTgAPI.EXPECT().GetLatestMsg(ctx).Return(mockTgMsg, nil)
+		authSuite.mock2FARepo.EXPECT().UpdateContactForUser(ctx, mockUser.ID, mockTgMsg.ChatId).Return(nil)
 		authSuite.mockTgAPI.EXPECT().SendTextMsg(ctx, mockTgMsg.ChatId, fmt.Sprintf("Authorization code: %s", plainOTPCode))
 
 		connInfo, err := authSuite.service.Add2FA(ctx, &schemas.Add2FASchema{UserEmail: mockUser.Email, Typ: entity.TWO_FA_TELEGRAM})
