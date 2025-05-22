@@ -24,6 +24,7 @@ type AuthService struct {
 	authTokenTTL         time.Duration
 	sessionsRepo         gateways.UserSessionsRepo
 	geoIPApi             gateways.GeoIPApi
+	twoFactorAuthRepo    gateways.TwoFactorAuthRepo
 }
 
 func New(
@@ -37,6 +38,7 @@ func New(
 	tgApi gateways.TelegramBotAPI,
 	sessionsRepo gateways.UserSessionsRepo,
 	geoIPApi gateways.GeoIPApi,
+	twoFactorAuthRepo gateways.TwoFactorAuthRepo,
 ) *AuthService {
 	return &AuthService{
 		usersRepo:            usersRepo,
@@ -49,6 +51,7 @@ func New(
 		tgApi:                tgApi,
 		sessionsRepo:         sessionsRepo,
 		geoIPApi:             geoIPApi,
+		twoFactorAuthRepo:    twoFactorAuthRepo,
 	}
 }
 
@@ -97,19 +100,19 @@ func (s *AuthService) SignUp(
 	otp, err := s.otpRepo.GetByEmail(ctx, dto.Email)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return "", nil, ErrInvalidOtp
+			return "", nil, ErrOTPInvalidOrExpired
 		}
 		return "", nil, err
 	}
-	if time.Now().After(otp.UpdatedAt.Add(s.otpTTL)) {
-		return "", nil, ErrOtpExpired
+	if otp.IsExpired(s.otpTTL) {
+		return "", nil, ErrOTPInvalidOrExpired
 	}
 	matched, err := s.securityProvider.ComparePasswords(otp.Code, dto.ConfirmationCode)
 	if err != nil {
 		return "", nil, err
 	}
 	if !matched {
-		return "", nil, ErrInvalidOtp
+		return "", nil, ErrOTPInvalidOrExpired
 	}
 	hashedPassword, err := s.securityProvider.HashPassword(dto.Password)
 	if err != nil {
@@ -262,12 +265,12 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 	otp, err := s.otpRepo.GetByEmail(ctx, dto.Email)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return "", ErrInvalidOtp
+			return "", ErrOTPInvalidOrExpired
 		}
 		return "", err
 	}
-	if time.Now().After(otp.UpdatedAt.Add(s.otpTTL)) {
-		return "", ErrOtpExpired
+	if otp.IsExpired(s.otpTTL) {
+		return "", ErrOTPInvalidOrExpired
 	}
 	otpToCompare := dto.Code
 	if dto.TwoFATyp == entity.TWO_FA_TOTP_APP {
@@ -278,7 +281,7 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 		return "", err
 	}
 	if !matched {
-		return "", ErrInvalidOtp
+		return "", ErrOTPInvalidOrExpired
 	}
 	user, err := s.usersRepo.GetByLogin(ctx, dto.Email)
 	if err != nil {
@@ -299,7 +302,7 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 	if dto.TwoFATyp == entity.TWO_FA_TOTP_APP {
 		isValid := s.securityProvider.ValidateTOTP(dto.Code, user.TwoFactorAuth.TotpSecret)
 		if !isValid {
-			return "", ErrInvalidOrExpiredTOTP
+			return "", ErrOTPInvalidOrExpired
 		}
 	}
 	token, err := s.authTokenProvider.NewToken(s.authTokenTTL, map[string]any{"uid": user.ID})
@@ -323,7 +326,53 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 	return token, nil
 }
 
-// func (s *AuthService) Confirm2FA(ctx context.Context, dto *schemas.Confirm2FASchema) (*entity.TwoFactorAuth, error)
+func (s *AuthService) Confirm2FA(ctx context.Context, dto *schemas.Confirm2FASchema) (*entity.TwoFactorAuth, error) {
+	targetEmail := dto.UserEmail
+	if dto.Contact != "" {
+		targetEmail = dto.Contact
+	}
+	if dto.Typ == entity.TWO_FA_TOTP_APP {
+		isValid := s.securityProvider.ValidateTOTP(dto.ConfirmationCode, dto.TotpSecret)
+		if !isValid {
+			return nil, ErrOTPInvalidOrExpired
+		}
+	} else {
+		otp, err := s.otpRepo.GetByEmail(ctx, targetEmail)
+		if err != nil {
+			if errors.Is(err, storage.ErrNotFound) {
+				return nil, ErrOTPInvalidOrExpired
+			}
+			return nil, err
+		}
+		if otp.IsExpired(s.otpTTL) {
+			return nil, ErrOTPInvalidOrExpired
+		}
+		matched, err := s.securityProvider.ComparePasswords(otp.Code, dto.ConfirmationCode)
+		if err != nil {
+			return nil, err
+		}
+		if !matched {
+			return nil, ErrOTPInvalidOrExpired
+		}
+	}
+	user, err := s.usersRepo.GetByLogin(ctx, dto.UserEmail)
+	if err != nil {
+		return nil, err
+	}
+	ent := &entity.TwoFactorAuth{
+		UserId:         user.ID,
+		DeliveryMethod: dto.Typ,
+		Enabled:        true,
+	}
+	if dto.Typ == entity.TWO_FA_EMAIL || dto.Typ == entity.TWO_FA_SMS {
+		ent.Contact = dto.Contact
+	}
+	twoFactorAuth, err := s.twoFactorAuthRepo.Insert(ctx, ent)
+	if err != nil {
+		return nil, err
+	}
+	return twoFactorAuth, nil
+}
 
 func (s *AuthService) tgSendOtpOnMsg(otpCode string, msgCode string) {
 	ctx := context.Background()

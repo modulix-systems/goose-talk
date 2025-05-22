@@ -85,7 +85,7 @@ func TestSignupNotFoundCode(t *testing.T) {
 
 	assert.Empty(t, token)
 	assert.Empty(t, user)
-	assert.ErrorIs(t, err, auth.ErrInvalidOtp)
+	assert.ErrorIs(t, err, auth.ErrOTPInvalidOrExpired)
 }
 
 func TestSignupExpiredCode(t *testing.T) {
@@ -108,7 +108,7 @@ func TestSignupExpiredCode(t *testing.T) {
 
 	assert.Empty(t, token)
 	assert.Empty(t, user)
-	assert.ErrorIs(t, err, auth.ErrOtpExpired)
+	assert.ErrorIs(t, err, auth.ErrOTPInvalidOrExpired)
 }
 
 func TestSignUpUserExists(t *testing.T) {

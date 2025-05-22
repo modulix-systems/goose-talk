@@ -3,13 +3,14 @@ package auth
 import "errors"
 
 var (
-	ErrInvalidOtp = errors.New("Invalid otp")
-	ErrOtpExpired = errors.New(
-		"Your otp has expired! Please obtain a new one and try again",
-	)
-	ErrInvalidOrExpiredTOTP = errors.New(
-		"Entered TOTP code is invalid or expired. Please take a new one from your auth application",
-	)
+	// ErrInvalidOtp          = errors.New("Invalid otp")
+	ErrOTPInvalidOrExpired = errors.New("Entered code is invalid or expired. Please take a new one and try again")
+	// ErrOtpExpired          = errors.New(
+	// 	"Your otp has expired! Please obtain a new one and try again",
+	// )
+	// ErrInvalidOrExpiredTOTP = errors.New(
+	// 	"Entered TOTP code is invalid or expired. Please take a new one from your auth application",
+	// )
 	Err2FANotEnabled = errors.New(
 		"You have not enabled two factor authentication for your account",
 	)

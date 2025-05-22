@@ -46,9 +46,12 @@ type (
 		Contact   string
 	}
 	Confirm2FASchema struct {
-		UserEmail        string
-		Typ              entity.TwoFADeliveryMethod
-		Contact          string
+		UserEmail string
+		Typ       entity.TwoFADeliveryMethod
+		Contact   string
+		// TotpSecret should be empty if Typ is not TOTP_APP
+		TotpSecret string
+		// ConfirmationCode is not required if Typ is TOTP_APP
 		ConfirmationCode string
 	}
 )

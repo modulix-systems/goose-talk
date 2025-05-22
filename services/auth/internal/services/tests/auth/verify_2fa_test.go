@@ -102,7 +102,7 @@ func TestVerify2FAOtpNotFound(t *testing.T) {
 				Return(nil, storage.ErrNotFound)
 
 			authToken, err := authSuite.service.Verify2FA(ctx, dto)
-			assert.ErrorIs(t, err, auth.ErrInvalidOtp)
+			assert.ErrorIs(t, err, auth.ErrOTPInvalidOrExpired)
 			assert.Empty(t, authToken)
 
 		})
@@ -128,7 +128,7 @@ func TestVerify2FAInvalidOTP(t *testing.T) {
 				Return(false, nil)
 
 			authToken, err := authSuite.service.Verify2FA(ctx, dto)
-			assert.ErrorIs(t, err, auth.ErrInvalidOtp)
+			assert.ErrorIs(t, err, auth.ErrOTPInvalidOrExpired)
 			assert.Empty(t, authToken)
 
 		})
@@ -181,7 +181,7 @@ func TestVerify2FATotpAppInvalidTOTP(t *testing.T) {
 		Return(false)
 
 	authToken, err := authSuite.service.Verify2FA(ctx, dto)
-	assert.ErrorIs(t, err, auth.ErrInvalidOrExpiredTOTP)
+	assert.ErrorIs(t, err, auth.ErrOTPInvalidOrExpired)
 	assert.Empty(t, authToken)
 }
 
@@ -198,7 +198,7 @@ func TestVerify2FAOtpExpired(t *testing.T) {
 			authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(mockOTP, nil)
 
 			authToken, err := authSuite.service.Verify2FA(ctx, dto)
-			assert.ErrorIs(t, err, auth.ErrOtpExpired)
+			assert.ErrorIs(t, err, auth.ErrOTPInvalidOrExpired)
 			assert.Empty(t, authToken)
 		})
 	}

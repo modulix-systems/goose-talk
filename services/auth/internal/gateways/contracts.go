@@ -54,6 +54,9 @@ type (
 		DeleteByEmail(ctx context.Context, email string) error
 		InsertOrUpdateCode(ctx context.Context, otp *entity.OTP) error
 	}
+	TwoFactorAuthRepo interface {
+		Insert(ctx context.Context, ent *entity.TwoFactorAuth) (*entity.TwoFactorAuth, error)
+	}
 	AuthTokenProvider interface {
 		NewToken(expires time.Duration, claims map[string]any) (string, error)
 		ParseClaimsFromToken(token string) (map[string]any, error)

@@ -26,7 +26,7 @@ func (m TwoFADeliveryMethod) String() string {
 	}
 }
 
-var OtpDeliveryMethods = []TwoFADeliveryMethod{TWO_FA_TELEGRAM, TWO_FA_EMAIL, TWO_FA_TOTP_APP}
+var OtpDeliveryMethods = []TwoFADeliveryMethod{TWO_FA_EMAIL, TWO_FA_TELEGRAM, TWO_FA_TOTP_APP}
 
 type (
 	// OTP represents storage for email verifications codes
@@ -54,3 +54,7 @@ type (
 		Enabled bool
 	}
 )
+
+func (otp *OTP) IsExpired(ttl time.Duration) bool {
+	return time.Now().After(otp.UpdatedAt.Add(ttl))
+}

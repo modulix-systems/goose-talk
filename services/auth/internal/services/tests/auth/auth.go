@@ -19,6 +19,7 @@ import (
 
 type AuthTestSuite struct {
 	mockCodeRepo          *mocks.MockOtpRepo
+	mock2FARepo           *mocks.MockTwoFactorAuthRepo
 	mockUsersRepo         *mocks.MockUsersRepo
 	mockSessionsRepo      *mocks.MockUserSessionsRepo
 	mockAuthTokenProvider *mocks.MockAuthTokenProvider
@@ -39,6 +40,7 @@ func NewAuthTestSuite(ctrl *gomock.Controller) *AuthTestSuite {
 	mockSecurityProvider := mocks.NewMockSecurityProvider(ctrl)
 	mockTgAPI := mocks.NewMockTelegramBotAPI(ctrl)
 	mockSessionsRepo := mocks.NewMockUserSessionsRepo(ctrl)
+	mock2FARepo := mocks.NewMockTwoFactorAuthRepo(ctrl)
 	mockGeoIPApi := mocks.NewMockGeoIPApi(ctrl)
 	service := auth.New(
 		mockUsersRepo,
@@ -51,6 +53,7 @@ func NewAuthTestSuite(ctrl *gomock.Controller) *AuthTestSuite {
 		mockTgAPI,
 		mockSessionsRepo,
 		mockGeoIPApi,
+		mock2FARepo,
 	)
 	return &AuthTestSuite{
 		mockCodeRepo:          mockCodeRepo,
@@ -63,6 +66,7 @@ func NewAuthTestSuite(ctrl *gomock.Controller) *AuthTestSuite {
 		mockTgAPI:             mockTgAPI,
 		service:               service,
 		mockGeoIPApi:          mockGeoIPApi,
+		mock2FARepo:           mock2FARepo,
 	}
 }
 
