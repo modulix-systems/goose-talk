@@ -47,17 +47,13 @@ func MockUserSession(active bool) *entity.UserSession {
 	}
 
 	return &entity.UserSession{
-		ID:     gofakeit.Number(1, 1000),
-		UserId: gofakeit.Number(1, 1000),
-		ClientIdentity: &entity.ClientIdentity{
-			DeviceInfo: gofakeit.UserAgent(),
-			IPAddr:     gofakeit.IPv4Address(),
-			Location:   gofakeit.City(),
-		},
-		LastSeenAt:    lastSeen,
-		CreatedAt:     created,
-		DeactivatedAt: deactivated,
-		AccessToken:   gofakeit.UUID(),
+		ID:             gofakeit.Number(1, 1000),
+		UserId:         gofakeit.Number(1, 1000),
+		ClientIdentity: MockClientIdentity(),
+		LastSeenAt:     lastSeen,
+		CreatedAt:      created,
+		DeactivatedAt:  deactivated,
+		AccessToken:    gofakeit.UUID(),
 	}
 }
 
@@ -65,5 +61,24 @@ func MockOTP() *entity.OTP {
 	return &entity.OTP{
 		Code: []byte(gofakeit.Numerify("######")), UserEmail: gofakeit.Email(),
 		CreatedAt: time.Now(), UpdatedAt: time.Now(),
+	}
+}
+
+func MockLoginToken(ttl time.Duration) *entity.LoginToken {
+	return &entity.LoginToken{
+		SessionId:        gofakeit.UUID(),
+		Val:              gofakeit.UUID(),
+		ClientIdentity:   MockClientIdentity(),
+		ClientIdentityId: gofakeit.Number(1, 1000),
+		AuthSessionId:    gofakeit.Number(0, 1000),
+		ExpiresAt:        time.Now().Add(ttl),
+	}
+}
+
+func MockClientIdentity() *entity.ClientIdentity {
+	return &entity.ClientIdentity{
+		IPAddr:     gofakeit.IPv4Address(),
+		Location:   gofakeit.City(),
+		DeviceInfo: gofakeit.UserAgent(),
 	}
 }

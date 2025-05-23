@@ -17,10 +17,12 @@ import (
 
 func mockSignInPayload() *schemas.SignInSchema {
 	return &schemas.SignInSchema{
-		Login:      gofakeit.Username(),
-		Password:   helpers.RandomPassword(),
-		DeviceInfo: gofakeit.UserAgent(),
-		ClientIP:   gofakeit.IPv4Address(),
+		Login:    gofakeit.Username(),
+		Password: helpers.RandomPassword(),
+		ClientIdentitySchema: schemas.ClientIdentitySchema{
+			DeviceInfo: gofakeit.UserAgent(),
+			IPAddr:     gofakeit.IPv4Address(),
+		},
 	}
 }
 
@@ -84,8 +86,9 @@ func TestSignInSuccessNo2FA(t *testing.T) {
 			mockSession := helpers.MockUserSession(gofakeit.Bool())
 			mockSession.UserId = mockUser.ID
 			mockSession.AccessToken = expectedToken
+			mockSession.ClientIdentity = &entity.ClientIdentity{DeviceInfo: dto.DeviceInfo, IPAddr: dto.IPAddr}
 			authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
-			setAuthSessionExpectations(t, ctx, authSuite, mockUser, mockSession, tc.sessionExists, dto.DeviceInfo, dto.ClientIP, expectedToken)
+			setAuthSessionExpectations(t, ctx, authSuite, mockUser, mockSession, tc.sessionExists)
 			authSuite.mockSecurityProvider.EXPECT().
 				ComparePasswords(mockUser.Password, dto.Password).
 				Return(true, nil)

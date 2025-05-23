@@ -17,11 +17,13 @@ import (
 
 func mockVerify2FAPayload(twoFaTyp entity.TwoFADeliveryMethod) *schemas.Verify2FASchema {
 	schema := &schemas.Verify2FASchema{
-		TwoFATyp:   twoFaTyp,
-		Code:       "123456",
-		Email:      gofakeit.Email(),
-		ClientIP:   gofakeit.IPv4Address(),
-		DeviceInfo: gofakeit.UserAgent(),
+		TwoFATyp: twoFaTyp,
+		Code:     "123456",
+		Email:    gofakeit.Email(),
+		ClientIdentitySchema: schemas.ClientIdentitySchema{
+			IPAddr:     gofakeit.IPv4Address(),
+			DeviceInfo: gofakeit.UserAgent(),
+		},
 	}
 	if twoFaTyp == entity.TWO_FA_TOTP_APP {
 		schema.SignInConfToken = "456789"
@@ -66,6 +68,7 @@ func TestVerify2FASuccess(t *testing.T) {
 			mockSession := helpers.MockUserSession(gofakeit.Bool())
 			mockSession.UserId = mockUser.ID
 			mockSession.AccessToken = expectedAuthToken
+			mockSession.ClientIdentity = &entity.ClientIdentity{DeviceInfo: dto.DeviceInfo, IPAddr: dto.IPAddr}
 			authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(mockOTP, nil)
 			otpToCompare := dto.Code
 			if tc.twoFaTyp == entity.TWO_FA_TOTP_APP {
@@ -80,7 +83,7 @@ func TestVerify2FASuccess(t *testing.T) {
 			authSuite.mockSecurityProvider.EXPECT().
 				ComparePasswords(mockOTP.Code, otpToCompare).
 				Return(true, nil)
-			setAuthSessionExpectations(t, ctx, authSuite, mockUser, mockSession, tc.sessionExists, dto.DeviceInfo, dto.ClientIP, expectedAuthToken)
+			setAuthSessionExpectations(t, ctx, authSuite, mockUser, mockSession, tc.sessionExists)
 			authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Email).Return(mockUser, nil)
 			authSuite.mockAuthTokenProvider.EXPECT().
 				NewToken(authSuite.tokenTTL, map[string]any{"uid": mockUser.ID}).

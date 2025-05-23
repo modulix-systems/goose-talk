@@ -22,6 +22,7 @@ type AuthTestSuite struct {
 	mock2FARepo           *mocks.MockTwoFactorAuthRepo
 	mockUsersRepo         *mocks.MockUsersRepo
 	mockSessionsRepo      *mocks.MockUserSessionsRepo
+	mockLoginTokenRepo    *mocks.MockLoginTokenRepo
 	mockAuthTokenProvider *mocks.MockAuthTokenProvider
 	mockMailSender        *mocks.MockNotificationsService
 	mockSecurityProvider  *mocks.MockSecurityProvider
@@ -40,6 +41,7 @@ func NewAuthTestSuite(ctrl *gomock.Controller) *AuthTestSuite {
 	mockSecurityProvider := mocks.NewMockSecurityProvider(ctrl)
 	mockTgAPI := mocks.NewMockTelegramBotAPI(ctrl)
 	mockSessionsRepo := mocks.NewMockUserSessionsRepo(ctrl)
+	mockLoginTokenRepo := mocks.NewMockLoginTokenRepo(ctrl)
 	mock2FARepo := mocks.NewMockTwoFactorAuthRepo(ctrl)
 	mockGeoIPApi := mocks.NewMockGeoIPApi(ctrl)
 	service := auth.New(
@@ -49,11 +51,13 @@ func NewAuthTestSuite(ctrl *gomock.Controller) *AuthTestSuite {
 		mockAuthTokenProvider,
 		tokenTTL,
 		tokenTTL,
+		tokenTTL,
 		mockSecurityProvider,
 		mockTgAPI,
 		mockSessionsRepo,
 		mockGeoIPApi,
 		mock2FARepo,
+		mockLoginTokenRepo,
 	)
 	return &AuthTestSuite{
 		mockCodeRepo:          mockCodeRepo,
@@ -67,13 +71,17 @@ func NewAuthTestSuite(ctrl *gomock.Controller) *AuthTestSuite {
 		service:               service,
 		mockGeoIPApi:          mockGeoIPApi,
 		mock2FARepo:           mock2FARepo,
+		mockLoginTokenRepo:    mockLoginTokenRepo,
 	}
 }
 
-func setAuthSessionExpectations(t *testing.T, ctx context.Context, authSuite *AuthTestSuite, mockUser *entity.User, mockSession *entity.UserSession, sessionExists bool, deviceInfo string, ip string, authToken string) {
+func setAuthSessionExpectations(t *testing.T, ctx context.Context, authSuite *AuthTestSuite, mockUser *entity.User, mockSession *entity.UserSession, sessionExists bool) {
 	t.Helper()
 	mockLocation := gofakeit.City()
+	ip := mockSession.ClientIdentity.IPAddr
+	deviceInfo := mockSession.ClientIdentity.DeviceInfo
 	authSuite.mockGeoIPApi.EXPECT().GetLocationByIP(ip).Return(mockLocation, nil)
+	mockSession.ClientIdentity.Location = mockLocation
 	if sessionExists {
 		authSuite.mockSessionsRepo.EXPECT().
 			GetByParamsMatch(ctx, ip, deviceInfo, mockUser.ID).
@@ -86,20 +94,20 @@ func setAuthSessionExpectations(t *testing.T, ctx context.Context, authSuite *Au
 				assert.NotNil(t, payload.DeactivatedAt)
 				assert.Equal(t, *payload.DeactivatedAt, time.Time{})
 				assert.WithinDuration(t, time.Now(), payload.LastSeenAt, time.Second)
-				assert.Equal(t, authToken, payload.AccessToken)
+				assert.Equal(t, mockSession.AccessToken, payload.AccessToken)
 				return mockSession, nil
 			})
 	} else {
 		authSuite.mockSessionsRepo.EXPECT().GetByParamsMatch(ctx, ip, deviceInfo, mockUser.ID).Return(nil, storage.ErrNotFound)
-		authSuite.mockSessionsRepo.EXPECT().Insert(ctx, &entity.UserSession{
-			UserId: mockUser.ID,
-			ClientIdentity: &entity.ClientIdentity{
-				DeviceInfo: deviceInfo,
-				IPAddr:     ip,
-				Location:   mockLocation,
-			},
-			AccessToken: authToken,
-		}).Return(mockSession, nil)
+		authSuite.mockSessionsRepo.EXPECT().Insert(ctx, gomock.Any()).
+			DoAndReturn(func(ctx context.Context, session *entity.UserSession) (*entity.UserSession, error) {
+				assert.Equal(t, mockSession.UserId, session.UserId)
+				assert.Equal(t, mockSession.AccessToken, session.AccessToken)
+				assert.Equal(t, ip, session.ClientIdentity.IPAddr)
+				assert.Equal(t, deviceInfo, session.ClientIdentity.DeviceInfo)
+				assert.Equal(t, mockLocation, session.ClientIdentity.Location)
+				return mockSession, nil
+			})
 		authSuite.mockMailSender.EXPECT().SendSignInNewDeviceEmail(ctx, mockUser.Email, mockSession)
 	}
 

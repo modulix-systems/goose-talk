@@ -20,11 +20,13 @@ type AuthService struct {
 	securityProvider     gateways.SecurityProvider
 	otpRepo              gateways.OtpRepo
 	otpTTL               time.Duration
+	loginTokenTTL        time.Duration
 	authTokenProvider    gateways.AuthTokenProvider
 	authTokenTTL         time.Duration
 	sessionsRepo         gateways.UserSessionsRepo
 	geoIPApi             gateways.GeoIPApi
 	twoFactorAuthRepo    gateways.TwoFactorAuthRepo
+	loginTokenRepo       gateways.LoginTokenRepo
 }
 
 func New(
@@ -33,18 +35,21 @@ func New(
 	otpRepo gateways.OtpRepo,
 	authTokenProvider gateways.AuthTokenProvider,
 	otpTTL time.Duration,
+	loginTokenTTL time.Duration,
 	authTokenTTL time.Duration,
 	securityProvider gateways.SecurityProvider,
 	tgApi gateways.TelegramBotAPI,
 	sessionsRepo gateways.UserSessionsRepo,
 	geoIPApi gateways.GeoIPApi,
 	twoFactorAuthRepo gateways.TwoFactorAuthRepo,
+	loginTokenRepo gateways.LoginTokenRepo,
 ) *AuthService {
 	return &AuthService{
 		usersRepo:            usersRepo,
 		notificationsServive: notificationsServive,
 		otpRepo:              otpRepo,
 		otpTTL:               otpTTL,
+		loginTokenTTL:        loginTokenTTL,
 		authTokenProvider:    authTokenProvider,
 		authTokenTTL:         authTokenTTL,
 		securityProvider:     securityProvider,
@@ -52,6 +57,7 @@ func New(
 		sessionsRepo:         sessionsRepo,
 		geoIPApi:             geoIPApi,
 		twoFactorAuthRepo:    twoFactorAuthRepo,
+		loginTokenRepo:       loginTokenRepo,
 	}
 }
 
@@ -228,7 +234,7 @@ func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (*a
 		}
 		return &authInfo{User: user}, nil
 	}
-	userLocation, err := s.geoIPApi.GetLocationByIP(dto.ClientIP)
+	userLocation, err := s.geoIPApi.GetLocationByIP(dto.IPAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +246,7 @@ func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (*a
 		UserId: user.ID,
 		ClientIdentity: &entity.ClientIdentity{
 			DeviceInfo: dto.DeviceInfo,
-			IPAddr:     dto.ClientIP,
+			IPAddr:     dto.IPAddr,
 			Location:   userLocation,
 		},
 		AccessToken: token,
@@ -306,7 +312,7 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 	if err != nil {
 		return "", err
 	}
-	userLocation, err := s.geoIPApi.GetLocationByIP(dto.ClientIP)
+	userLocation, err := s.geoIPApi.GetLocationByIP(dto.IPAddr)
 	if err != nil {
 		return "", err
 	}
@@ -314,7 +320,7 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 		UserId: user.ID,
 		ClientIdentity: &entity.ClientIdentity{
 			DeviceInfo: dto.DeviceInfo,
-			IPAddr:     dto.ClientIP,
+			IPAddr:     dto.IPAddr,
 			Location:   userLocation,
 		},
 		AccessToken: token,
@@ -519,7 +525,7 @@ func (s *AuthService) PingSession(
 	return session, nil
 }
 
-func (s *AuthService) ExportLoginToken(ctx context.Context, connId string) (*entity.LoginToken, error) {
+func (s *AuthService) ExportLoginToken(ctx context.Context, sessionId string) (*entity.LoginToken, error) {
 	return nil, nil
 }
 

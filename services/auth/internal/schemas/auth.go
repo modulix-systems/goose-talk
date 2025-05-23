@@ -21,17 +21,19 @@ type (
 	SignInSchema struct {
 		Login    string
 		Password string
+		ClientIdentitySchema
+	}
+	ClientIdentitySchema struct {
+		IPAddr string
 		// DeviceInfo can be user-agent for browser or for example some platform info
 		// if request is coming from mobile app
 		DeviceInfo string
-		ClientIP   string
 	}
 	Verify2FASchema struct {
-		DeviceInfo string
-		ClientIP   string
-		TwoFATyp   entity.TwoFADeliveryMethod
-		Email      string
-		Code       string
+		ClientIdentitySchema
+		TwoFATyp entity.TwoFADeliveryMethod
+		Email    string
+		Code     string
 		// SignInConfToken must be present only if TOTP 2fa type is used
 		SignInConfToken string
 	}
@@ -49,9 +51,13 @@ type (
 		UserId  int
 		Typ     entity.TwoFADeliveryMethod
 		Contact string
-		// TotpSecret should be empty if Typ is not TOTP_APP
+		// TotpSecret can be ommited if Typ is not TOTP_APP
 		TotpSecret string
 		// ConfirmationCode is not required if Typ is TOTP_APP
 		ConfirmationCode string
+	}
+	ExportLoginTokenSchema struct {
+		SessionId string
+		ClientIdentitySchema
 	}
 )

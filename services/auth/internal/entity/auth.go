@@ -60,8 +60,8 @@ type (
 		// SessionId serves role of unique identifier for client which requested token
 		SessionId        string
 		Val              string
-		IpInfoId         int
-		ApprovedByUserId int
+		ClientIdentity   *ClientIdentity
+		ClientIdentityId int
 		// AuthSessionId is optional and present only if token was approved
 		// to retrieve auth session details
 		AuthSessionId int
@@ -78,5 +78,5 @@ func (l *LoginToken) IsExpired() bool {
 }
 
 func (l *LoginToken) IsApproved() bool {
-	return l.ApprovedByUserId != 0
+	return l.AuthSessionId != 0
 }
