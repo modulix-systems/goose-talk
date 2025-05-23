@@ -58,6 +58,8 @@ type (
 	}
 	LoginTokenRepo interface {
 		Insert(ctx context.Context, token *entity.LoginToken) (*entity.LoginToken, error)
+		GetBySessionId(ctx context.Context, sessionId string) (*entity.LoginToken, error)
+		DeleteAllForSessionId(ctx context.Context, sessionId string) error
 	}
 	TwoFactorAuthRepo interface {
 		Insert(ctx context.Context, ent *entity.TwoFactorAuth) (*entity.TwoFactorAuth, error)
@@ -75,6 +77,7 @@ type (
 		ComparePasswords(hashed []byte, plain string) (bool, error)
 		EncryptSymmetric(plaintext string) ([]byte, error)
 		DecryptSymmetric(encrypted []byte) (string, error)
+		GenerateSecretTokenUrlSafe(len int) string
 	}
 	NotificationsService interface {
 		SendSignUpConfirmationEmail(ctx context.Context, to string, otp string) error

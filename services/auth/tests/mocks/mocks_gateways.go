@@ -352,6 +352,35 @@ func (m *MockLoginTokenRepo) EXPECT() *MockLoginTokenRepoMockRecorder {
 	return m.recorder
 }
 
+// DeleteAllForSessionId mocks base method.
+func (m *MockLoginTokenRepo) DeleteAllForSessionId(ctx context.Context, sessionId string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAllForSessionId", ctx, sessionId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAllForSessionId indicates an expected call of DeleteAllForSessionId.
+func (mr *MockLoginTokenRepoMockRecorder) DeleteAllForSessionId(ctx, sessionId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllForSessionId", reflect.TypeOf((*MockLoginTokenRepo)(nil).DeleteAllForSessionId), ctx, sessionId)
+}
+
+// GetBySessionId mocks base method.
+func (m *MockLoginTokenRepo) GetBySessionId(ctx context.Context, sessionId string) (*entity.LoginToken, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBySessionId", ctx, sessionId)
+	ret0, _ := ret[0].(*entity.LoginToken)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBySessionId indicates an expected call of GetBySessionId.
+func (mr *MockLoginTokenRepoMockRecorder) GetBySessionId(ctx, sessionId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBySessionId", reflect.TypeOf((*MockLoginTokenRepo)(nil).GetBySessionId), ctx, sessionId)
+}
+
 // Insert mocks base method.
 func (m *MockLoginTokenRepo) Insert(ctx context.Context, token *entity.LoginToken) (*entity.LoginToken, error) {
 	m.ctrl.T.Helper()
@@ -555,6 +584,20 @@ func (m *MockSecurityProvider) GenerateOTPCode() string {
 func (mr *MockSecurityProviderMockRecorder) GenerateOTPCode() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateOTPCode", reflect.TypeOf((*MockSecurityProvider)(nil).GenerateOTPCode))
+}
+
+// GenerateSecretTokenUrlSafe mocks base method.
+func (m *MockSecurityProvider) GenerateSecretTokenUrlSafe(len int) string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GenerateSecretTokenUrlSafe", len)
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GenerateSecretTokenUrlSafe indicates an expected call of GenerateSecretTokenUrlSafe.
+func (mr *MockSecurityProviderMockRecorder) GenerateSecretTokenUrlSafe(len any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateSecretTokenUrlSafe", reflect.TypeOf((*MockSecurityProvider)(nil).GenerateSecretTokenUrlSafe), len)
 }
 
 // GenerateTOTPEnrollUrlWithSecret mocks base method.

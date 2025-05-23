@@ -65,6 +65,7 @@ type (
 		// AuthSessionId is optional and present only if token was approved
 		// to retrieve auth session details
 		AuthSessionId int
+		AuthSession   *UserSession
 		ExpiresAt     time.Time
 	}
 )

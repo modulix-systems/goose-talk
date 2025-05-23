@@ -27,6 +27,7 @@ type AuthService struct {
 	geoIPApi             gateways.GeoIPApi
 	twoFactorAuthRepo    gateways.TwoFactorAuthRepo
 	loginTokenRepo       gateways.LoginTokenRepo
+	loginTokenLen        int
 }
 
 func New(
@@ -58,6 +59,7 @@ func New(
 		geoIPApi:             geoIPApi,
 		twoFactorAuthRepo:    twoFactorAuthRepo,
 		loginTokenRepo:       loginTokenRepo,
+		loginTokenLen:        16,
 	}
 }
 
@@ -525,8 +527,42 @@ func (s *AuthService) PingSession(
 	return session, nil
 }
 
-func (s *AuthService) ExportLoginToken(ctx context.Context, sessionId string) (*entity.LoginToken, error) {
-	return nil, nil
+func (s *AuthService) ExportLoginToken(ctx context.Context, dto *schemas.ExportLoginTokenSchema) (*entity.LoginToken, error) {
+	token, err := s.loginTokenRepo.GetBySessionId(ctx, dto.SessionId)
+	if err != nil {
+		if !errors.Is(err, storage.ErrNotFound) {
+			return nil, err
+		}
+		tokenValue := s.securityProvider.GenerateSecretTokenUrlSafe(s.loginTokenLen)
+		userLocation, err := s.geoIPApi.GetLocationByIP(dto.IPAddr)
+		if err != nil {
+			return nil, err
+		}
+		return s.loginTokenRepo.Insert(ctx, &entity.LoginToken{
+			SessionId: dto.SessionId,
+			Val:       tokenValue,
+			ClientIdentity: &entity.ClientIdentity{
+				IPAddr:     dto.IPAddr,
+				DeviceInfo: dto.DeviceInfo,
+				Location:   userLocation,
+			},
+			ExpiresAt: time.Now().Add(s.loginTokenTTL),
+		})
+	}
+	if token.IsApproved() {
+		return token, nil
+	}
+	err = s.loginTokenRepo.DeleteAllForSessionId(ctx, token.SessionId)
+	if err != nil {
+		return nil, err
+	}
+	tokenValue := s.securityProvider.GenerateSecretTokenUrlSafe(s.loginTokenLen)
+	return s.loginTokenRepo.Insert(ctx, &entity.LoginToken{
+		SessionId:        dto.SessionId,
+		Val:              tokenValue,
+		ClientIdentityId: token.ClientIdentityId, // reuse previous identity from existent token
+		ExpiresAt:        time.Now().Add(s.loginTokenTTL),
+	})
 }
 
 func (s *AuthService) AcceptLoginToken(ctx context.Context, userId int, token string) (*entity.UserSession, error) {

@@ -71,6 +71,7 @@ func MockLoginToken(ttl time.Duration) *entity.LoginToken {
 		ClientIdentity:   MockClientIdentity(),
 		ClientIdentityId: gofakeit.Number(1, 1000),
 		AuthSessionId:    gofakeit.Number(0, 1000),
+		AuthSession:      MockUserSession(true),
 		ExpiresAt:        time.Now().Add(ttl),
 	}
 }
