@@ -57,8 +57,8 @@ type (
 		Enabled bool
 	}
 	LoginToken struct {
-		// SessionId serves role of unique identifier for client which requested token
-		SessionId        string
+		// ClientId is unique identifier for client which requested token
+		ClientId         string
 		Val              string
 		ClientIdentity   *ClientIdentity
 		ClientIdentityId int

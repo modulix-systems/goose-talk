@@ -58,8 +58,10 @@ type (
 	}
 	LoginTokenRepo interface {
 		Insert(ctx context.Context, token *entity.LoginToken) (*entity.LoginToken, error)
-		GetBySessionId(ctx context.Context, sessionId string) (*entity.LoginToken, error)
-		DeleteAllForSessionId(ctx context.Context, sessionId string) error
+		GetByClientId(ctx context.Context, sessionId string) (*entity.LoginToken, error)
+		GetByValue(ctx context.Context, val string) (*entity.LoginToken, error)
+		DeleteByClientId(ctx context.Context, sessionId string) error
+		UpdateAuthSessionByClientId(ctx context.Context, clientId string, authSessionId int) error
 	}
 	TwoFactorAuthRepo interface {
 		Insert(ctx context.Context, ent *entity.TwoFactorAuth) (*entity.TwoFactorAuth, error)

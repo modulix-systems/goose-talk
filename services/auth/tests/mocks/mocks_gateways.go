@@ -352,33 +352,48 @@ func (m *MockLoginTokenRepo) EXPECT() *MockLoginTokenRepoMockRecorder {
 	return m.recorder
 }
 
-// DeleteAllForSessionId mocks base method.
-func (m *MockLoginTokenRepo) DeleteAllForSessionId(ctx context.Context, sessionId string) error {
+// DeleteByClientId mocks base method.
+func (m *MockLoginTokenRepo) DeleteByClientId(ctx context.Context, sessionId string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteAllForSessionId", ctx, sessionId)
+	ret := m.ctrl.Call(m, "DeleteByClientId", ctx, sessionId)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteAllForSessionId indicates an expected call of DeleteAllForSessionId.
-func (mr *MockLoginTokenRepoMockRecorder) DeleteAllForSessionId(ctx, sessionId any) *gomock.Call {
+// DeleteByClientId indicates an expected call of DeleteByClientId.
+func (mr *MockLoginTokenRepoMockRecorder) DeleteByClientId(ctx, sessionId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllForSessionId", reflect.TypeOf((*MockLoginTokenRepo)(nil).DeleteAllForSessionId), ctx, sessionId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteByClientId", reflect.TypeOf((*MockLoginTokenRepo)(nil).DeleteByClientId), ctx, sessionId)
 }
 
-// GetBySessionId mocks base method.
-func (m *MockLoginTokenRepo) GetBySessionId(ctx context.Context, sessionId string) (*entity.LoginToken, error) {
+// GetByClientId mocks base method.
+func (m *MockLoginTokenRepo) GetByClientId(ctx context.Context, sessionId string) (*entity.LoginToken, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBySessionId", ctx, sessionId)
+	ret := m.ctrl.Call(m, "GetByClientId", ctx, sessionId)
 	ret0, _ := ret[0].(*entity.LoginToken)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetBySessionId indicates an expected call of GetBySessionId.
-func (mr *MockLoginTokenRepoMockRecorder) GetBySessionId(ctx, sessionId any) *gomock.Call {
+// GetByClientId indicates an expected call of GetByClientId.
+func (mr *MockLoginTokenRepoMockRecorder) GetByClientId(ctx, sessionId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBySessionId", reflect.TypeOf((*MockLoginTokenRepo)(nil).GetBySessionId), ctx, sessionId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByClientId", reflect.TypeOf((*MockLoginTokenRepo)(nil).GetByClientId), ctx, sessionId)
+}
+
+// GetByValue mocks base method.
+func (m *MockLoginTokenRepo) GetByValue(ctx context.Context, val string) (*entity.LoginToken, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByValue", ctx, val)
+	ret0, _ := ret[0].(*entity.LoginToken)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByValue indicates an expected call of GetByValue.
+func (mr *MockLoginTokenRepoMockRecorder) GetByValue(ctx, val any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByValue", reflect.TypeOf((*MockLoginTokenRepo)(nil).GetByValue), ctx, val)
 }
 
 // Insert mocks base method.
@@ -394,6 +409,20 @@ func (m *MockLoginTokenRepo) Insert(ctx context.Context, token *entity.LoginToke
 func (mr *MockLoginTokenRepoMockRecorder) Insert(ctx, token any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockLoginTokenRepo)(nil).Insert), ctx, token)
+}
+
+// UpdateAuthSessionByClientId mocks base method.
+func (m *MockLoginTokenRepo) UpdateAuthSessionByClientId(ctx context.Context, sessionId string, authSessionId int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateAuthSessionByClientId", ctx, sessionId, authSessionId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateAuthSessionByClientId indicates an expected call of UpdateAuthSessionByClientId.
+func (mr *MockLoginTokenRepoMockRecorder) UpdateAuthSessionByClientId(ctx, sessionId, authSessionId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthSessionByClientId", reflect.TypeOf((*MockLoginTokenRepo)(nil).UpdateAuthSessionByClientId), ctx, sessionId, authSessionId)
 }
 
 // MockTwoFactorAuthRepo is a mock of TwoFactorAuthRepo interface.

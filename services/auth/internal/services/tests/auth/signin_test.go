@@ -88,7 +88,7 @@ func TestSignInSuccessNo2FA(t *testing.T) {
 			mockSession.AccessToken = expectedToken
 			mockSession.ClientIdentity = &entity.ClientIdentity{DeviceInfo: dto.DeviceInfo, IPAddr: dto.IPAddr}
 			authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
-			setAuthSessionExpectations(t, ctx, authSuite, mockUser, mockSession, tc.sessionExists)
+			setAuthSessionExpectations(t, ctx, authSuite, mockUser, mockSession, tc.sessionExists, true)
 			authSuite.mockSecurityProvider.EXPECT().
 				ComparePasswords(mockUser.Password, dto.Password).
 				Return(true, nil)

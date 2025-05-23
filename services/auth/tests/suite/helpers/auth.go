@@ -66,7 +66,7 @@ func MockOTP() *entity.OTP {
 
 func MockLoginToken(ttl time.Duration) *entity.LoginToken {
 	return &entity.LoginToken{
-		SessionId:        gofakeit.UUID(),
+		ClientId:         gofakeit.UUID(),
 		Val:              gofakeit.UUID(),
 		ClientIdentity:   MockClientIdentity(),
 		ClientIdentityId: gofakeit.Number(1, 1000),

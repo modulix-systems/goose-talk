@@ -2,7 +2,6 @@ package auth_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -19,7 +18,6 @@ func TestDeactivateSession(t *testing.T) {
 	ctx := context.Background()
 	mockSessionId := gofakeit.Number(1, 1000)
 	mockUserId := gofakeit.Number(1, 1000)
-	fmt.Println(time.Now().Truncate(time.Second))
 	t.Run("success", func(t *testing.T) {
 		authSuite.mockSessionsRepo.EXPECT().UpdateForUserById(
 			ctx, mockUserId, mockSessionId, gomock.Any(),

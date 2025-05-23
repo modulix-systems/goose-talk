@@ -528,7 +528,7 @@ func (s *AuthService) PingSession(
 }
 
 func (s *AuthService) ExportLoginToken(ctx context.Context, dto *schemas.ExportLoginTokenSchema) (*entity.LoginToken, error) {
-	token, err := s.loginTokenRepo.GetBySessionId(ctx, dto.SessionId)
+	token, err := s.loginTokenRepo.GetByClientId(ctx, dto.ClientId)
 	if err != nil {
 		if !errors.Is(err, storage.ErrNotFound) {
 			return nil, err
@@ -539,8 +539,8 @@ func (s *AuthService) ExportLoginToken(ctx context.Context, dto *schemas.ExportL
 			return nil, err
 		}
 		return s.loginTokenRepo.Insert(ctx, &entity.LoginToken{
-			SessionId: dto.SessionId,
-			Val:       tokenValue,
+			ClientId: dto.ClientId,
+			Val:      tokenValue,
 			ClientIdentity: &entity.ClientIdentity{
 				IPAddr:     dto.IPAddr,
 				DeviceInfo: dto.DeviceInfo,
@@ -552,19 +552,52 @@ func (s *AuthService) ExportLoginToken(ctx context.Context, dto *schemas.ExportL
 	if token.IsApproved() {
 		return token, nil
 	}
-	err = s.loginTokenRepo.DeleteAllForSessionId(ctx, token.SessionId)
+	err = s.loginTokenRepo.DeleteByClientId(ctx, token.ClientId)
 	if err != nil {
 		return nil, err
 	}
 	tokenValue := s.securityProvider.GenerateSecretTokenUrlSafe(s.loginTokenLen)
 	return s.loginTokenRepo.Insert(ctx, &entity.LoginToken{
-		SessionId:        dto.SessionId,
+		ClientId:         dto.ClientId,
 		Val:              tokenValue,
 		ClientIdentityId: token.ClientIdentityId, // reuse previous identity from existent token
 		ExpiresAt:        time.Now().Add(s.loginTokenTTL),
 	})
 }
 
-func (s *AuthService) AcceptLoginToken(ctx context.Context, userId int, token string) (*entity.UserSession, error) {
-	return nil, nil
+func (s *AuthService) AcceptLoginToken(ctx context.Context, userId int, tokenVal string) (*entity.UserSession, error) {
+	token, err := s.loginTokenRepo.GetByValue(ctx, tokenVal)
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return nil, ErrInvalidLoginToken
+		}
+		return nil, err
+	}
+	if token.IsExpired() {
+		return nil, ErrExpiredLoginToken
+	}
+	user, err := s.usersRepo.GetByID(ctx, userId)
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return nil, ErrUserNotFound
+		}
+		return nil, err
+	}
+	authToken, err := s.authTokenProvider.NewToken(s.authTokenTTL, map[string]any{"uid": user.ID})
+	if err != nil {
+		return nil, err
+	}
+	session, err := s.newAuthSession(ctx, user, &entity.UserSession{
+		UserId:           user.ID,
+		ClientIdentityId: token.ClientIdentityId,
+		ClientIdentity:   token.ClientIdentity,
+		AccessToken:      authToken,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if err := s.loginTokenRepo.UpdateAuthSessionByClientId(ctx, token.ClientId, session.ID); err != nil {
+		return nil, err
+	}
+	return session, nil
 }

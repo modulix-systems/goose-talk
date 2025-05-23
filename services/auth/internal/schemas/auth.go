@@ -57,7 +57,7 @@ type (
 		ConfirmationCode string
 	}
 	ExportLoginTokenSchema struct {
-		SessionId string
+		ClientId string
 		ClientIdentitySchema
 	}
 )

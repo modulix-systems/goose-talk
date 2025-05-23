@@ -75,16 +75,19 @@ func NewAuthTestSuite(ctrl *gomock.Controller) *AuthTestSuite {
 	}
 }
 
-func setAuthSessionExpectations(t *testing.T, ctx context.Context, authSuite *AuthTestSuite, mockUser *entity.User, mockSession *entity.UserSession, sessionExists bool) {
+func setAuthSessionExpectations(t *testing.T, ctx context.Context, authSuite *AuthTestSuite, mockUser *entity.User, mockSession *entity.UserSession, sessionExists bool, shouldFetchLocation bool) {
 	t.Helper()
-	mockLocation := gofakeit.City()
-	ip := mockSession.ClientIdentity.IPAddr
-	deviceInfo := mockSession.ClientIdentity.DeviceInfo
-	authSuite.mockGeoIPApi.EXPECT().GetLocationByIP(ip).Return(mockLocation, nil)
-	mockSession.ClientIdentity.Location = mockLocation
+	expectedIP := mockSession.ClientIdentity.IPAddr
+	expectedDeviceInfo := mockSession.ClientIdentity.DeviceInfo
+	expectedLocation := mockSession.ClientIdentity.Location
+	if shouldFetchLocation {
+		expectedLocation = gofakeit.City()
+		authSuite.mockGeoIPApi.EXPECT().GetLocationByIP(expectedIP).Return(expectedLocation, nil)
+		mockSession.ClientIdentity.Location = expectedLocation
+	}
 	if sessionExists {
 		authSuite.mockSessionsRepo.EXPECT().
-			GetByParamsMatch(ctx, ip, deviceInfo, mockUser.ID).
+			GetByParamsMatch(ctx, expectedIP, expectedDeviceInfo, mockUser.ID).
 			Return(mockSession, nil)
 		authSuite.mockSessionsRepo.EXPECT().UpdateById(
 			ctx, mockSession.ID,
@@ -98,14 +101,17 @@ func setAuthSessionExpectations(t *testing.T, ctx context.Context, authSuite *Au
 				return mockSession, nil
 			})
 	} else {
-		authSuite.mockSessionsRepo.EXPECT().GetByParamsMatch(ctx, ip, deviceInfo, mockUser.ID).Return(nil, storage.ErrNotFound)
+		authSuite.mockSessionsRepo.EXPECT().GetByParamsMatch(ctx, expectedIP, expectedDeviceInfo, mockUser.ID).Return(nil, storage.ErrNotFound)
 		authSuite.mockSessionsRepo.EXPECT().Insert(ctx, gomock.Any()).
 			DoAndReturn(func(ctx context.Context, session *entity.UserSession) (*entity.UserSession, error) {
 				assert.Equal(t, mockSession.UserId, session.UserId)
 				assert.Equal(t, mockSession.AccessToken, session.AccessToken)
-				assert.Equal(t, ip, session.ClientIdentity.IPAddr)
-				assert.Equal(t, deviceInfo, session.ClientIdentity.DeviceInfo)
-				assert.Equal(t, mockLocation, session.ClientIdentity.Location)
+				// if related entity id is not provided - assert that has enought data to create that related entity
+				if session.ClientIdentityId == 0 {
+					assert.Equal(t, expectedIP, session.ClientIdentity.IPAddr)
+					assert.Equal(t, expectedDeviceInfo, session.ClientIdentity.DeviceInfo)
+					assert.Equal(t, expectedLocation, session.ClientIdentity.Location)
+				}
 				return mockSession, nil
 			})
 		authSuite.mockMailSender.EXPECT().SendSignInNewDeviceEmail(ctx, mockUser.Email, mockSession)

@@ -24,7 +24,9 @@ var (
 	ErrDisabledAccount = errors.New(
 		"Your account is disabled. Try to contact support to resolve this issue",
 	)
-	ErrSessionNotFound  = errors.New("No active session found")
-	ErrExpiredAuthToken = errors.New("Your auth token has expired. Please obtain a new one")
-	ErrInvalidAuthToken = errors.New("Your auth token is malformed. Please obtain a new one")
+	ErrSessionNotFound   = errors.New("No active session found")
+	ErrExpiredAuthToken  = errors.New("Your auth token has expired. Please obtain a new one")
+	ErrInvalidAuthToken  = errors.New("Your auth token is malformed. Please obtain a new one")
+	ErrInvalidLoginToken = errors.New("Your login token is invalid. Please obtain a new one")
+	ErrExpiredLoginToken = errors.New("Your login token has expired. Please obtain a new one")
 )

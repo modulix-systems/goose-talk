@@ -16,7 +16,7 @@ import (
 
 func fakeExportLoginTokenPayload(fromEnt *entity.LoginToken) *schemas.ExportLoginTokenSchema {
 	return &schemas.ExportLoginTokenSchema{
-		SessionId: fromEnt.SessionId,
+		ClientId: fromEnt.ClientId,
 		ClientIdentitySchema: schemas.ClientIdentitySchema{
 			IPAddr:     fromEnt.ClientIdentity.IPAddr,
 			DeviceInfo: fromEnt.ClientIdentity.DeviceInfo,
@@ -30,7 +30,7 @@ func setInsertExpectation(t *testing.T, ctx context.Context, authSuite *AuthTest
 	authSuite.mockSecurityProvider.EXPECT().GenerateSecretTokenUrlSafe(16).Return(tokenVal)
 	authSuite.mockLoginTokenRepo.EXPECT().Insert(ctx, gomock.Any()).
 		DoAndReturn(func(ctx context.Context, token *entity.LoginToken) (*entity.LoginToken, error) {
-			assert.Equal(t, expectedLoginToken.SessionId, token.SessionId)
+			assert.Equal(t, expectedLoginToken.ClientId, token.ClientId)
 			assert.Equal(t, tokenVal, token.Val)
 			assert.WithinDuration(t, time.Now().Add(authSuite.tokenTTL), token.ExpiresAt, time.Second)
 			if withClientId {
@@ -53,7 +53,7 @@ func TestExportLoginTokenInsertNotFound(t *testing.T) {
 	mockLoginToken.AuthSessionId = 0
 	dto := fakeExportLoginTokenPayload(mockLoginToken)
 
-	authSuite.mockLoginTokenRepo.EXPECT().GetBySessionId(ctx, dto.SessionId).Return(nil, storage.ErrNotFound)
+	authSuite.mockLoginTokenRepo.EXPECT().GetByClientId(ctx, dto.ClientId).Return(nil, storage.ErrNotFound)
 	authSuite.mockGeoIPApi.EXPECT().GetLocationByIP(dto.IPAddr).Return(mockLoginToken.ClientIdentity.Location, nil)
 	setInsertExpectation(t, ctx, authSuite, mockLoginToken, true)
 
@@ -70,13 +70,13 @@ func TestExportLoginTokenReInsertNotApproved(t *testing.T) {
 	mockLoginToken := helpers.MockLoginToken(authSuite.tokenTTL)
 	mockLoginToken.AuthSessionId = 0
 	dto := fakeExportLoginTokenPayload(mockLoginToken)
-	authSuite.mockLoginTokenRepo.EXPECT().GetBySessionId(ctx, dto.SessionId).Return(mockLoginToken, nil)
-	authSuite.mockLoginTokenRepo.EXPECT().DeleteAllForSessionId(ctx, dto.SessionId).Return(nil)
+	authSuite.mockLoginTokenRepo.EXPECT().GetByClientId(ctx, dto.ClientId).Return(mockLoginToken, nil)
+	authSuite.mockLoginTokenRepo.EXPECT().DeleteByClientId(ctx, dto.ClientId).Return(nil)
 	setInsertExpectation(t, ctx, authSuite, mockLoginToken, false)
 
 	token, err := authSuite.service.ExportLoginToken(ctx, dto)
 	assert.NoError(t, err)
-	assert.Equal(t, mockLoginToken.SessionId, token.SessionId)
+	assert.Equal(t, mockLoginToken.ClientId, token.ClientId)
 	assert.False(t, token.IsApproved())
 }
 
@@ -87,11 +87,11 @@ func TestExportLoginTokenReturnApproved(t *testing.T) {
 	ctx := context.Background()
 	mockLoginToken := helpers.MockLoginToken(authSuite.tokenTTL)
 	dto := fakeExportLoginTokenPayload(mockLoginToken)
-	authSuite.mockLoginTokenRepo.EXPECT().GetBySessionId(ctx, dto.SessionId).Return(mockLoginToken, nil)
+	authSuite.mockLoginTokenRepo.EXPECT().GetByClientId(ctx, dto.ClientId).Return(mockLoginToken, nil)
 
 	token, err := authSuite.service.ExportLoginToken(ctx, dto)
 	assert.NoError(t, err)
-	assert.Equal(t, mockLoginToken.SessionId, token.SessionId)
+	assert.Equal(t, mockLoginToken.ClientId, token.ClientId)
 	assert.NotEmpty(t, token.AuthSession)
 	assert.True(t, token.IsApproved())
 }
