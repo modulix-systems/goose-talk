@@ -92,10 +92,12 @@ func setAuthSessionExpectations(t *testing.T, ctx context.Context, authSuite *Au
 	} else {
 		authSuite.mockSessionsRepo.EXPECT().GetByParamsMatch(ctx, ip, deviceInfo, mockUser.ID).Return(nil, storage.ErrNotFound)
 		authSuite.mockSessionsRepo.EXPECT().Insert(ctx, &entity.UserSession{
-			UserId:      mockUser.ID,
-			DeviceInfo:  deviceInfo,
-			IP:          ip,
-			Location:    mockLocation,
+			UserId: mockUser.ID,
+			ClientIdentity: &entity.ClientIdentity{
+				DeviceInfo: deviceInfo,
+				IPAddr:     ip,
+				Location:   mockLocation,
+			},
 			AccessToken: authToken,
 		}).Return(mockSession, nil)
 		authSuite.mockMailSender.EXPECT().SendSignInNewDeviceEmail(ctx, mockUser.Email, mockSession)

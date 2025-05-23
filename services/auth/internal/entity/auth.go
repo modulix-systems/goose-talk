@@ -56,8 +56,27 @@ type (
 		// indicates whether user has 2fa enabled. By default false
 		Enabled bool
 	}
+	LoginToken struct {
+		// SessionId serves role of unique identifier for client which requested token
+		SessionId        string
+		Val              string
+		IpInfoId         int
+		ApprovedByUserId int
+		// AuthSessionId is optional and present only if token was approved
+		// to retrieve auth session details
+		AuthSessionId int
+		ExpiresAt     time.Time
+	}
 )
 
 func (otp *OTP) IsExpired(ttl time.Duration) bool {
 	return time.Now().After(otp.UpdatedAt.Add(ttl))
+}
+
+func (l *LoginToken) IsExpired() bool {
+	return time.Now().After(l.ExpiresAt)
+}
+
+func (l *LoginToken) IsApproved() bool {
+	return l.ApprovedByUserId != 0
 }

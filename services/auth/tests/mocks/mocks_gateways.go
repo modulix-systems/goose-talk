@@ -328,6 +328,45 @@ func (mr *MockOtpRepoMockRecorder) InsertOrUpdateCode(ctx, otp any) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertOrUpdateCode", reflect.TypeOf((*MockOtpRepo)(nil).InsertOrUpdateCode), ctx, otp)
 }
 
+// MockLoginTokenRepo is a mock of LoginTokenRepo interface.
+type MockLoginTokenRepo struct {
+	ctrl     *gomock.Controller
+	recorder *MockLoginTokenRepoMockRecorder
+	isgomock struct{}
+}
+
+// MockLoginTokenRepoMockRecorder is the mock recorder for MockLoginTokenRepo.
+type MockLoginTokenRepoMockRecorder struct {
+	mock *MockLoginTokenRepo
+}
+
+// NewMockLoginTokenRepo creates a new mock instance.
+func NewMockLoginTokenRepo(ctrl *gomock.Controller) *MockLoginTokenRepo {
+	mock := &MockLoginTokenRepo{ctrl: ctrl}
+	mock.recorder = &MockLoginTokenRepoMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockLoginTokenRepo) EXPECT() *MockLoginTokenRepoMockRecorder {
+	return m.recorder
+}
+
+// Insert mocks base method.
+func (m *MockLoginTokenRepo) Insert(ctx context.Context, token *entity.LoginToken) (*entity.LoginToken, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Insert", ctx, token)
+	ret0, _ := ret[0].(*entity.LoginToken)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Insert indicates an expected call of Insert.
+func (mr *MockLoginTokenRepoMockRecorder) Insert(ctx, token any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockLoginTokenRepo)(nil).Insert), ctx, token)
+}
+
 // MockTwoFactorAuthRepo is a mock of TwoFactorAuthRepo interface.
 type MockTwoFactorAuthRepo struct {
 	ctrl     *gomock.Controller

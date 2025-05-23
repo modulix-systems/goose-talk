@@ -56,6 +56,9 @@ type (
 		DeleteByEmail(ctx context.Context, email string) error
 		InsertOrUpdateCode(ctx context.Context, otp *entity.OTP) error
 	}
+	LoginTokenRepo interface {
+		Insert(ctx context.Context, token *entity.LoginToken) (*entity.LoginToken, error)
+	}
 	TwoFactorAuthRepo interface {
 		Insert(ctx context.Context, ent *entity.TwoFactorAuth) (*entity.TwoFactorAuth, error)
 		UpdateContactForUser(ctx context.Context, userId int, contact string) error

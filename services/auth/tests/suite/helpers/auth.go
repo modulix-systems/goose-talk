@@ -47,13 +47,15 @@ func MockUserSession(active bool) *entity.UserSession {
 	}
 
 	return &entity.UserSession{
-		ID:            gofakeit.Number(1, 1000),
-		UserId:        gofakeit.Number(1, 1000),
-		Location:      gofakeit.City(),
-		IP:            gofakeit.IPv4Address(),
+		ID:     gofakeit.Number(1, 1000),
+		UserId: gofakeit.Number(1, 1000),
+		ClientIdentity: &entity.ClientIdentity{
+			DeviceInfo: gofakeit.UserAgent(),
+			IPAddr:     gofakeit.IPv4Address(),
+			Location:   gofakeit.City(),
+		},
 		LastSeenAt:    lastSeen,
 		CreatedAt:     created,
-		DeviceInfo:    gofakeit.UserAgent(),
 		DeactivatedAt: deactivated,
 		AccessToken:   gofakeit.UUID(),
 	}

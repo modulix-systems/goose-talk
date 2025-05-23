@@ -77,7 +77,7 @@ func (s *AuthService) createOTP(ctx context.Context, email string, userId int) (
 func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, sessionEnt *entity.UserSession) (*entity.UserSession, error) {
 	// Try to find matching session by set of params, if it wasn't found - create new one
 	// or update otherwise
-	session, err := s.sessionsRepo.GetByParamsMatch(ctx, sessionEnt.IP, sessionEnt.DeviceInfo, user.ID)
+	session, err := s.sessionsRepo.GetByParamsMatch(ctx, sessionEnt.ClientIdentity.IPAddr, sessionEnt.ClientIdentity.DeviceInfo, user.ID)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			session, err = s.sessionsRepo.Insert(ctx, sessionEnt)
@@ -237,10 +237,12 @@ func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (*a
 		return nil, err
 	}
 	session, err := s.newAuthSession(ctx, user, &entity.UserSession{
-		UserId:      user.ID,
-		DeviceInfo:  dto.DeviceInfo,
-		IP:          dto.ClientIP,
-		Location:    userLocation,
+		UserId: user.ID,
+		ClientIdentity: &entity.ClientIdentity{
+			DeviceInfo: dto.DeviceInfo,
+			IPAddr:     dto.ClientIP,
+			Location:   userLocation,
+		},
 		AccessToken: token,
 	})
 	if err != nil {
@@ -309,10 +311,12 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 		return "", err
 	}
 	_, err = s.newAuthSession(ctx, user, &entity.UserSession{
-		UserId:      user.ID,
-		DeviceInfo:  dto.DeviceInfo,
-		IP:          dto.ClientIP,
-		Location:    userLocation,
+		UserId: user.ID,
+		ClientIdentity: &entity.ClientIdentity{
+			DeviceInfo: dto.DeviceInfo,
+			IPAddr:     dto.ClientIP,
+			Location:   userLocation,
+		},
 		AccessToken: token,
 	})
 	if err != nil {
@@ -515,12 +519,7 @@ func (s *AuthService) PingSession(
 	return session, nil
 }
 
-type loginToken struct {
-	Val string
-	TTL time.Duration
-}
-
-func (s *AuthService) ExportLoginToken(ctx context.Context) (*loginToken, error) {
+func (s *AuthService) ExportLoginToken(ctx context.Context, connId string) (*entity.LoginToken, error) {
 	return nil, nil
 }
 

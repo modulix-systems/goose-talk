@@ -25,17 +25,21 @@ type (
 	// UserSession stores information about user's session within single device
 	// Allows to forbid access to user if his ip is not in a list of user's active sessions
 	UserSession struct {
-		ID       int
-		UserId   int
-		Location string
-		// IP serves role of unique session identifier
-		IP         string
-		LastSeenAt time.Time
-		CreatedAt  time.Time
-		DeviceInfo string
+		ID               int
+		UserId           int
+		LastSeenAt       time.Time
+		CreatedAt        time.Time
+		ClientIdentity   *ClientIdentity
+		ClientIdentityId int
 		// nil by default if session is active
 		DeactivatedAt time.Time
 		AccessToken   string // unique
+	}
+	ClientIdentity struct {
+		ID         int
+		Location   string
+		IPAddr     string
+		DeviceInfo string
 	}
 )
 
