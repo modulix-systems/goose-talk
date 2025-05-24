@@ -1,0 +1,30 @@
+on:
+  workflow_call:
+    inputs:
+      workdir:
+        required: true
+        type: string
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          working-directory: ${{inputs.workdir}}
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{inputs.workdir}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+      - name: Install deps
+        run: go mod tidy
+      - name: Run tests
+        run: go test ./...
+
