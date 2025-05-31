@@ -79,10 +79,9 @@ type (
 	}
 
 	PasskeyCredential struct {
-		ID         string
-		Name       string
+		ID         []byte
 		UserId     int
-		PublicKey  string
+		PublicKey  []byte
 		CreatedAt  time.Time
 		LastUsedAt time.Time
 		BackedUp   bool
