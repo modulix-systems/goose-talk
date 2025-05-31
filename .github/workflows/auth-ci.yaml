@@ -2,7 +2,7 @@ name: Auth service CI
 on:
   push:
     paths:
-      - ./services/auth
+      - services/auth/**
 
 permissions:
   contents: read
@@ -12,4 +12,3 @@ jobs:
     uses: ./.github/workflows/golang-base-workflow.yaml
     with:
       workdir: ./services/auth
-

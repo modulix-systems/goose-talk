@@ -601,3 +601,7 @@ func (s *AuthService) AcceptLoginToken(ctx context.Context, userId int, tokenVal
 	}
 	return session, nil
 }
+
+func (s *AuthService) BeginPasskeyRegistration(ctx context.Context, userId int)
+
+func (s *AuthService) FinishPasskeyRegistration(ctx context.Context)

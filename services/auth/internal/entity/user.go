@@ -6,21 +6,22 @@ import (
 
 type (
 	User struct {
-		ID            int
-		Username      string
-		Password      []byte `json:"-"`
-		Email         string
-		FirstName     string
-		LastName      string
-		PhotoUrl      string
-		Friends       []User
-		CreatedAt     time.Time `json:"created_at" db:"created_at"`
-		UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
-		LastSeenAt    time.Time
-		IsActive      bool
-		BirthDate     time.Time
-		AboutMe       string
-		TwoFactorAuth *TwoFactorAuth
+		ID                 int
+		Username           string
+		Password           []byte `json:"-"`
+		Email              string
+		FirstName          string
+		LastName           string
+		PhotoUrl           string
+		Friends            []User
+		CreatedAt          time.Time `json:"created_at" db:"created_at"`
+		UpdatedAt          time.Time `json:"updated_at" db:"updated_at"`
+		LastSeenAt         time.Time
+		IsActive           bool
+		BirthDate          time.Time
+		AboutMe            string
+		TwoFactorAuth      *TwoFactorAuth
+		PasskeyCredentials []PasskeyCredential
 	}
 	// UserSession stores information about user's session within single device
 	// Allows to forbid access to user if his ip is not in a list of user's active sessions

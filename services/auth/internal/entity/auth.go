@@ -2,6 +2,15 @@ package entity
 
 import "time"
 
+type PasskeyAuthTransport string
+
+const (
+	PASSKEY_AUTH_TRANSPORT_USB      PasskeyAuthTransport = "usb"
+	PASSKEY_AUTH_TRANSPORT_NFC                           = "nfc"
+	PASSKEY_AUTH_TRANSPORT_BLE                           = "ble"
+	PASSKEY_AUTH_TRANSPORT_INTERNAL                      = "internal"
+)
+
 type TwoFADeliveryMethod int
 
 const (
@@ -67,6 +76,17 @@ type (
 		AuthSessionId int
 		AuthSession   *UserSession
 		ExpiresAt     time.Time
+	}
+
+	PasskeyCredential struct {
+		ID         string
+		Name       string
+		UserId     int
+		PublicKey  string
+		CreatedAt  time.Time
+		LastUsedAt time.Time
+		BackedUp   bool
+		Transports []PasskeyAuthTransport
 	}
 )
 

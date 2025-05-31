@@ -81,6 +81,26 @@ type (
 		DecryptSymmetric(encrypted []byte) (string, error)
 		GenerateSecretTokenUrlSafe(len int) string
 	}
+	KeyValueStorage interface {
+		Set(key string, value string, expiresIn time.Duration) error
+		Get(key string) (string, error)
+	}
+	PasskeyCredentialParam struct {
+		Type string
+		Alg  int
+	}
+	// session created during start of passkey registration process
+	// required for further verification
+	PasskeyTmpSession struct {
+		UserId     []byte
+		Challenge  string
+		CredParams []PasskeyCredentialParam
+	}
+	WebAuthnRegistrationOptions []byte
+	WebAuthnProvider            interface {
+		GenerateRegistrationOptions(user *entity.User) (WebAuthnRegistrationOptions, *PasskeyTmpSession, error)
+		VerifyRegistrationOptions()
+	}
 	NotificationsService interface {
 		SendSignUpConfirmationEmail(ctx context.Context, to string, otp string) error
 		SendGreetingEmail(ctx context.Context, to string, name string) error
