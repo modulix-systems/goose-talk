@@ -86,8 +86,10 @@ type (
 		Get(key string) (string, error)
 	}
 	PasskeyCredentialParam struct {
+		// Type should be a string representing valid credential type
 		Type string
-		Alg  int
+		// Alg is an identifier with restricted set of allowed values (enum)
+		Alg int
 	}
 	// session created during start of passkey registration process
 	// required for further verification
@@ -99,7 +101,7 @@ type (
 	WebAuthnRegistrationOptions []byte
 	WebAuthnProvider            interface {
 		GenerateRegistrationOptions(user *entity.User) (WebAuthnRegistrationOptions, *PasskeyTmpSession, error)
-		VerifyRegistrationOptions()
+		VerifyRegistrationOptions(userId int, rawCredential []byte, prevSession *PasskeyTmpSession) (*entity.PasskeyCredential, error)
 	}
 	NotificationsService interface {
 		SendSignUpConfirmationEmail(ctx context.Context, to string, otp string) error

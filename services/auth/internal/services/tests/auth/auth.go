@@ -26,8 +26,10 @@ type AuthTestSuite struct {
 	mockAuthTokenProvider *mocks.MockAuthTokenProvider
 	mockMailSender        *mocks.MockNotificationsService
 	mockSecurityProvider  *mocks.MockSecurityProvider
+	mockWebAuthnProvider  *mocks.MockWebAuthnProvider
 	mockTgAPI             *mocks.MockTelegramBotAPI
 	mockGeoIPApi          *mocks.MockGeoIPApi
+	mockKeyValueStorage   *mocks.MockKeyValueStorage
 	service               *auth.AuthService
 	tokenTTL              time.Duration
 }
@@ -43,7 +45,9 @@ func NewAuthTestSuite(ctrl *gomock.Controller) *AuthTestSuite {
 	mockSessionsRepo := mocks.NewMockUserSessionsRepo(ctrl)
 	mockLoginTokenRepo := mocks.NewMockLoginTokenRepo(ctrl)
 	mock2FARepo := mocks.NewMockTwoFactorAuthRepo(ctrl)
+	mockKeyValueStorage := mocks.NewMockKeyValueStorage(ctrl)
 	mockGeoIPApi := mocks.NewMockGeoIPApi(ctrl)
+	mockWebAuthnProvider := mocks.NewMockWebAuthnProvider(ctrl)
 	service := auth.New(
 		mockUsersRepo,
 		mockMailSender,
@@ -58,6 +62,8 @@ func NewAuthTestSuite(ctrl *gomock.Controller) *AuthTestSuite {
 		mockGeoIPApi,
 		mock2FARepo,
 		mockLoginTokenRepo,
+		mockWebAuthnProvider,
+		mockKeyValueStorage,
 	)
 	return &AuthTestSuite{
 		mockCodeRepo:          mockCodeRepo,
@@ -72,6 +78,8 @@ func NewAuthTestSuite(ctrl *gomock.Controller) *AuthTestSuite {
 		mockGeoIPApi:          mockGeoIPApi,
 		mock2FARepo:           mock2FARepo,
 		mockLoginTokenRepo:    mockLoginTokenRepo,
+		mockWebAuthnProvider:  mockWebAuthnProvider,
+		mockKeyValueStorage:   mockKeyValueStorage,
 	}
 }
 

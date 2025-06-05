@@ -412,17 +412,17 @@ func (mr *MockLoginTokenRepoMockRecorder) Insert(ctx, token any) *gomock.Call {
 }
 
 // UpdateAuthSessionByClientId mocks base method.
-func (m *MockLoginTokenRepo) UpdateAuthSessionByClientId(ctx context.Context, sessionId string, authSessionId int) error {
+func (m *MockLoginTokenRepo) UpdateAuthSessionByClientId(ctx context.Context, clientId string, authSessionId int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateAuthSessionByClientId", ctx, sessionId, authSessionId)
+	ret := m.ctrl.Call(m, "UpdateAuthSessionByClientId", ctx, clientId, authSessionId)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateAuthSessionByClientId indicates an expected call of UpdateAuthSessionByClientId.
-func (mr *MockLoginTokenRepoMockRecorder) UpdateAuthSessionByClientId(ctx, sessionId, authSessionId any) *gomock.Call {
+func (mr *MockLoginTokenRepoMockRecorder) UpdateAuthSessionByClientId(ctx, clientId, authSessionId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthSessionByClientId", reflect.TypeOf((*MockLoginTokenRepo)(nil).UpdateAuthSessionByClientId), ctx, sessionId, authSessionId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAuthSessionByClientId", reflect.TypeOf((*MockLoginTokenRepo)(nil).UpdateAuthSessionByClientId), ctx, clientId, authSessionId)
 }
 
 // MockTwoFactorAuthRepo is a mock of TwoFactorAuthRepo interface.
@@ -671,6 +671,114 @@ func (m *MockSecurityProvider) ValidateTOTP(code, secret string) bool {
 func (mr *MockSecurityProviderMockRecorder) ValidateTOTP(code, secret any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateTOTP", reflect.TypeOf((*MockSecurityProvider)(nil).ValidateTOTP), code, secret)
+}
+
+// MockKeyValueStorage is a mock of KeyValueStorage interface.
+type MockKeyValueStorage struct {
+	ctrl     *gomock.Controller
+	recorder *MockKeyValueStorageMockRecorder
+	isgomock struct{}
+}
+
+// MockKeyValueStorageMockRecorder is the mock recorder for MockKeyValueStorage.
+type MockKeyValueStorageMockRecorder struct {
+	mock *MockKeyValueStorage
+}
+
+// NewMockKeyValueStorage creates a new mock instance.
+func NewMockKeyValueStorage(ctrl *gomock.Controller) *MockKeyValueStorage {
+	mock := &MockKeyValueStorage{ctrl: ctrl}
+	mock.recorder = &MockKeyValueStorageMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockKeyValueStorage) EXPECT() *MockKeyValueStorageMockRecorder {
+	return m.recorder
+}
+
+// Get mocks base method.
+func (m *MockKeyValueStorage) Get(key string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Get", key)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockKeyValueStorageMockRecorder) Get(key any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockKeyValueStorage)(nil).Get), key)
+}
+
+// Set mocks base method.
+func (m *MockKeyValueStorage) Set(key, value string, expiresIn time.Duration) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Set", key, value, expiresIn)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Set indicates an expected call of Set.
+func (mr *MockKeyValueStorageMockRecorder) Set(key, value, expiresIn any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockKeyValueStorage)(nil).Set), key, value, expiresIn)
+}
+
+// MockWebAuthnProvider is a mock of WebAuthnProvider interface.
+type MockWebAuthnProvider struct {
+	ctrl     *gomock.Controller
+	recorder *MockWebAuthnProviderMockRecorder
+	isgomock struct{}
+}
+
+// MockWebAuthnProviderMockRecorder is the mock recorder for MockWebAuthnProvider.
+type MockWebAuthnProviderMockRecorder struct {
+	mock *MockWebAuthnProvider
+}
+
+// NewMockWebAuthnProvider creates a new mock instance.
+func NewMockWebAuthnProvider(ctrl *gomock.Controller) *MockWebAuthnProvider {
+	mock := &MockWebAuthnProvider{ctrl: ctrl}
+	mock.recorder = &MockWebAuthnProviderMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockWebAuthnProvider) EXPECT() *MockWebAuthnProviderMockRecorder {
+	return m.recorder
+}
+
+// GenerateRegistrationOptions mocks base method.
+func (m *MockWebAuthnProvider) GenerateRegistrationOptions(user *entity.User) (gateways.WebAuthnRegistrationOptions, *gateways.PasskeyTmpSession, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GenerateRegistrationOptions", user)
+	ret0, _ := ret[0].(gateways.WebAuthnRegistrationOptions)
+	ret1, _ := ret[1].(*gateways.PasskeyTmpSession)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GenerateRegistrationOptions indicates an expected call of GenerateRegistrationOptions.
+func (mr *MockWebAuthnProviderMockRecorder) GenerateRegistrationOptions(user any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateRegistrationOptions", reflect.TypeOf((*MockWebAuthnProvider)(nil).GenerateRegistrationOptions), user)
+}
+
+// VerifyRegistrationOptions mocks base method.
+func (m *MockWebAuthnProvider) VerifyRegistrationOptions(userId int, rawCredential []byte, prevSession *gateways.PasskeyTmpSession) (*entity.PasskeyCredential, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VerifyRegistrationOptions", userId, rawCredential, prevSession)
+	ret0, _ := ret[0].(*entity.PasskeyCredential)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VerifyRegistrationOptions indicates an expected call of VerifyRegistrationOptions.
+func (mr *MockWebAuthnProviderMockRecorder) VerifyRegistrationOptions(userId, rawCredential, prevSession any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyRegistrationOptions", reflect.TypeOf((*MockWebAuthnProvider)(nil).VerifyRegistrationOptions), userId, rawCredential, prevSession)
 }
 
 // MockNotificationsService is a mock of NotificationsService interface.

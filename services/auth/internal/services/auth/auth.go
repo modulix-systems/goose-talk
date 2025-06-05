@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -28,6 +29,8 @@ type AuthService struct {
 	twoFactorAuthRepo    gateways.TwoFactorAuthRepo
 	loginTokenRepo       gateways.LoginTokenRepo
 	loginTokenLen        int
+	webAuthnProvider     gateways.WebAuthnProvider
+	keyValueStorage      gateways.KeyValueStorage
 }
 
 func New(
@@ -44,6 +47,8 @@ func New(
 	geoIPApi gateways.GeoIPApi,
 	twoFactorAuthRepo gateways.TwoFactorAuthRepo,
 	loginTokenRepo gateways.LoginTokenRepo,
+	webAuthnProvider gateways.WebAuthnProvider,
+	keyValueStorage gateways.KeyValueStorage,
 ) *AuthService {
 	return &AuthService{
 		usersRepo:            usersRepo,
@@ -60,6 +65,8 @@ func New(
 		twoFactorAuthRepo:    twoFactorAuthRepo,
 		loginTokenRepo:       loginTokenRepo,
 		loginTokenLen:        16,
+		webAuthnProvider:     webAuthnProvider,
+		keyValueStorage:      keyValueStorage,
 	}
 }
 
@@ -602,6 +609,26 @@ func (s *AuthService) AcceptLoginToken(ctx context.Context, userId int, tokenVal
 	return session, nil
 }
 
-func (s *AuthService) BeginPasskeyRegistration(ctx context.Context, userId int)
+func (s *AuthService) BeginPasskeyRegistration(ctx context.Context, userId int) (gateways.WebAuthnRegistrationOptions, error) {
+	user, err := s.usersRepo.GetByID(ctx, userId)
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return nil, ErrUserNotFound
+		}
+		return nil, err
+	}
+	registrationOptions, passkeySession, err := s.webAuthnProvider.GenerateRegistrationOptions(user)
+	if err != nil {
+		return nil, err
+	}
+	serializedPasskeySession, err := json.Marshal(passkeySession)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.keyValueStorage.Set(fmt.Sprintf("passkey_session:%d", user.ID), string(serializedPasskeySession), 0); err != nil {
+		return nil, err
+	}
+	return registrationOptions, nil
+}
 
-func (s *AuthService) FinishPasskeyRegistration(ctx context.Context)
+func (s *AuthService) FinishPasskeyRegistration(ctx context.Context, rawCredential []byte) {}
