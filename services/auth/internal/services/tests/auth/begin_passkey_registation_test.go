@@ -17,24 +17,13 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func createFakePasskeySession() *gateways.PasskeyTmpSession {
-	return &gateways.PasskeyTmpSession{
-		UserId:    []byte(gofakeit.Numerify("###")),
-		Challenge: gofakeit.Sentence(10),
-		CredParams: []gateways.PasskeyCredentialParam{
-			gateways.PasskeyCredentialParam{Type: gofakeit.AppName(), Alg: gofakeit.Number(1, 10)},
-			gateways.PasskeyCredentialParam{Type: gofakeit.AppName(), Alg: gofakeit.Number(1, 10)},
-		},
-	}
-}
-
 func TestBeginPasskeyRegistrationSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
 	fakeUser := helpers.MockUser()
 	expectedOptions := gateways.WebAuthnRegistrationOptions(gofakeit.Sentence(10))
-	fakePasskeySession := createFakePasskeySession()
+	fakePasskeySession := helpers.MockPasskeySession()
 	serializedPasskeySession, err := json.Marshal(fakePasskeySession)
 	require.NoError(t, err)
 	authSuite.mockUsersRepo.EXPECT().GetByID(ctx, fakeUser.ID).Return(fakeUser, nil)

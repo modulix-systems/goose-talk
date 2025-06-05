@@ -609,6 +609,10 @@ func (s *AuthService) AcceptLoginToken(ctx context.Context, userId int, tokenVal
 	return session, nil
 }
 
+func (s *AuthService) getPasskeySessionKey(userId int) string {
+	return fmt.Sprintf("passkey_session:%d", userId)
+}
+
 func (s *AuthService) BeginPasskeyRegistration(ctx context.Context, userId int) (gateways.WebAuthnRegistrationOptions, error) {
 	user, err := s.usersRepo.GetByID(ctx, userId)
 	if err != nil {
@@ -625,10 +629,33 @@ func (s *AuthService) BeginPasskeyRegistration(ctx context.Context, userId int) 
 	if err != nil {
 		return nil, err
 	}
-	if err := s.keyValueStorage.Set(fmt.Sprintf("passkey_session:%d", user.ID), string(serializedPasskeySession), 0); err != nil {
+	if err := s.keyValueStorage.Set(s.getPasskeySessionKey(user.ID), string(serializedPasskeySession), 0); err != nil {
 		return nil, err
 	}
 	return registrationOptions, nil
 }
 
-func (s *AuthService) FinishPasskeyRegistration(ctx context.Context, rawCredential []byte) {}
+func (s *AuthService) FinishPasskeyRegistration(ctx context.Context, userId int, rawCredential []byte) error {
+	passkeySessionJson, err := s.keyValueStorage.Get(s.getPasskeySessionKey(userId))
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return ErrPasskeyRegistrationNotInProgress
+		}
+		return err
+	}
+	var passkeySession gateways.PasskeyTmpSession
+	if err := json.Unmarshal([]byte(passkeySessionJson), &passkeySession); err != nil {
+		return err
+	}
+	cred, err := s.webAuthnProvider.VerifyRegistrationOptions(userId, rawCredential, &passkeySession)
+	if err != nil {
+		if errors.Is(err, gateways.ErrInvalidCredential) {
+			return ErrInvalidPasskeyCredential
+		}
+		return err
+	}
+	if err := s.usersRepo.AddPasskeyCredential(ctx, userId, cred); err != nil {
+		return err
+	}
+	return nil
+}

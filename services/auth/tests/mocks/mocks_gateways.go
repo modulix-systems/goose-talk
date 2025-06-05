@@ -44,6 +44,20 @@ func (m *MockUsersRepo) EXPECT() *MockUsersRepoMockRecorder {
 	return m.recorder
 }
 
+// AddPasskeyCredential mocks base method.
+func (m *MockUsersRepo) AddPasskeyCredential(ctx context.Context, userId int, cred *entity.PasskeyCredential) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddPasskeyCredential", ctx, userId, cred)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddPasskeyCredential indicates an expected call of AddPasskeyCredential.
+func (mr *MockUsersRepoMockRecorder) AddPasskeyCredential(ctx, userId, cred any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPasskeyCredential", reflect.TypeOf((*MockUsersRepo)(nil).AddPasskeyCredential), ctx, userId, cred)
+}
+
 // CheckExistsWithEmail mocks base method.
 func (m *MockUsersRepo) CheckExistsWithEmail(ctx context.Context, email string) (bool, error) {
 	m.ctrl.T.Helper()

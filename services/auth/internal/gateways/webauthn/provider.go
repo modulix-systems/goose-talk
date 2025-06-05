@@ -2,6 +2,7 @@ package webauthn
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/protocol/webauthncose"
@@ -50,11 +51,11 @@ func (p *WebAuthnProvider) VerifyRegistrationOptions(userId int, rawCredential [
 	webauthnUser := webauthnUserAdapter{user: &entity.User{ID: userId}}
 	var ccr protocol.CredentialCreationResponse
 	if err := json.Unmarshal(rawCredential, &ccr); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: malformed json", gateways.ErrInvalidCredential)
 	}
 	parsedCredential, err := ccr.Parse()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: malformed data", gateways.ErrInvalidCredential)
 	}
 	adaptedCredParams := make([]protocol.CredentialParameter, len(prevSession.CredParams))
 	for _, param := range prevSession.CredParams {
@@ -71,7 +72,7 @@ func (p *WebAuthnProvider) VerifyRegistrationOptions(userId int, rawCredential [
 		CredParams:     adaptedCredParams,
 	}, parsedCredential)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: verification failed", gateways.ErrInvalidCredential)
 	}
 	adaptedTransports := make([]entity.PasskeyAuthTransport, len(credential.Transport))
 	for _, transport := range credential.Transport {

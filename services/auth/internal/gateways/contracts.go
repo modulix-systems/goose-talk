@@ -1,17 +1,11 @@
-// Package repo implements application outer layer logic. Each logic group in own file.
 package gateways
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/modulix-systems/goose-talk/internal/entity"
 	"github.com/modulix-systems/goose-talk/internal/schemas"
-)
-
-var (
-	ErrExpiredToken = errors.New("Expired token")
 )
 
 //go:generate mockgen -source=contracts.go -destination=../../tests/mocks/mocks_gateways.go -package=mocks
@@ -22,6 +16,7 @@ type (
 		GetByLogin(ctx context.Context, login string) (*entity.User, error)
 		GetByID(ctx context.Context, id int) (*entity.User, error)
 		UpdateIsActiveById(ctx context.Context, userId int, isActive bool) (*entity.User, error)
+		AddPasskeyCredential(ctx context.Context, userId int, cred *entity.PasskeyCredential) error
 	}
 	UserSessionsRepo interface {
 		Insert(ctx context.Context, session *entity.UserSession) (*entity.UserSession, error)
@@ -85,19 +80,6 @@ type (
 		Set(key string, value string, expiresIn time.Duration) error
 		Get(key string) (string, error)
 	}
-	PasskeyCredentialParam struct {
-		// Type should be a string representing valid credential type
-		Type string
-		// Alg is an identifier with restricted set of allowed values (enum)
-		Alg int
-	}
-	// session created during start of passkey registration process
-	// required for further verification
-	PasskeyTmpSession struct {
-		UserId     []byte
-		Challenge  string
-		CredParams []PasskeyCredentialParam
-	}
 	WebAuthnRegistrationOptions []byte
 	WebAuthnProvider            interface {
 		GenerateRegistrationOptions(user *entity.User) (WebAuthnRegistrationOptions, *PasskeyTmpSession, error)
@@ -109,11 +91,6 @@ type (
 		Send2FAEmail(ctx context.Context, to string, otp string) error
 		SendAccDeactivationEmail(ctx context.Context, to string) error
 		SendSignInNewDeviceEmail(ctx context.Context, to string, newSession *entity.UserSession) error
-	}
-	TelegramMsg struct {
-		DateSent time.Time
-		Text     string
-		ChatId   string
 	}
 	TelegramBotAPI interface {
 		SendTextMsg(ctx context.Context, chatId string, text string) error

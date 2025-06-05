@@ -5,6 +5,7 @@ import (
 
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/modulix-systems/goose-talk/internal/entity"
+	"github.com/modulix-systems/goose-talk/internal/gateways"
 )
 
 func MockUser() *entity.User {
@@ -81,5 +82,32 @@ func MockClientIdentity() *entity.ClientIdentity {
 		IPAddr:     gofakeit.IPv4Address(),
 		Location:   gofakeit.City(),
 		DeviceInfo: gofakeit.UserAgent(),
+	}
+}
+
+func MockPasskeySession() *gateways.PasskeyTmpSession {
+	return &gateways.PasskeyTmpSession{
+		UserId:    []byte(gofakeit.Numerify("###")),
+		Challenge: gofakeit.Sentence(10),
+		CredParams: []gateways.PasskeyCredentialParam{
+			gateways.PasskeyCredentialParam{Type: gofakeit.AppName(), Alg: gofakeit.Number(1, 10)},
+			gateways.PasskeyCredentialParam{Type: gofakeit.AppName(), Alg: gofakeit.Number(1, 10)},
+		},
+	}
+}
+
+func MockPasskeyCredential() *entity.PasskeyCredential {
+	return &entity.PasskeyCredential{
+		ID:        []byte(gofakeit.UUID()),
+		PublicKey: []byte(gofakeit.UUID()),
+		UserId:    gofakeit.Number(1, 1000),
+		Transports: []entity.PasskeyAuthTransport{
+			RandomChoose(
+				entity.PASSKEY_AUTH_TRANSPORT_USB,
+				entity.PASSKEY_AUTH_TRANSPORT_BLE,
+				entity.PASSKEY_AUTH_TRANSPORT_INTERNAL,
+				entity.PASSKEY_AUTH_TRANSPORT_NFC,
+			),
+		},
 	}
 }
