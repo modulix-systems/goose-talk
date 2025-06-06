@@ -180,6 +180,10 @@ func (s *AuthService) SignUp(
 	if err != nil {
 		return nil, err
 	}
+	sessionTTL := s.defaultSessionTTL
+	if dto.RememberMe {
+		sessionTTL = s.longLivedSessionTTL
+	}
 	authSession, err := s.sessionsRepo.Insert(ctx, &entity.UserSession{
 		ID:     s.securityProvider.GenerateSessionId(),
 		UserId: user.ID,
@@ -188,6 +192,7 @@ func (s *AuthService) SignUp(
 			IPAddr:     dto.IPAddr,
 			Location:   userLocation,
 		},
+		ExpiresAt: time.Now().Add(sessionTTL),
 	})
 	authSession.User = user
 	displayName := dto.Username

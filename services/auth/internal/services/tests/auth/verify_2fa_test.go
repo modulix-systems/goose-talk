@@ -121,6 +121,7 @@ func TestVerify2FAInvalidOTP(t *testing.T) {
 		name := "2FA over " + twoFaTyp.String()
 		t.Run(name, func(t *testing.T) {
 			dto := mockVerify2FAPayload(twoFaTyp)
+			mockOTP.UserEmail = dto.Email
 			authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(mockOTP, nil)
 			otpToCompare := dto.Code
 			if twoFaTyp == entity.TWO_FA_TOTP_APP {
@@ -149,6 +150,7 @@ func TestVerify2FADisabled(t *testing.T) {
 		name := "2FA over " + twoFaTyp.String()
 		t.Run(name, func(t *testing.T) {
 			dto := mockVerify2FAPayload(twoFaTyp)
+			mockOTP.UserEmail = dto.Email
 			otpToCompare := dto.Code
 			if twoFaTyp == entity.TWO_FA_TOTP_APP {
 				otpToCompare = dto.SignInConfToken
@@ -174,6 +176,7 @@ func TestVerify2FATotpAppInvalidTOTP(t *testing.T) {
 	mockUser := helpers.MockUser()
 	mockUser.TwoFactorAuth.Enabled = true
 	dto := mockVerify2FAPayload(entity.TWO_FA_TOTP_APP)
+	mockOTP.UserEmail = dto.Email
 	authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(mockOTP, nil)
 	authSuite.mockSecurityProvider.EXPECT().
 		ComparePasswords(mockOTP.Code, dto.SignInConfToken).
@@ -196,11 +199,12 @@ func TestVerify2FAOtpExpired(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
 	mockOTP := helpers.MockOTP()
-	mockOTP.UpdatedAt = time.Now().Add(-authSuite.tokenTTL)
+	mockOTP.UpdatedAt = time.Now().Add(-authSuite.mockTTL)
 	for _, twoFaTyp := range entity.OtpDeliveryMethods {
 		name := "2FA over " + twoFaTyp.String()
 		t.Run(name, func(t *testing.T) {
 			dto := mockVerify2FAPayload(twoFaTyp)
+			mockOTP.UserEmail = dto.Email
 			authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(mockOTP, nil)
 
 			authSession, err := authSuite.service.Verify2FA(ctx, dto)
@@ -209,36 +213,6 @@ func TestVerify2FAOtpExpired(t *testing.T) {
 		})
 	}
 }
-
-// TODO: Should it be handled ?
-// func TestVerify2FAUserNotFound(t *testing.T) {
-// 	ctrl := gomock.NewController(t)
-// 	authSuite := NewAuthTestSuite(ctrl)
-// 	ctx := context.Background()
-// 	mockOTP := helpers.MockOTP()
-// 	for _, twoFaTyp := range entity.OtpDeliveryMethods {
-// 		name := "2FA over " + twoFaTyp.String()
-// 		t.Run(name, func(t *testing.T) {
-// 			dto := mockVerify2FAPayload(twoFaTyp)
-// 			authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(mockOTP, nil)
-// 			otpToCompare := dto.Code
-// 			if twoFaTyp == entity.TWO_FA_TOTP_APP {
-// 				otpToCompare = dto.SignInConfToken
-// 			}
-// 			authSuite.mockSecurityProvider.EXPECT().
-// 				ComparePasswords(mockOTP.Code, otpToCompare).
-// 				Return(true, nil)
-// 			authSuite.mockUsersRepo.EXPECT().
-// 				GetByLogin(ctx, dto.Email).
-// 				Return(nil, storage.ErrNotFound)
-// 			authSuite.mockCodeRepo.EXPECT().DeleteByEmail(ctx, dto.Email).Return(nil)
-//
-// 			authToken, err := authSuite.service.Verify2FA(ctx, dto)
-// 			assert.ErrorIs(t, err, auth.ErrUserNotFound)
-// 			assert.Empty(t, authToken)
-// 		})
-// 	}
-// }
 
 func TestVerify2FAUserNotActive(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -252,6 +226,7 @@ func TestVerify2FAUserNotActive(t *testing.T) {
 		name := "2FA over " + twoFaTyp.String()
 		t.Run(name, func(t *testing.T) {
 			dto := mockVerify2FAPayload(twoFaTyp)
+			mockOTP.UserEmail = dto.Email
 			authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(mockOTP, nil)
 			otpToCompare := dto.Code
 			if twoFaTyp == entity.TWO_FA_TOTP_APP {

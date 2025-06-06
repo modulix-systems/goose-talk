@@ -128,7 +128,7 @@ func TestConfirm2FAInvalidOTP(t *testing.T) {
 				actAndAssert(dto)
 			})
 			t.Run("expired otp", func(t *testing.T) {
-				mockOTP.UpdatedAt = time.Now().Add(-authSuite.tokenTTL)
+				mockOTP.UpdatedAt = time.Now().Add(-authSuite.mockTTL)
 				authSuite.mockCodeRepo.EXPECT().GetByUserId(ctx, dto.UserId).Return(mockOTP, nil)
 				actAndAssert(dto)
 			})

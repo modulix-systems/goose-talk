@@ -31,7 +31,8 @@ type AuthTestSuite struct {
 	mockGeoIPApi         *mocks.MockGeoIPApi
 	mockKeyValueStorage  *mocks.MockKeyValueStorage
 	service              *auth.AuthService
-	tokenTTL             time.Duration
+	mockTTL              time.Duration
+	longLivedSessionTTL  time.Duration
 }
 
 func NewAuthTestSuite(ctrl *gomock.Controller) *AuthTestSuite {
@@ -70,7 +71,8 @@ func NewAuthTestSuite(ctrl *gomock.Controller) *AuthTestSuite {
 		mockUsersRepo:        mockUsersRepo,
 		mockSecurityProvider: mockSecurityProvider,
 		mockSessionsRepo:     mockSessionsRepo,
-		tokenTTL:             tokenTTL,
+		mockTTL:              tokenTTL,
+		longLivedSessionTTL:  tokenTTL * 2,
 		mockMailSender:       mockMailSender,
 		mockTgAPI:            mockTgAPI,
 		service:              service,
@@ -105,6 +107,7 @@ func setAuthSessionExpectations(t *testing.T, ctx context.Context, authSuite *Au
 				assert.NotNil(t, payload.DeactivatedAt)
 				assert.Equal(t, *payload.DeactivatedAt, time.Time{})
 				assert.WithinDuration(t, time.Now(), payload.LastSeenAt, time.Second)
+				// assert.True(t, payload.ExpiresAt.After(time.Now()))
 				return mockSession, nil
 			})
 	} else {

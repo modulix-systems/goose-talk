@@ -17,11 +17,13 @@ type (
 		FirstName        string
 		LastName         string
 		ConfirmationCode string
+		RememberMe       bool
 		ClientIdentitySchema
 	}
 	SignInSchema struct {
-		Login    string
-		Password string
+		Login      string
+		Password   string
+		RememberMe bool
 		ClientIdentitySchema
 	}
 	ClientIdentitySchema struct {

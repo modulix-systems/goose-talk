@@ -32,7 +32,7 @@ func setInsertExpectation(t *testing.T, ctx context.Context, authSuite *AuthTest
 		DoAndReturn(func(ctx context.Context, token *entity.LoginToken) (*entity.LoginToken, error) {
 			assert.Equal(t, expectedLoginToken.ClientId, token.ClientId)
 			assert.Equal(t, tokenVal, token.Val)
-			assert.WithinDuration(t, time.Now().Add(authSuite.tokenTTL), token.ExpiresAt, time.Second)
+			assert.WithinDuration(t, time.Now().Add(authSuite.mockTTL), token.ExpiresAt, time.Second)
 			if withClientId {
 				assert.Equal(t, expectedLoginToken.ClientIdentity.IPAddr, token.ClientIdentity.IPAddr)
 				assert.Equal(t, expectedLoginToken.ClientIdentity.Location, token.ClientIdentity.Location)
@@ -49,7 +49,7 @@ func TestExportLoginTokenInsertNotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
-	mockLoginToken := helpers.MockLoginToken(authSuite.tokenTTL)
+	mockLoginToken := helpers.MockLoginToken(authSuite.mockTTL)
 	mockLoginToken.AuthSessionId = 0
 	dto := fakeExportLoginTokenPayload(mockLoginToken)
 
@@ -67,7 +67,7 @@ func TestExportLoginTokenReInsertNotApproved(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
-	mockLoginToken := helpers.MockLoginToken(authSuite.tokenTTL)
+	mockLoginToken := helpers.MockLoginToken(authSuite.mockTTL)
 	mockLoginToken.AuthSessionId = 0
 	dto := fakeExportLoginTokenPayload(mockLoginToken)
 	authSuite.mockLoginTokenRepo.EXPECT().GetByClientId(ctx, dto.ClientId).Return(mockLoginToken, nil)
@@ -85,7 +85,7 @@ func TestExportLoginTokenReturnApproved(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
-	mockLoginToken := helpers.MockLoginToken(authSuite.tokenTTL)
+	mockLoginToken := helpers.MockLoginToken(authSuite.mockTTL)
 	dto := fakeExportLoginTokenPayload(mockLoginToken)
 	authSuite.mockLoginTokenRepo.EXPECT().GetByClientId(ctx, dto.ClientId).Return(mockLoginToken, nil)
 

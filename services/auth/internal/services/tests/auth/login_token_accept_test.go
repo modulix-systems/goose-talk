@@ -21,7 +21,7 @@ func TestAcceptLoginTokenSuccess(t *testing.T) {
 	mockUser := helpers.MockUser()
 	mockSession := helpers.MockUserSession(true)
 	mockSession.UserId = mockUser.ID
-	mockLoginToken := helpers.MockLoginToken(authSuite.tokenTTL)
+	mockLoginToken := helpers.MockLoginToken(authSuite.mockTTL)
 	mockSession.ClientIdentity = mockLoginToken.ClientIdentity
 	authSuite.mockUsersRepo.EXPECT().GetByID(ctx, mockUser.ID).Return(mockUser, nil)
 	authSuite.mockLoginTokenRepo.EXPECT().GetByValue(ctx, mockLoginToken.Val).Return(mockLoginToken, nil)
@@ -40,7 +40,7 @@ func TestAcceptLoginTokenNotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
-	mockLoginToken := helpers.MockLoginToken(authSuite.tokenTTL)
+	mockLoginToken := helpers.MockLoginToken(authSuite.mockTTL)
 	authSuite.mockLoginTokenRepo.EXPECT().GetByValue(ctx, mockLoginToken.Val).Return(nil, storage.ErrNotFound)
 
 	session, err := authSuite.service.AcceptLoginToken(ctx, gofakeit.Number(1, 1000), mockLoginToken.Val)
@@ -53,7 +53,7 @@ func TestAcceptLoginTokenUserNotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
-	mockLoginToken := helpers.MockLoginToken(authSuite.tokenTTL)
+	mockLoginToken := helpers.MockLoginToken(authSuite.mockTTL)
 	mockUser := helpers.MockUser()
 	authSuite.mockUsersRepo.EXPECT().GetByID(ctx, mockUser.ID).Return(nil, storage.ErrNotFound)
 	authSuite.mockLoginTokenRepo.EXPECT().GetByValue(ctx, mockLoginToken.Val).Return(mockLoginToken, nil)
@@ -70,7 +70,7 @@ func TestAcceptLoginTokenExpired(t *testing.T) {
 	ctx := context.Background()
 	mockUser := helpers.MockUser()
 	mockSession := helpers.MockUserSession(true)
-	mockLoginToken := helpers.MockLoginToken(authSuite.tokenTTL)
+	mockLoginToken := helpers.MockLoginToken(authSuite.mockTTL)
 	mockLoginToken.ExpiresAt = time.Now()
 	mockSession.ClientIdentity = mockLoginToken.ClientIdentity
 	authSuite.mockLoginTokenRepo.EXPECT().GetByValue(ctx, mockLoginToken.Val).Return(mockLoginToken, nil)
