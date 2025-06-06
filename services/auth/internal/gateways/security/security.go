@@ -21,7 +21,9 @@ func New(totpTTL *time.Duration, otpLen int) *SecurityProvider {
 
 func createRandBytes(size int) []byte {
 	buf := make([]byte, size)
-	rand.Read(buf)
+	if _, err := rand.Read(buf); err != nil {
+		panic(err)
+	}
 	return buf
 }
 

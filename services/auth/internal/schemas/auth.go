@@ -7,9 +7,6 @@ import (
 )
 
 type (
-	SendConfirmationCodeSchema struct {
-		email string
-	}
 	SignUpSchema struct {
 		Username         string
 		Password         string

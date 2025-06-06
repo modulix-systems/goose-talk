@@ -6,9 +6,9 @@ type PasskeyAuthTransport string
 
 const (
 	PASSKEY_AUTH_TRANSPORT_USB      PasskeyAuthTransport = "usb"
-	PASSKEY_AUTH_TRANSPORT_NFC                           = "nfc"
-	PASSKEY_AUTH_TRANSPORT_BLE                           = "ble"
-	PASSKEY_AUTH_TRANSPORT_INTERNAL                      = "internal"
+	PASSKEY_AUTH_TRANSPORT_NFC      PasskeyAuthTransport = "nfc"
+	PASSKEY_AUTH_TRANSPORT_BLE      PasskeyAuthTransport = "ble"
+	PASSKEY_AUTH_TRANSPORT_INTERNAL PasskeyAuthTransport = "internal"
 )
 
 type TwoFADeliveryMethod int

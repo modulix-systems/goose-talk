@@ -91,22 +91,22 @@ func (s *AuthService) createOTP(ctx context.Context, email string, userId int) (
 	)
 }
 
-func (s *AuthService) useOTP(ctx context.Context, otp *entity.OTP, compareWith string) error {
-	if otp.IsExpired(s.otpTTL) {
-		return ErrOTPInvalidOrExpired
-	}
-	matched, err := s.securityProvider.ComparePasswords(otp.Code, compareWith)
-	if err != nil {
-		return err
-	}
-	if !matched {
-		return ErrOTPInvalidOrExpired
-	}
-	if err = s.otpRepo.DeleteByEmailOrUserId(ctx, otp.UserEmail, otp.UserId); err != nil {
-		return err
-	}
-	return nil
-}
+// func (s *AuthService) useOTP(ctx context.Context, otp *entity.OTP, compareWith string) error {
+// 	if otp.IsExpired(s.otpTTL) {
+// 		return ErrOTPInvalidOrExpired
+// 	}
+// 	matched, err := s.securityProvider.ComparePasswords(otp.Code, compareWith)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if !matched {
+// 		return ErrOTPInvalidOrExpired
+// 	}
+// 	if err = s.otpRepo.DeleteByEmailOrUserId(ctx, otp.UserEmail, otp.UserId); err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
 // newAuthSession inserts a new session or updates existing one based on set of params
 // if new session was inserted - sends 'warning' email
@@ -120,7 +120,10 @@ func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, ses
 			if err != nil {
 				return nil, err
 			}
-			s.notificationsServive.SendSignInNewDeviceEmail(ctx, user.Email, session)
+			if err = s.notificationsServive.SendSignInNewDeviceEmail(ctx, user.Email, session); err != nil {
+				s.log.Error("Failed to send 'sign in from new device' notification after creating new session", "sessionId", session.ID)
+				return nil, err
+			}
 			return session, nil
 		}
 		return nil, err
@@ -194,6 +197,9 @@ func (s *AuthService) SignUp(
 		},
 		ExpiresAt: time.Now().Add(sessionTTL),
 	})
+	if err != nil {
+		return nil, err
+	}
 	authSession.User = user
 	displayName := dto.Username
 	if dto.FirstName != "" {
@@ -202,7 +208,9 @@ func (s *AuthService) SignUp(
 			displayName = displayName + " " + dto.LastName
 		}
 	}
-	s.notificationsServive.SendGreetingEmail(ctx, user.Email, displayName)
+	if err = s.notificationsServive.SendGreetingEmail(ctx, user.Email, displayName); err != nil {
+		s.log.Error("Failed to send greeting email after signup", "to", user.Email)
+	}
 	return authSession, nil
 }
 
@@ -220,6 +228,7 @@ func (s *AuthService) ConfirmEmail(ctx context.Context, email string) error {
 		return err
 	}
 	if err = s.notificationsServive.SendSignUpConfirmationEmail(ctx, email, otpCode); err != nil {
+		s.log.Error("Failed to send signup confirmation email with otp code", "to", email)
 		return err
 	}
 	return nil
