@@ -24,6 +24,8 @@ type AuthService struct {
 	otpTTL               time.Duration
 	defaultSessionTTL    time.Duration
 	longLivedSessionTTL  time.Duration
+	SessionTTLThreshold  time.Duration
+	SessionTTLAddend     time.Duration
 	loginTokenTTL        time.Duration
 	sessionsRepo         gateways.UserSessionsRepo
 	geoIPApi             gateways.GeoIPApi
@@ -71,6 +73,8 @@ func New(
 		webAuthnProvider:     webAuthnProvider,
 		keyValueStorage:      keyValueStorage,
 		log:                  log,
+		SessionTTLThreshold:  30 * time.Minute,
+		SessionTTLAddend:     15 * time.Minute,
 	}
 }
 
@@ -538,8 +542,10 @@ func (s *AuthService) PingSession(
 		return nil, ErrSessionNotFound
 	}
 	now := time.Now()
-	// TODO: update expires too
 	updatePayload := &schemas.SessionUpdatePayload{LastSeenAt: now}
+	if session.ExpiresAt.Sub(time.Now()) < s.SessionTTLThreshold {
+		updatePayload.ExpiresAt = session.ExpiresAt.Add(s.SessionTTLAddend)
+	}
 	session, err = s.sessionsRepo.UpdateById(ctx, session.ID, updatePayload)
 	if err != nil {
 		return nil, err

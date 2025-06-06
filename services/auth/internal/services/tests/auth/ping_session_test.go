@@ -28,7 +28,21 @@ func TestPingSessionSuccess(t *testing.T) {
 		assert.Equal(t, expectedSessionId, session.ID)
 		assert.NoError(t, err)
 	}
-	t.Run("success with valid token", func(t *testing.T) {
+	t.Run("with expiry update", func(t *testing.T) {
+		mockSession.ExpiresAt = time.Now().Add(authSuite.service.SessionTTLThreshold)
+		authSuite.mockSessionsRepo.EXPECT().GetById(ctx, expectedSessionId).Return(mockSession, nil)
+		authSuite.mockSessionsRepo.EXPECT().UpdateById(
+			ctx, mockSession.ID, gomock.Any()).
+			DoAndReturn(func(ctx context.Context, sessionId string, payload *schemas.SessionUpdatePayload) (*entity.UserSession, error) {
+				assert.WithinDuration(t, payload.LastSeenAt, time.Now(), time.Second)
+				assert.Equal(t, mockSession.ExpiresAt.Add(authSuite.service.SessionTTLAddend), payload.ExpiresAt)
+				assert.Empty(t, payload.DeactivatedAt)
+				return mockSession, nil
+			})
+		actAndAssert()
+	})
+	t.Run("without updating expiry", func(t *testing.T) {
+		mockSession.ExpiresAt = time.Now().Add(100 * time.Hour)
 		authSuite.mockSessionsRepo.EXPECT().GetById(ctx, expectedSessionId).Return(mockSession, nil)
 		authSuite.mockSessionsRepo.EXPECT().UpdateById(
 			ctx, mockSession.ID, gomock.Any()).
@@ -39,18 +53,6 @@ func TestPingSessionSuccess(t *testing.T) {
 			})
 		actAndAssert()
 	})
-	// t.Run("success with expired token", func(t *testing.T) {
-	// 	authSuite.mockSessionsRepo.EXPECT().GetById(ctx, expectedSessionId).Return(mockSession, nil)
-	// 	authSuite.mockSessionsRepo.EXPECT().UpdateById(
-	// 		ctx, mockSession.ID, gomock.Any()).
-	// 		DoAndReturn(func(ctx context.Context, sessionId string, payload *schemas.SessionUpdatePayload) (*entity.UserSession, error) {
-	// 			assert.NotNil(t, payload.DeactivatedAt)
-	// 			assert.WithinDuration(t, *payload.DeactivatedAt, time.Now(), time.Second)
-	// 			assert.Empty(t, payload.LastSeenAt)
-	// 			return mockSession, nil
-	// 		})
-	// 	actAndAssert()
-	// })
 }
 
 func TestPingSessionNotFound(t *testing.T) {
