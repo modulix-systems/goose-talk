@@ -12,6 +12,7 @@ import (
 	"github.com/modulix-systems/goose-talk/internal/gateways"
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage"
 	"github.com/modulix-systems/goose-talk/internal/schemas"
+	"github.com/modulix-systems/goose-talk/pkg/logger"
 )
 
 type AuthService struct {
@@ -31,6 +32,7 @@ type AuthService struct {
 	loginTokenLen        int
 	webAuthnProvider     gateways.WebAuthnProvider
 	keyValueStorage      gateways.KeyValueStorage
+	log                  logger.Interface
 }
 
 func New(
@@ -49,6 +51,7 @@ func New(
 	loginTokenRepo gateways.LoginTokenRepo,
 	webAuthnProvider gateways.WebAuthnProvider,
 	keyValueStorage gateways.KeyValueStorage,
+	log logger.Interface,
 ) *AuthService {
 	return &AuthService{
 		usersRepo:            usersRepo,
@@ -67,6 +70,7 @@ func New(
 		loginTokenLen:        16,
 		webAuthnProvider:     webAuthnProvider,
 		keyValueStorage:      keyValueStorage,
+		log:                  log,
 	}
 }
 
@@ -313,10 +317,10 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 	if !matched {
 		return nil, ErrOTPInvalidOrExpired
 	}
-	user, err := s.usersRepo.GetByLogin(ctx, dto.Email)
+	user, err := s.usersRepo.GetByLogin(ctx, otp.UserEmail)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			// TODO: add error log, because in theory such situation is impossible
+			s.log.Error("Failed to get user by email in existing OTP token", "email", otp.UserEmail)
 		}
 		return nil, err
 	}

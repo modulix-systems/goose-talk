@@ -10,6 +10,7 @@ import (
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage"
 	"github.com/modulix-systems/goose-talk/internal/schemas"
 	"github.com/modulix-systems/goose-talk/internal/services/auth"
+	"github.com/modulix-systems/goose-talk/pkg/logger"
 	"github.com/modulix-systems/goose-talk/tests/mocks"
 	"github.com/modulix-systems/goose-talk/tests/suite/helpers"
 	"github.com/stretchr/testify/assert"
@@ -62,6 +63,7 @@ func NewAuthTestSuite(ctrl *gomock.Controller) *AuthTestSuite {
 		mockLoginTokenRepo,
 		mockWebAuthnProvider,
 		mockKeyValueStorage,
+		logger.NewStub(),
 	)
 	return &AuthTestSuite{
 		mockCodeRepo:         mockCodeRepo,
