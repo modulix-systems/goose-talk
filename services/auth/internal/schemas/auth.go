@@ -17,6 +17,7 @@ type (
 		FirstName        string
 		LastName         string
 		ConfirmationCode string
+		ClientIdentitySchema
 	}
 	SignInSchema struct {
 		Login    string
@@ -38,9 +39,9 @@ type (
 		SignInConfToken string
 	}
 	SessionUpdatePayload struct {
-		AccessToken   string
 		DeactivatedAt *time.Time
 		LastSeenAt    time.Time
+		ExpiresAt     time.Time
 	}
 	Add2FASchema struct {
 		UserId  int

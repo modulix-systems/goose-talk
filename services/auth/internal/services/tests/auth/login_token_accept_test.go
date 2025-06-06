@@ -26,7 +26,7 @@ func TestAcceptLoginTokenSuccess(t *testing.T) {
 	authSuite.mockUsersRepo.EXPECT().GetByID(ctx, mockUser.ID).Return(mockUser, nil)
 	authSuite.mockLoginTokenRepo.EXPECT().GetByValue(ctx, mockLoginToken.Val).Return(mockLoginToken, nil)
 	authSuite.mockLoginTokenRepo.EXPECT().UpdateAuthSessionByClientId(ctx, mockLoginToken.ClientId, mockSession.ID).Return(nil)
-	authSuite.mockAuthTokenProvider.EXPECT().NewToken(authSuite.tokenTTL, map[string]any{"uid": mockUser.ID}).Return(mockSession.AccessToken, nil)
+	authSuite.mockSecurityProvider.EXPECT().GenerateSessionId().Return(mockSession.ID)
 	setAuthSessionExpectations(t, ctx, authSuite, mockUser, mockSession, gofakeit.Bool(), false)
 
 	session, err := authSuite.service.AcceptLoginToken(ctx, mockUser.ID, mockLoginToken.Val)
@@ -34,7 +34,6 @@ func TestAcceptLoginTokenSuccess(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, mockSession.ID, session.ID)
 	assert.True(t, session.IsActive())
-	assert.Equal(t, mockSession.AccessToken, session.AccessToken)
 }
 
 func TestAcceptLoginTokenNotFound(t *testing.T) {

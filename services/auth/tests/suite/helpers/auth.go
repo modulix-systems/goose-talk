@@ -48,13 +48,12 @@ func MockUserSession(active bool) *entity.UserSession {
 	}
 
 	return &entity.UserSession{
-		ID:             gofakeit.Number(1, 1000),
+		ID:             gofakeit.UUID(),
 		UserId:         gofakeit.Number(1, 1000),
 		ClientIdentity: MockClientIdentity(),
 		LastSeenAt:     lastSeen,
 		CreatedAt:      created,
 		DeactivatedAt:  deactivated,
-		AccessToken:    gofakeit.UUID(),
 	}
 }
 

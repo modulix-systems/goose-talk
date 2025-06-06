@@ -3,6 +3,7 @@ package security
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"time"
 )
 
@@ -18,8 +19,16 @@ func New(totpTTL *time.Duration, otpLen int) *SecurityProvider {
 	}
 }
 
-func (s *SecurityProvider) GenerateSecretTokenUrlSafe(len int) string {
-	tokenBytes := make([]byte, len*6/8)
-	rand.Read(tokenBytes)
-	return base64.URLEncoding.EncodeToString(tokenBytes)
+func createRandBytes(size int) []byte {
+	buf := make([]byte, size)
+	rand.Read(buf)
+	return buf
+}
+
+func (s *SecurityProvider) GenerateSessionId() string {
+	return hex.EncodeToString(createRandBytes(8))
+}
+
+func (s *SecurityProvider) GenerateSecretTokenUrlSafe(entropy int) string {
+	return base64.URLEncoding.EncodeToString(createRandBytes(entropy))
 }

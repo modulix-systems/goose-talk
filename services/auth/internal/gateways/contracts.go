@@ -21,7 +21,6 @@ type (
 	UserSessionsRepo interface {
 		Insert(ctx context.Context, session *entity.UserSession) (*entity.UserSession, error)
 		Delete(ctx context.Context, ip string) error
-		GetByToken(ctx context.Context, token string) (*entity.UserSession, error)
 		GetAllForUser(
 			ctx context.Context,
 			userId int,
@@ -29,13 +28,13 @@ type (
 		) ([]entity.UserSession, error)
 		UpdateById(
 			ctx context.Context,
-			sessionId int,
+			sessionId string,
 			payload *schemas.SessionUpdatePayload,
 		) (*entity.UserSession, error)
 		UpdateForUserById(
 			ctx context.Context,
 			userId int,
-			sessionId int,
+			sessionId string,
 			deactivatedAt time.Time,
 		) error
 		GetByParamsMatch(
@@ -44,11 +43,12 @@ type (
 			deviceInfo string,
 			userId int,
 		) (*entity.UserSession, error)
+		GetById(ctx context.Context, sessionId string) (*entity.UserSession, error)
 	}
 	OtpRepo interface {
 		GetByEmail(ctx context.Context, email string) (*entity.OTP, error)
 		GetByUserId(ctx context.Context, userId int) (*entity.OTP, error)
-		DeleteByEmail(ctx context.Context, email string) error
+		DeleteByEmailOrUserId(ctx context.Context, email string, userId int) error
 		InsertOrUpdateCode(ctx context.Context, otp *entity.OTP) error
 	}
 	LoginTokenRepo interface {
@@ -56,15 +56,11 @@ type (
 		GetByClientId(ctx context.Context, sessionId string) (*entity.LoginToken, error)
 		GetByValue(ctx context.Context, val string) (*entity.LoginToken, error)
 		DeleteByClientId(ctx context.Context, sessionId string) error
-		UpdateAuthSessionByClientId(ctx context.Context, clientId string, authSessionId int) error
+		UpdateAuthSessionByClientId(ctx context.Context, clientId string, authSessionId string) error
 	}
 	TwoFactorAuthRepo interface {
 		Insert(ctx context.Context, ent *entity.TwoFactorAuth) (*entity.TwoFactorAuth, error)
 		UpdateContactForUser(ctx context.Context, userId int, contact string) error
-	}
-	AuthTokenProvider interface {
-		NewToken(expires time.Duration, claims map[string]any) (string, error)
-		ParseClaimsFromToken(token string) (map[string]any, error)
 	}
 	SecurityProvider interface {
 		GenerateOTPCode() string
@@ -74,7 +70,8 @@ type (
 		ComparePasswords(hashed []byte, plain string) (bool, error)
 		EncryptSymmetric(plaintext string) ([]byte, error)
 		DecryptSymmetric(encrypted []byte) (string, error)
-		GenerateSecretTokenUrlSafe(len int) string
+		GenerateSecretTokenUrlSafe(entropy int) string
+		GenerateSessionId() string
 	}
 	KeyValueStorage interface {
 		Set(key string, value string, expiresIn time.Duration) error

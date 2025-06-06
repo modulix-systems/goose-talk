@@ -49,7 +49,6 @@ func TestSignInSuccessNo2FA(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
 	dto := mockSignInPayload()
-	expectedToken := "testtoken"
 	testCases := []struct {
 		name          string
 		sessionExists bool
@@ -85,22 +84,20 @@ func TestSignInSuccessNo2FA(t *testing.T) {
 			}
 			mockSession := helpers.MockUserSession(gofakeit.Bool())
 			mockSession.UserId = mockUser.ID
-			mockSession.AccessToken = expectedToken
 			mockSession.ClientIdentity = &entity.ClientIdentity{DeviceInfo: dto.DeviceInfo, IPAddr: dto.IPAddr}
 			authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
 			setAuthSessionExpectations(t, ctx, authSuite, mockUser, mockSession, tc.sessionExists, true)
 			authSuite.mockSecurityProvider.EXPECT().
 				ComparePasswords(mockUser.Password, dto.Password).
 				Return(true, nil)
-			authSuite.mockAuthTokenProvider.EXPECT().
-				NewToken(authSuite.tokenTTL, map[string]any{"uid": mockUser.ID}).
-				Return(expectedToken, nil)
+			authSuite.mockSecurityProvider.EXPECT().
+				GenerateSessionId().Return(mockSession.ID)
 
 			authInfo, err := authSuite.service.SignIn(ctx, dto)
 
 			assert.NoError(t, err)
 			assert.NotNil(t, authInfo)
-			assert.Equal(t, authInfo.Session.AccessToken, expectedToken)
+			assert.Equal(t, authInfo.Session.ID, mockSession.ID)
 			assert.Equal(t, authInfo.User.ID, mockUser.ID)
 		})
 	}

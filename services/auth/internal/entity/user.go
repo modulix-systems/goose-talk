@@ -23,18 +23,21 @@ type (
 		TwoFactorAuth      *TwoFactorAuth
 		PasskeyCredentials []PasskeyCredential
 	}
-	// UserSession stores information about user's session within single device
+	// UserSession is a rolling auth session
+	// which stores information about user's session within single device
 	// Allows to forbid access to user if his ip is not in a list of user's active sessions
 	UserSession struct {
-		ID               int
-		UserId           int
-		LastSeenAt       time.Time
+		ID         string
+		User       *User
+		UserId     int
+		LastSeenAt time.Time
+		// ExpiresAt should be automatically updated when user interacts within session
+		ExpiresAt        time.Time
 		CreatedAt        time.Time
 		ClientIdentity   *ClientIdentity
 		ClientIdentityId int
 		// nil by default if session is active
 		DeactivatedAt time.Time
-		AccessToken   string // unique
 	}
 	ClientIdentity struct {
 		ID         int

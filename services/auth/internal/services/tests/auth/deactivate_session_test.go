@@ -16,12 +16,12 @@ func TestDeactivateSession(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
-	mockSessionId := gofakeit.Number(1, 1000)
+	mockSessionId := gofakeit.UUID()
 	mockUserId := gofakeit.Number(1, 1000)
 	t.Run("success", func(t *testing.T) {
 		authSuite.mockSessionsRepo.EXPECT().UpdateForUserById(
 			ctx, mockUserId, mockSessionId, gomock.Any(),
-		).DoAndReturn(func(ctx context.Context, userId int, sessionId int, ts time.Time) error {
+		).DoAndReturn(func(ctx context.Context, userId int, sessionId string, ts time.Time) error {
 			assert.WithinDuration(t, time.Now(), ts, time.Second)
 			return nil
 		})
@@ -32,7 +32,7 @@ func TestDeactivateSession(t *testing.T) {
 	t.Run("not found", func(t *testing.T) {
 		authSuite.mockSessionsRepo.EXPECT().UpdateForUserById(
 			ctx, mockUserId, mockSessionId, gomock.Any(),
-		).DoAndReturn(func(ctx context.Context, userId int, sessionId int, deactivatedAt time.Time) error {
+		).DoAndReturn(func(ctx context.Context, userId int, sessionId string, deactivatedAt time.Time) error {
 			assert.WithinDuration(t, time.Now(), deactivatedAt, time.Second)
 			return storage.ErrNotFound
 		})

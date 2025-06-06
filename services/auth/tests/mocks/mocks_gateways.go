@@ -186,6 +186,21 @@ func (mr *MockUserSessionsRepoMockRecorder) GetAllForUser(ctx, userId, activeOnl
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllForUser", reflect.TypeOf((*MockUserSessionsRepo)(nil).GetAllForUser), ctx, userId, activeOnly)
 }
 
+// GetById mocks base method.
+func (m *MockUserSessionsRepo) GetById(ctx context.Context, sessionId string) (*entity.UserSession, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetById", ctx, sessionId)
+	ret0, _ := ret[0].(*entity.UserSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetById indicates an expected call of GetById.
+func (mr *MockUserSessionsRepoMockRecorder) GetById(ctx, sessionId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetById", reflect.TypeOf((*MockUserSessionsRepo)(nil).GetById), ctx, sessionId)
+}
+
 // GetByParamsMatch mocks base method.
 func (m *MockUserSessionsRepo) GetByParamsMatch(ctx context.Context, ip, deviceInfo string, userId int) (*entity.UserSession, error) {
 	m.ctrl.T.Helper()
@@ -199,21 +214,6 @@ func (m *MockUserSessionsRepo) GetByParamsMatch(ctx context.Context, ip, deviceI
 func (mr *MockUserSessionsRepoMockRecorder) GetByParamsMatch(ctx, ip, deviceInfo, userId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByParamsMatch", reflect.TypeOf((*MockUserSessionsRepo)(nil).GetByParamsMatch), ctx, ip, deviceInfo, userId)
-}
-
-// GetByToken mocks base method.
-func (m *MockUserSessionsRepo) GetByToken(ctx context.Context, token string) (*entity.UserSession, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByToken", ctx, token)
-	ret0, _ := ret[0].(*entity.UserSession)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetByToken indicates an expected call of GetByToken.
-func (mr *MockUserSessionsRepoMockRecorder) GetByToken(ctx, token any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByToken", reflect.TypeOf((*MockUserSessionsRepo)(nil).GetByToken), ctx, token)
 }
 
 // Insert mocks base method.
@@ -232,7 +232,7 @@ func (mr *MockUserSessionsRepoMockRecorder) Insert(ctx, session any) *gomock.Cal
 }
 
 // UpdateById mocks base method.
-func (m *MockUserSessionsRepo) UpdateById(ctx context.Context, sessionId int, payload *schemas.SessionUpdatePayload) (*entity.UserSession, error) {
+func (m *MockUserSessionsRepo) UpdateById(ctx context.Context, sessionId string, payload *schemas.SessionUpdatePayload) (*entity.UserSession, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateById", ctx, sessionId, payload)
 	ret0, _ := ret[0].(*entity.UserSession)
@@ -247,7 +247,7 @@ func (mr *MockUserSessionsRepoMockRecorder) UpdateById(ctx, sessionId, payload a
 }
 
 // UpdateForUserById mocks base method.
-func (m *MockUserSessionsRepo) UpdateForUserById(ctx context.Context, userId, sessionId int, deactivatedAt time.Time) error {
+func (m *MockUserSessionsRepo) UpdateForUserById(ctx context.Context, userId int, sessionId string, deactivatedAt time.Time) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateForUserById", ctx, userId, sessionId, deactivatedAt)
 	ret0, _ := ret[0].(error)
@@ -284,18 +284,18 @@ func (m *MockOtpRepo) EXPECT() *MockOtpRepoMockRecorder {
 	return m.recorder
 }
 
-// DeleteByEmail mocks base method.
-func (m *MockOtpRepo) DeleteByEmail(ctx context.Context, email string) error {
+// DeleteByEmailOrUserId mocks base method.
+func (m *MockOtpRepo) DeleteByEmailOrUserId(ctx context.Context, email string, userId int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteByEmail", ctx, email)
+	ret := m.ctrl.Call(m, "DeleteByEmailOrUserId", ctx, email, userId)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteByEmail indicates an expected call of DeleteByEmail.
-func (mr *MockOtpRepoMockRecorder) DeleteByEmail(ctx, email any) *gomock.Call {
+// DeleteByEmailOrUserId indicates an expected call of DeleteByEmailOrUserId.
+func (mr *MockOtpRepoMockRecorder) DeleteByEmailOrUserId(ctx, email, userId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteByEmail", reflect.TypeOf((*MockOtpRepo)(nil).DeleteByEmail), ctx, email)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteByEmailOrUserId", reflect.TypeOf((*MockOtpRepo)(nil).DeleteByEmailOrUserId), ctx, email, userId)
 }
 
 // GetByEmail mocks base method.
@@ -426,7 +426,7 @@ func (mr *MockLoginTokenRepoMockRecorder) Insert(ctx, token any) *gomock.Call {
 }
 
 // UpdateAuthSessionByClientId mocks base method.
-func (m *MockLoginTokenRepo) UpdateAuthSessionByClientId(ctx context.Context, clientId string, authSessionId int) error {
+func (m *MockLoginTokenRepo) UpdateAuthSessionByClientId(ctx context.Context, clientId, authSessionId string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateAuthSessionByClientId", ctx, clientId, authSessionId)
 	ret0, _ := ret[0].(error)
@@ -490,60 +490,6 @@ func (m *MockTwoFactorAuthRepo) UpdateContactForUser(ctx context.Context, userId
 func (mr *MockTwoFactorAuthRepoMockRecorder) UpdateContactForUser(ctx, userId, contact any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateContactForUser", reflect.TypeOf((*MockTwoFactorAuthRepo)(nil).UpdateContactForUser), ctx, userId, contact)
-}
-
-// MockAuthTokenProvider is a mock of AuthTokenProvider interface.
-type MockAuthTokenProvider struct {
-	ctrl     *gomock.Controller
-	recorder *MockAuthTokenProviderMockRecorder
-	isgomock struct{}
-}
-
-// MockAuthTokenProviderMockRecorder is the mock recorder for MockAuthTokenProvider.
-type MockAuthTokenProviderMockRecorder struct {
-	mock *MockAuthTokenProvider
-}
-
-// NewMockAuthTokenProvider creates a new mock instance.
-func NewMockAuthTokenProvider(ctrl *gomock.Controller) *MockAuthTokenProvider {
-	mock := &MockAuthTokenProvider{ctrl: ctrl}
-	mock.recorder = &MockAuthTokenProviderMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockAuthTokenProvider) EXPECT() *MockAuthTokenProviderMockRecorder {
-	return m.recorder
-}
-
-// NewToken mocks base method.
-func (m *MockAuthTokenProvider) NewToken(expires time.Duration, claims map[string]any) (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NewToken", expires, claims)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// NewToken indicates an expected call of NewToken.
-func (mr *MockAuthTokenProviderMockRecorder) NewToken(expires, claims any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewToken", reflect.TypeOf((*MockAuthTokenProvider)(nil).NewToken), expires, claims)
-}
-
-// ParseClaimsFromToken mocks base method.
-func (m *MockAuthTokenProvider) ParseClaimsFromToken(token string) (map[string]any, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ParseClaimsFromToken", token)
-	ret0, _ := ret[0].(map[string]any)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ParseClaimsFromToken indicates an expected call of ParseClaimsFromToken.
-func (mr *MockAuthTokenProviderMockRecorder) ParseClaimsFromToken(token any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParseClaimsFromToken", reflect.TypeOf((*MockAuthTokenProvider)(nil).ParseClaimsFromToken), token)
 }
 
 // MockSecurityProvider is a mock of SecurityProvider interface.
@@ -630,17 +576,31 @@ func (mr *MockSecurityProviderMockRecorder) GenerateOTPCode() *gomock.Call {
 }
 
 // GenerateSecretTokenUrlSafe mocks base method.
-func (m *MockSecurityProvider) GenerateSecretTokenUrlSafe(len int) string {
+func (m *MockSecurityProvider) GenerateSecretTokenUrlSafe(entropy int) string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GenerateSecretTokenUrlSafe", len)
+	ret := m.ctrl.Call(m, "GenerateSecretTokenUrlSafe", entropy)
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
 // GenerateSecretTokenUrlSafe indicates an expected call of GenerateSecretTokenUrlSafe.
-func (mr *MockSecurityProviderMockRecorder) GenerateSecretTokenUrlSafe(len any) *gomock.Call {
+func (mr *MockSecurityProviderMockRecorder) GenerateSecretTokenUrlSafe(entropy any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateSecretTokenUrlSafe", reflect.TypeOf((*MockSecurityProvider)(nil).GenerateSecretTokenUrlSafe), len)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateSecretTokenUrlSafe", reflect.TypeOf((*MockSecurityProvider)(nil).GenerateSecretTokenUrlSafe), entropy)
+}
+
+// GenerateSessionId mocks base method.
+func (m *MockSecurityProvider) GenerateSessionId() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GenerateSessionId")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GenerateSessionId indicates an expected call of GenerateSessionId.
+func (mr *MockSecurityProviderMockRecorder) GenerateSessionId() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateSessionId", reflect.TypeOf((*MockSecurityProvider)(nil).GenerateSessionId))
 }
 
 // GenerateTOTPEnrollUrlWithSecret mocks base method.

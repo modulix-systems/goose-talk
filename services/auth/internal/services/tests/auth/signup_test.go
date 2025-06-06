@@ -23,6 +23,10 @@ func mockSignUpPayload() *schemas.SignUpSchema {
 		LastName:         helpers.RandomChoose(gofakeit.LastName(), ""),
 		ConfirmationCode: gofakeit.Numerify("######"),
 		Password:         helpers.RandomPassword(),
+		ClientIdentitySchema: schemas.ClientIdentitySchema{
+			DeviceInfo: gofakeit.UserAgent(),
+			IPAddr:     gofakeit.IPv4Address(),
+		},
 	}
 }
 
@@ -30,7 +34,6 @@ func TestSignupSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	dto := mockSignUpPayload()
-	expectedToken := "auth token"
 	mockOTP := helpers.MockOTP()
 	mockOTP.UserEmail = dto.Email
 	ctx := context.Background()
@@ -42,19 +45,32 @@ func TestSignupSuccess(t *testing.T) {
 	}
 	insertedUser := *userToInsert
 	insertedUser.ID = gofakeit.Number(1, 1000)
-	authSuite.mockAuthTokenProvider.EXPECT().
-		NewToken(authSuite.tokenTTL, map[string]any{"uid": insertedUser.ID}).
-		Return(expectedToken, nil)
+	expectedSession := helpers.MockUserSession(true)
+	expectedSession.UserId = insertedUser.ID
+	authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(mockOTP, nil)
 	authSuite.mockSecurityProvider.EXPECT().
 		ComparePasswords(mockOTP.Code, dto.ConfirmationCode).
 		Return(true, nil)
-	authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(mockOTP, nil)
+	authSuite.mockSecurityProvider.EXPECT().
+		GenerateSessionId().
+		Return(expectedSession.ID)
 	authSuite.mockSecurityProvider.EXPECT().
 		HashPassword(dto.Password).
 		Return(userToInsert.Password, nil)
 	authSuite.mockUsersRepo.EXPECT().
 		Insert(ctx, userToInsert).
 		Return(&insertedUser, nil)
+	expectedLocation := gofakeit.City()
+	authSuite.mockGeoIPApi.EXPECT().GetLocationByIP(dto.IPAddr).Return(expectedLocation, nil)
+	authSuite.mockSessionsRepo.EXPECT().Insert(ctx, gomock.Any()).
+		DoAndReturn(func(ctx context.Context, session *entity.UserSession) (*entity.UserSession, error) {
+			assert.Equal(t, expectedSession.UserId, session.UserId)
+			assert.Equal(t, expectedSession.ID, session.ID)
+			assert.Equal(t, dto.IPAddr, session.ClientIdentity.IPAddr)
+			assert.Equal(t, dto.DeviceInfo, session.ClientIdentity.DeviceInfo)
+			assert.Equal(t, expectedLocation, session.ClientIdentity.Location)
+			return expectedSession, nil
+		})
 	expectedName := dto.Username
 	if dto.FirstName != "" {
 		expectedName = dto.FirstName
@@ -64,10 +80,11 @@ func TestSignupSuccess(t *testing.T) {
 	}
 	authSuite.mockMailSender.EXPECT().SendGreetingEmail(ctx, dto.Email, expectedName)
 
-	token, user, err := authSuite.service.SignUp(ctx, dto)
+	authSession, err := authSuite.service.SignUp(ctx, dto)
 
-	assert.Equal(t, token, expectedToken)
-	assert.Equal(t, user.ID, insertedUser.ID)
+	assert.True(t, authSession.IsActive())
+	assert.Equal(t, expectedSession.ID, authSession.ID)
+	assert.Equal(t, insertedUser, *authSession.User)
 	assert.NoError(t, err)
 }
 
@@ -81,10 +98,9 @@ func TestSignupNotFoundCode(t *testing.T) {
 		storage.ErrNotFound,
 	)
 
-	token, user, err := authSuite.service.SignUp(ctx, dto)
+	authSession, err := authSuite.service.SignUp(ctx, dto)
 
-	assert.Empty(t, token)
-	assert.Empty(t, user)
+	assert.Empty(t, authSession)
 	assert.ErrorIs(t, err, auth.ErrOTPInvalidOrExpired)
 }
 
@@ -104,10 +120,9 @@ func TestSignupExpiredCode(t *testing.T) {
 		nil,
 	)
 
-	token, user, err := authSuite.service.SignUp(ctx, dto)
+	authSession, err := authSuite.service.SignUp(ctx, dto)
 
-	assert.Empty(t, token)
-	assert.Empty(t, user)
+	assert.Empty(t, authSession)
 	assert.ErrorIs(t, err, auth.ErrOTPInvalidOrExpired)
 }
 
@@ -128,10 +143,9 @@ func TestSignUpUserExists(t *testing.T) {
 		Insert(ctx, &entity.User{FirstName: dto.FirstName, LastName: dto.LastName, Email: dto.Email, Password: hashedPassword}).
 		Return(nil, storage.ErrAlreadyExists)
 
-	token, user, err := authSuite.service.SignUp(ctx, dto)
+	authSession, err := authSuite.service.SignUp(ctx, dto)
 
-	assert.Empty(t, token)
-	assert.Empty(t, user)
+	assert.Empty(t, authSession)
 	assert.ErrorIs(t, err, auth.ErrUserAlreadyExists)
 
 }

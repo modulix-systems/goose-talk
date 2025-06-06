@@ -21,9 +21,9 @@ type AuthService struct {
 	securityProvider     gateways.SecurityProvider
 	otpRepo              gateways.OtpRepo
 	otpTTL               time.Duration
+	defaultSessionTTL    time.Duration
+	longLivedSessionTTL  time.Duration
 	loginTokenTTL        time.Duration
-	authTokenProvider    gateways.AuthTokenProvider
-	authTokenTTL         time.Duration
 	sessionsRepo         gateways.UserSessionsRepo
 	geoIPApi             gateways.GeoIPApi
 	twoFactorAuthRepo    gateways.TwoFactorAuthRepo
@@ -37,10 +37,10 @@ func New(
 	usersRepo gateways.UsersRepo,
 	notificationsServive gateways.NotificationsService,
 	otpRepo gateways.OtpRepo,
-	authTokenProvider gateways.AuthTokenProvider,
 	otpTTL time.Duration,
 	loginTokenTTL time.Duration,
-	authTokenTTL time.Duration,
+	defaultSessionTTL time.Duration,
+	longLivedSessionTTL time.Duration,
 	securityProvider gateways.SecurityProvider,
 	tgApi gateways.TelegramBotAPI,
 	sessionsRepo gateways.UserSessionsRepo,
@@ -55,9 +55,9 @@ func New(
 		notificationsServive: notificationsServive,
 		otpRepo:              otpRepo,
 		otpTTL:               otpTTL,
+		defaultSessionTTL:    defaultSessionTTL,
+		longLivedSessionTTL:  longLivedSessionTTL,
 		loginTokenTTL:        loginTokenTTL,
-		authTokenProvider:    authTokenProvider,
-		authTokenTTL:         authTokenTTL,
 		securityProvider:     securityProvider,
 		tgApi:                tgApi,
 		sessionsRepo:         sessionsRepo,
@@ -87,7 +87,24 @@ func (s *AuthService) createOTP(ctx context.Context, email string, userId int) (
 	)
 }
 
-// newAuthSession inserts a new session on updates existing one based on set of params
+func (s *AuthService) useOTP(ctx context.Context, otp *entity.OTP, compareWith string) error {
+	if otp.IsExpired(s.otpTTL) {
+		return ErrOTPInvalidOrExpired
+	}
+	matched, err := s.securityProvider.ComparePasswords(otp.Code, compareWith)
+	if err != nil {
+		return err
+	}
+	if !matched {
+		return ErrOTPInvalidOrExpired
+	}
+	if err = s.otpRepo.DeleteByEmailOrUserId(ctx, otp.UserEmail, otp.UserId); err != nil {
+		return err
+	}
+	return nil
+}
+
+// newAuthSession inserts a new session or updates existing one based on set of params
 // if new session was inserted - sends 'warning' email
 func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, sessionEnt *entity.UserSession) (*entity.UserSession, error) {
 	// Try to find matching session by set of params, if it wasn't found - create new one
@@ -111,7 +128,6 @@ func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, ses
 		&schemas.SessionUpdatePayload{
 			DeactivatedAt: &time.Time{},
 			LastSeenAt:    time.Now(),
-			AccessToken:   session.AccessToken,
 		},
 	)
 }
@@ -119,27 +135,27 @@ func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, ses
 func (s *AuthService) SignUp(
 	ctx context.Context,
 	dto *schemas.SignUpSchema,
-) (string, *entity.User, error) {
+) (*entity.UserSession, error) {
 	otp, err := s.otpRepo.GetByEmail(ctx, dto.Email)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return "", nil, ErrOTPInvalidOrExpired
+			return nil, ErrOTPInvalidOrExpired
 		}
-		return "", nil, err
+		return nil, err
 	}
 	if otp.IsExpired(s.otpTTL) {
-		return "", nil, ErrOTPInvalidOrExpired
+		return nil, ErrOTPInvalidOrExpired
 	}
 	matched, err := s.securityProvider.ComparePasswords(otp.Code, dto.ConfirmationCode)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 	if !matched {
-		return "", nil, ErrOTPInvalidOrExpired
+		return nil, ErrOTPInvalidOrExpired
 	}
 	hashedPassword, err := s.securityProvider.HashPassword(dto.Password)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 	user, err := s.usersRepo.Insert(
 		ctx,
@@ -152,14 +168,24 @@ func (s *AuthService) SignUp(
 	)
 	if err != nil {
 		if errors.Is(err, storage.ErrAlreadyExists) {
-			return "", nil, ErrUserAlreadyExists
+			return nil, ErrUserAlreadyExists
 		}
-		return "", nil, err
+		return nil, err
 	}
-	authToken, err := s.authTokenProvider.NewToken(s.authTokenTTL, map[string]any{"uid": user.ID})
+	userLocation, err := s.geoIPApi.GetLocationByIP(dto.IPAddr)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
+	authSession, err := s.sessionsRepo.Insert(ctx, &entity.UserSession{
+		ID:     s.securityProvider.GenerateSessionId(),
+		UserId: user.ID,
+		ClientIdentity: &entity.ClientIdentity{
+			DeviceInfo: dto.DeviceInfo,
+			IPAddr:     dto.IPAddr,
+			Location:   userLocation,
+		},
+	})
+	authSession.User = user
 	displayName := dto.Username
 	if dto.FirstName != "" {
 		displayName = dto.FirstName
@@ -168,7 +194,7 @@ func (s *AuthService) SignUp(
 		}
 	}
 	s.notificationsServive.SendGreetingEmail(ctx, user.Email, displayName)
-	return authToken, user, nil
+	return authSession, nil
 }
 
 func (s *AuthService) ConfirmEmail(ctx context.Context, email string) error {
@@ -247,18 +273,14 @@ func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (*a
 	if err != nil {
 		return nil, err
 	}
-	token, err := s.authTokenProvider.NewToken(s.authTokenTTL, map[string]any{"uid": user.ID})
-	if err != nil {
-		return nil, err
-	}
 	session, err := s.newAuthSession(ctx, user, &entity.UserSession{
+		ID:     s.securityProvider.GenerateSessionId(),
 		UserId: user.ID,
 		ClientIdentity: &entity.ClientIdentity{
 			DeviceInfo: dto.DeviceInfo,
 			IPAddr:     dto.IPAddr,
 			Location:   userLocation,
 		},
-		AccessToken: token,
 	})
 	if err != nil {
 		return nil, err
@@ -269,16 +291,16 @@ func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (*a
 	}, nil
 }
 
-func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchema) (string, error) {
+func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchema) (*entity.UserSession, error) {
 	otp, err := s.otpRepo.GetByEmail(ctx, dto.Email)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return "", ErrOTPInvalidOrExpired
+			return nil, ErrOTPInvalidOrExpired
 		}
-		return "", err
+		return nil, err
 	}
 	if otp.IsExpired(s.otpTTL) {
-		return "", ErrOTPInvalidOrExpired
+		return nil, ErrOTPInvalidOrExpired
 	}
 	otpToCompare := dto.Code
 	if dto.TwoFATyp == entity.TWO_FA_TOTP_APP {
@@ -286,58 +308,51 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 	}
 	matched, err := s.securityProvider.ComparePasswords(otp.Code, otpToCompare)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if !matched {
-		return "", ErrOTPInvalidOrExpired
+		return nil, ErrOTPInvalidOrExpired
 	}
 	user, err := s.usersRepo.GetByLogin(ctx, dto.Email)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			if err = s.otpRepo.DeleteByEmail(ctx, dto.Email); err != nil {
-				return "", err
-			}
-			return "", ErrUserNotFound
+			// TODO: add error log, because in theory such situation is impossible
 		}
-		return "", err
+		return nil, err
 	}
 	if !user.IsActive {
-		return "", ErrDisabledAccount
+		return nil, ErrDisabledAccount
 	}
 	if !user.Is2FAEnabled() {
-		return "", Err2FANotEnabled
+		return nil, Err2FANotEnabled
 	}
 	if dto.TwoFATyp == entity.TWO_FA_TOTP_APP {
 		decryptedSecret, err := s.securityProvider.DecryptSymmetric(user.TwoFactorAuth.TotpSecret)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		isValid := s.securityProvider.ValidateTOTP(dto.Code, decryptedSecret)
 		if !isValid {
-			return "", ErrOTPInvalidOrExpired
+			return nil, ErrOTPInvalidOrExpired
 		}
-	}
-	token, err := s.authTokenProvider.NewToken(s.authTokenTTL, map[string]any{"uid": user.ID})
-	if err != nil {
-		return "", err
 	}
 	userLocation, err := s.geoIPApi.GetLocationByIP(dto.IPAddr)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	_, err = s.newAuthSession(ctx, user, &entity.UserSession{
+	authSession, err := s.newAuthSession(ctx, user, &entity.UserSession{
+		ID:     s.securityProvider.GenerateSessionId(),
 		UserId: user.ID,
 		ClientIdentity: &entity.ClientIdentity{
 			DeviceInfo: dto.DeviceInfo,
 			IPAddr:     dto.IPAddr,
 			Location:   userLocation,
 		},
-		AccessToken: token,
 	})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return token, nil
+	return authSession, nil
 }
 
 func (s *AuthService) Confirm2FaAddition(ctx context.Context, dto *schemas.Confirm2FASchema) (*entity.TwoFactorAuth, error) {
@@ -475,24 +490,20 @@ func (s *AuthService) DeactivateAccount(ctx context.Context, userId int) error {
 
 func (s *AuthService) GetActiveSessions(
 	ctx context.Context,
-	authToken string,
+	sessionId string,
 ) ([]entity.UserSession, error) {
-	var sessions []entity.UserSession
-	tokenPayload, err := s.authTokenProvider.ParseClaimsFromToken(authToken)
+	authSession, err := s.sessionsRepo.GetById(ctx, sessionId)
 	if err != nil {
-		if errors.Is(err, gateways.ErrExpiredToken) {
-			return sessions, ErrExpiredAuthToken
-		}
-		return sessions, ErrInvalidAuthToken
+		return nil, err
 	}
-	sessions, err = s.sessionsRepo.GetAllForUser(ctx, tokenPayload["uid"].(int), true)
+	sessions, err := s.sessionsRepo.GetAllForUser(ctx, authSession.UserId, true)
 	if err != nil {
-		return sessions, err
+		return nil, err
 	}
 	return sessions, nil
 }
 
-func (s *AuthService) DeactivateSession(ctx context.Context, userId int, sessionId int) error {
+func (s *AuthService) DeactivateSession(ctx context.Context, userId int, sessionId string) error {
 	if err := s.sessionsRepo.UpdateForUserById(ctx, userId, sessionId, time.Now()); err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return ErrSessionNotFound
@@ -503,9 +514,9 @@ func (s *AuthService) DeactivateSession(ctx context.Context, userId int, session
 
 func (s *AuthService) PingSession(
 	ctx context.Context,
-	authToken string,
+	sessionId string,
 ) (*entity.UserSession, error) {
-	session, err := s.sessionsRepo.GetByToken(ctx, authToken)
+	session, err := s.sessionsRepo.GetById(ctx, sessionId)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return nil, ErrSessionNotFound
@@ -516,19 +527,10 @@ func (s *AuthService) PingSession(
 		return nil, ErrSessionNotFound
 	}
 	now := time.Now()
+	// TODO: update expires too
 	updatePayload := &schemas.SessionUpdatePayload{LastSeenAt: now}
-	// if token expired - deactivate session
-	if _, err = s.authTokenProvider.ParseClaimsFromToken(authToken); err != nil {
-		if !errors.Is(err, gateways.ErrExpiredToken) {
-			return nil, err
-		}
-		updatePayload = &schemas.SessionUpdatePayload{DeactivatedAt: &now}
-	}
 	session, err = s.sessionsRepo.UpdateById(ctx, session.ID, updatePayload)
 	if err != nil {
-		if errors.Is(err, storage.ErrNotFound) {
-			return nil, ErrSessionNotFound
-		}
 		return nil, err
 	}
 	return session, nil
@@ -572,6 +574,7 @@ func (s *AuthService) ExportLoginToken(ctx context.Context, dto *schemas.ExportL
 	})
 }
 
+// AcceptLoginToken is used to authenticated another device from an authorized one (qrcode auth)
 func (s *AuthService) AcceptLoginToken(ctx context.Context, userId int, tokenVal string) (*entity.UserSession, error) {
 	token, err := s.loginTokenRepo.GetByValue(ctx, tokenVal)
 	if err != nil {
@@ -590,15 +593,11 @@ func (s *AuthService) AcceptLoginToken(ctx context.Context, userId int, tokenVal
 		}
 		return nil, err
 	}
-	authToken, err := s.authTokenProvider.NewToken(s.authTokenTTL, map[string]any{"uid": user.ID})
-	if err != nil {
-		return nil, err
-	}
 	session, err := s.newAuthSession(ctx, user, &entity.UserSession{
+		ID:               s.securityProvider.GenerateSessionId(),
 		UserId:           user.ID,
 		ClientIdentityId: token.ClientIdentityId,
 		ClientIdentity:   token.ClientIdentity,
-		AccessToken:      authToken,
 	})
 	if err != nil {
 		return nil, err

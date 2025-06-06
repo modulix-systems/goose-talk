@@ -18,27 +18,25 @@ import (
 )
 
 type AuthTestSuite struct {
-	mockCodeRepo          *mocks.MockOtpRepo
-	mock2FARepo           *mocks.MockTwoFactorAuthRepo
-	mockUsersRepo         *mocks.MockUsersRepo
-	mockSessionsRepo      *mocks.MockUserSessionsRepo
-	mockLoginTokenRepo    *mocks.MockLoginTokenRepo
-	mockAuthTokenProvider *mocks.MockAuthTokenProvider
-	mockMailSender        *mocks.MockNotificationsService
-	mockSecurityProvider  *mocks.MockSecurityProvider
-	mockWebAuthnProvider  *mocks.MockWebAuthnProvider
-	mockTgAPI             *mocks.MockTelegramBotAPI
-	mockGeoIPApi          *mocks.MockGeoIPApi
-	mockKeyValueStorage   *mocks.MockKeyValueStorage
-	service               *auth.AuthService
-	tokenTTL              time.Duration
+	mockCodeRepo         *mocks.MockOtpRepo
+	mock2FARepo          *mocks.MockTwoFactorAuthRepo
+	mockUsersRepo        *mocks.MockUsersRepo
+	mockSessionsRepo     *mocks.MockUserSessionsRepo
+	mockLoginTokenRepo   *mocks.MockLoginTokenRepo
+	mockMailSender       *mocks.MockNotificationsService
+	mockSecurityProvider *mocks.MockSecurityProvider
+	mockWebAuthnProvider *mocks.MockWebAuthnProvider
+	mockTgAPI            *mocks.MockTelegramBotAPI
+	mockGeoIPApi         *mocks.MockGeoIPApi
+	mockKeyValueStorage  *mocks.MockKeyValueStorage
+	service              *auth.AuthService
+	tokenTTL             time.Duration
 }
 
 func NewAuthTestSuite(ctrl *gomock.Controller) *AuthTestSuite {
 	mockCodeRepo := mocks.NewMockOtpRepo(ctrl)
 	mockUsersRepo := mocks.NewMockUsersRepo(ctrl)
 	tokenTTL := helpers.MockDuration("")
-	mockAuthTokenProvider := mocks.NewMockAuthTokenProvider(ctrl)
 	mockMailSender := mocks.NewMockNotificationsService(ctrl)
 	mockSecurityProvider := mocks.NewMockSecurityProvider(ctrl)
 	mockTgAPI := mocks.NewMockTelegramBotAPI(ctrl)
@@ -52,10 +50,10 @@ func NewAuthTestSuite(ctrl *gomock.Controller) *AuthTestSuite {
 		mockUsersRepo,
 		mockMailSender,
 		mockCodeRepo,
-		mockAuthTokenProvider,
 		tokenTTL,
 		tokenTTL,
 		tokenTTL,
+		tokenTTL*2,
 		mockSecurityProvider,
 		mockTgAPI,
 		mockSessionsRepo,
@@ -66,20 +64,19 @@ func NewAuthTestSuite(ctrl *gomock.Controller) *AuthTestSuite {
 		mockKeyValueStorage,
 	)
 	return &AuthTestSuite{
-		mockCodeRepo:          mockCodeRepo,
-		mockUsersRepo:         mockUsersRepo,
-		mockSecurityProvider:  mockSecurityProvider,
-		mockAuthTokenProvider: mockAuthTokenProvider,
-		mockSessionsRepo:      mockSessionsRepo,
-		tokenTTL:              tokenTTL,
-		mockMailSender:        mockMailSender,
-		mockTgAPI:             mockTgAPI,
-		service:               service,
-		mockGeoIPApi:          mockGeoIPApi,
-		mock2FARepo:           mock2FARepo,
-		mockLoginTokenRepo:    mockLoginTokenRepo,
-		mockWebAuthnProvider:  mockWebAuthnProvider,
-		mockKeyValueStorage:   mockKeyValueStorage,
+		mockCodeRepo:         mockCodeRepo,
+		mockUsersRepo:        mockUsersRepo,
+		mockSecurityProvider: mockSecurityProvider,
+		mockSessionsRepo:     mockSessionsRepo,
+		tokenTTL:             tokenTTL,
+		mockMailSender:       mockMailSender,
+		mockTgAPI:            mockTgAPI,
+		service:              service,
+		mockGeoIPApi:         mockGeoIPApi,
+		mock2FARepo:          mock2FARepo,
+		mockLoginTokenRepo:   mockLoginTokenRepo,
+		mockWebAuthnProvider: mockWebAuthnProvider,
+		mockKeyValueStorage:  mockKeyValueStorage,
 	}
 }
 
@@ -97,15 +94,15 @@ func setAuthSessionExpectations(t *testing.T, ctx context.Context, authSuite *Au
 		authSuite.mockSessionsRepo.EXPECT().
 			GetByParamsMatch(ctx, expectedIP, expectedDeviceInfo, mockUser.ID).
 			Return(mockSession, nil)
+		// TODO: update expires at too
 		authSuite.mockSessionsRepo.EXPECT().UpdateById(
 			ctx, mockSession.ID,
 			gomock.Any()).
-			DoAndReturn(func(ctx context.Context, sessionId int, payload *schemas.SessionUpdatePayload) (*entity.UserSession, error) {
+			DoAndReturn(func(ctx context.Context, sessionId string, payload *schemas.SessionUpdatePayload) (*entity.UserSession, error) {
 				require.NotNil(t, payload)
 				assert.NotNil(t, payload.DeactivatedAt)
 				assert.Equal(t, *payload.DeactivatedAt, time.Time{})
 				assert.WithinDuration(t, time.Now(), payload.LastSeenAt, time.Second)
-				assert.Equal(t, mockSession.AccessToken, payload.AccessToken)
 				return mockSession, nil
 			})
 	} else {
@@ -113,7 +110,7 @@ func setAuthSessionExpectations(t *testing.T, ctx context.Context, authSuite *Au
 		authSuite.mockSessionsRepo.EXPECT().Insert(ctx, gomock.Any()).
 			DoAndReturn(func(ctx context.Context, session *entity.UserSession) (*entity.UserSession, error) {
 				assert.Equal(t, mockSession.UserId, session.UserId)
-				assert.Equal(t, mockSession.AccessToken, session.AccessToken)
+				assert.Equal(t, mockSession.ID, session.ID)
 				// if related entity id is not provided - assert that has enought data to create that related entity
 				if session.ClientIdentityId == 0 {
 					assert.Equal(t, expectedIP, session.ClientIdentity.IPAddr)
