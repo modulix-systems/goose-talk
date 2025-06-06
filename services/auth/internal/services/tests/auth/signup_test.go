@@ -50,6 +50,7 @@ func TestSignupSuccess(t *testing.T) {
 	setExpectations := func(rememberMe bool) {
 		dto.RememberMe = rememberMe
 		authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(mockOTP, nil)
+		authSuite.mockCodeRepo.EXPECT().DeleteByEmailOrUserId(ctx, dto.Email, 0).Return(nil)
 		authSuite.mockSecurityProvider.EXPECT().
 			ComparePasswords(mockOTP.Code, dto.ConfirmationCode).
 			Return(true, nil)
@@ -165,5 +166,4 @@ func TestSignUpUserExists(t *testing.T) {
 
 	assert.Empty(t, authSession)
 	assert.ErrorIs(t, err, auth.ErrUserAlreadyExists)
-
 }

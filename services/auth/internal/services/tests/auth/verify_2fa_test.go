@@ -68,6 +68,7 @@ func TestVerify2FASuccess(t *testing.T) {
 			mockSession.UserId = mockUser.ID
 			mockSession.ClientIdentity = &entity.ClientIdentity{DeviceInfo: dto.DeviceInfo, IPAddr: dto.IPAddr}
 			authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(mockOTP, nil)
+			authSuite.mockCodeRepo.EXPECT().DeleteByEmailOrUserId(ctx, dto.Email, 0).Return(nil)
 			otpToCompare := dto.Code
 			if tc.twoFaTyp == entity.TWO_FA_TOTP_APP {
 				otpToCompare = dto.SignInConfToken

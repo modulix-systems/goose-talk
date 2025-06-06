@@ -59,8 +59,10 @@ func MockUserSession(active bool) *entity.UserSession {
 
 func MockOTP() *entity.OTP {
 	return &entity.OTP{
-		Code: []byte(gofakeit.Numerify("######")), UserEmail: gofakeit.Email(),
-		CreatedAt: time.Now(), UpdatedAt: time.Now(),
+		Code:      []byte(gofakeit.Numerify("######")),
+		UserEmail: gofakeit.Email(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 }
 

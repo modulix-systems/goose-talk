@@ -55,6 +55,8 @@ func TestConfirm2FASuccess(t *testing.T) {
 			ConfirmationCode: confirmationCode,
 			Contact:          tc.contact,
 		}
+		mockOTP.UserEmail = ""
+		mockOTP.UserId = dto.UserId
 		mock2FA := &entity.TwoFactorAuth{
 			UserId:         mockUser.ID,
 			DeliveryMethod: dto.Typ,
@@ -79,6 +81,7 @@ func TestConfirm2FASuccess(t *testing.T) {
 				authSuite.mockSecurityProvider.EXPECT().EncryptSymmetric(dto.TotpSecret).Return(encryptedTotpSecret, nil)
 			} else {
 				authSuite.mockCodeRepo.EXPECT().GetByUserId(ctx, dto.UserId).Return(mockOTP, nil)
+				authSuite.mockCodeRepo.EXPECT().DeleteByEmailOrUserId(ctx, "", dto.UserId).Return(nil)
 				authSuite.mockSecurityProvider.EXPECT().ComparePasswords(mockOTP.Code, dto.ConfirmationCode).Return(true, nil)
 			}
 			authSuite.mock2FARepo.EXPECT().Insert(ctx, mock2FA).Return(mock2FA, nil)

@@ -91,22 +91,23 @@ func (s *AuthService) createOTP(ctx context.Context, email string, userId int) (
 	)
 }
 
-// func (s *AuthService) useOTP(ctx context.Context, otp *entity.OTP, compareWith string) error {
-// 	if otp.IsExpired(s.otpTTL) {
-// 		return ErrOTPInvalidOrExpired
-// 	}
-// 	matched, err := s.securityProvider.ComparePasswords(otp.Code, compareWith)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if !matched {
-// 		return ErrOTPInvalidOrExpired
-// 	}
-// 	if err = s.otpRepo.DeleteByEmailOrUserId(ctx, otp.UserEmail, otp.UserId); err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
+func (s *AuthService) checkOTP(ctx context.Context, otp *entity.OTP, compareWith string) error {
+	if otp.IsExpired(s.otpTTL) {
+		return ErrOTPInvalidOrExpired
+	}
+	matched, err := s.securityProvider.ComparePasswords(otp.Code, compareWith)
+	if err != nil {
+		return err
+	}
+	if !matched {
+		return ErrOTPInvalidOrExpired
+	}
+	return nil
+}
+
+func (s *AuthService) removeOTP(ctx context.Context, otp *entity.OTP) error {
+	return s.otpRepo.DeleteByEmailOrUserId(ctx, otp.UserEmail, otp.UserId)
+}
 
 // newAuthSession inserts a new session or updates existing one based on set of params
 // if new session was inserted - sends 'warning' email
@@ -150,15 +151,8 @@ func (s *AuthService) SignUp(
 		}
 		return nil, err
 	}
-	if otp.IsExpired(s.otpTTL) {
-		return nil, ErrOTPInvalidOrExpired
-	}
-	matched, err := s.securityProvider.ComparePasswords(otp.Code, dto.ConfirmationCode)
-	if err != nil {
+	if err := s.checkOTP(ctx, otp, dto.ConfirmationCode); err != nil {
 		return nil, err
-	}
-	if !matched {
-		return nil, ErrOTPInvalidOrExpired
 	}
 	hashedPassword, err := s.securityProvider.HashPassword(dto.Password)
 	if err != nil {
@@ -207,6 +201,9 @@ func (s *AuthService) SignUp(
 		if dto.LastName != "" {
 			displayName = displayName + " " + dto.LastName
 		}
+	}
+	if err = s.removeOTP(ctx, otp); err != nil {
+		return nil, err
 	}
 	if err = s.notificationsServive.SendGreetingEmail(ctx, user.Email, displayName); err != nil {
 		s.log.Error("Failed to send greeting email after signup", "to", user.Email)
@@ -317,19 +314,12 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 		}
 		return nil, err
 	}
-	if otp.IsExpired(s.otpTTL) {
-		return nil, ErrOTPInvalidOrExpired
-	}
 	otpToCompare := dto.Code
 	if dto.TwoFATyp == entity.TWO_FA_TOTP_APP {
 		otpToCompare = dto.SignInConfToken
 	}
-	matched, err := s.securityProvider.ComparePasswords(otp.Code, otpToCompare)
-	if err != nil {
+	if err := s.checkOTP(ctx, otp, otpToCompare); err != nil {
 		return nil, err
-	}
-	if !matched {
-		return nil, ErrOTPInvalidOrExpired
 	}
 	user, err := s.usersRepo.GetByLogin(ctx, otp.UserEmail)
 	if err != nil {
@@ -370,6 +360,9 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 	if err != nil {
 		return nil, err
 	}
+	if err = s.removeOTP(ctx, otp); err != nil {
+		return nil, err
+	}
 	return authSession, nil
 }
 
@@ -379,6 +372,7 @@ func (s *AuthService) Confirm2FaAddition(ctx context.Context, dto *schemas.Confi
 		DeliveryMethod: dto.Typ,
 		Enabled:        true,
 	}
+	var otp *entity.OTP
 	if dto.Typ == entity.TWO_FA_TOTP_APP {
 		isValid := s.securityProvider.ValidateTOTP(dto.ConfirmationCode, dto.TotpSecret)
 		if !isValid {
@@ -390,22 +384,16 @@ func (s *AuthService) Confirm2FaAddition(ctx context.Context, dto *schemas.Confi
 		}
 		ent.TotpSecret = encryptedSecret
 	} else {
-		otp, err := s.otpRepo.GetByUserId(ctx, dto.UserId)
+		var err error
+		otp, err = s.otpRepo.GetByUserId(ctx, dto.UserId)
 		if err != nil {
 			if errors.Is(err, storage.ErrNotFound) {
 				return nil, ErrOTPInvalidOrExpired
 			}
 			return nil, err
 		}
-		if otp.IsExpired(s.otpTTL) {
-			return nil, ErrOTPInvalidOrExpired
-		}
-		matched, err := s.securityProvider.ComparePasswords(otp.Code, dto.ConfirmationCode)
-		if err != nil {
+		if err = s.checkOTP(ctx, otp, dto.ConfirmationCode); err != nil {
 			return nil, err
-		}
-		if !matched {
-			return nil, ErrOTPInvalidOrExpired
 		}
 	}
 	if dto.Typ == entity.TWO_FA_EMAIL || dto.Typ == entity.TWO_FA_SMS {
@@ -414,6 +402,11 @@ func (s *AuthService) Confirm2FaAddition(ctx context.Context, dto *schemas.Confi
 	twoFactorAuth, err := s.twoFactorAuthRepo.Insert(ctx, ent)
 	if err != nil {
 		return nil, err
+	}
+	if otp != nil {
+		if err = s.removeOTP(ctx, otp); err != nil {
+			return nil, err
+		}
 	}
 	return twoFactorAuth, nil
 }
