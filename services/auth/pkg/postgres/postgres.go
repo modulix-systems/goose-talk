@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/modulix-systems/goose-talk/internal/gateways"
 )
 
 const (
@@ -76,4 +78,18 @@ func (p *Postgres) Close() {
 	if p.Pool != nil {
 		p.Pool.Close()
 	}
+}
+
+type pgTransactionManager struct {
+	pool *pgxpool.Pool
+}
+
+func NewTransactionManager(pool *pgxpool.Pool) *pgTransactionManager {
+	return &pgTransactionManager{
+		pool: pool,
+	}
+}
+
+func (m *pgTransactionManager) StartTransaction(ctx context.Context) (gateways.Transaction, error) {
+	return m.pool.BeginTx(ctx, pgx.TxOptions{})
 }
