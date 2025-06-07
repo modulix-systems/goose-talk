@@ -17,18 +17,15 @@ func Exec(migrationsPath string) {
 	if _, err = fmt.Scanln(&migrationName); err != nil {
 		panic(err)
 	}
-	fmt.Println("Selected migration name", migrationName)
 	fmt.Print("Do you want to add migrations body? (yes/no)[no] ")
 	if addMigrationBodyReply, err = bufio.NewReader(os.Stdin).ReadString('\n'); err != nil {
 		panic(err)
 	}
-	fmt.Println("Option selected", addMigrationBodyReply)
 	migrationVersion := time.Now().Unix()
 	migrationUp := createMigrationFile(migrationName, int(migrationVersion), "up", migrationsPath)
 	migrationDown := createMigrationFile(migrationName, int(migrationVersion), "down", migrationsPath)
 	if strings.ToLower(strings.TrimSpace(addMigrationBodyReply)) == "yes" {
 		editor := os.Getenv("EDITOR")
-		fmt.Println("Using editor", editor)
 		if editor == "" {
 			fmt.Println("WARNING: editor not set, using vi")
 			editor = "vi"
@@ -36,6 +33,7 @@ func Exec(migrationsPath string) {
 		launchEditor(editor, migrationUp.Name())
 		launchEditor(editor, migrationDown.Name())
 	}
+	fmt.Println("Migrations succesfully created!")
 }
 
 func launchEditor(executableName string, filename string) {

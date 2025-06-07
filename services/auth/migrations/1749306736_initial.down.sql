@@ -1,0 +1,8 @@
+BEGIN;
+
+DROP TABLE IF EXISTS two_factor_auth;
+DROP TABLE IF EXISTS user_session;
+DROP TABLE IF EXISTS client_identity;
+DROP TABLE IF EXISTS "user";
+
+COMMIT;

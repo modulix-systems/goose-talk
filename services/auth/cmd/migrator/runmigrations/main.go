@@ -29,8 +29,8 @@ func Exec(migrationsPath string) {
 		panic(err)
 	}
 	var direction string
-	if len(os.Args) > 1 {
-		direction = os.Args[1]
+	if len(os.Args) > 2 {
+		direction = os.Args[2]
 	} else {
 		direction = "up"
 	}
