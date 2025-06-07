@@ -10,7 +10,7 @@ import (
 func main() {
 	// Configuration
 	var configPath string
-	flag.StringVar(&configPath, "config", "", "path to config file")
+	flag.StringVar(&configPath, "config", "./configs/local.yaml", "path to config file")
 	flag.Parse()
 	if configPath == "" {
 		configPath = config.ResolveConfigPath()
