@@ -62,7 +62,8 @@ type (
 		// secret key required for otp generation if TOTP delivery method is used
 		// stored as encrypted set of bytes
 		TotpSecret []byte
-		// indicates whether user has 2fa enabled. By default false
+		// indicates whether user has 2fa enabled.
+		// By default true, but can be disabled on user's demand
 		Enabled bool
 	}
 	LoginToken struct {

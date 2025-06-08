@@ -10,13 +10,12 @@ import (
 
 func MockUser() *entity.User {
 	return &entity.User{
-		ID:         gofakeit.Number(1, 100000),
-		Username:   gofakeit.Username(),
-		FirstName:  gofakeit.FirstName(),
-		LastName:   gofakeit.LastName(),
-		CreatedAt:  gofakeit.Date(),
-		UpdatedAt:  gofakeit.Date(),
-		LastSeenAt: gofakeit.Date(),
+		ID:        gofakeit.Number(1, 100000),
+		Username:  gofakeit.Username(),
+		FirstName: gofakeit.FirstName(),
+		LastName:  gofakeit.LastName(),
+		CreatedAt: gofakeit.Date(),
+		UpdatedAt: gofakeit.Date(),
 		BirthDate: gofakeit.DateRange(
 			time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC),
 			time.Now().AddDate(-18, 0, 0),

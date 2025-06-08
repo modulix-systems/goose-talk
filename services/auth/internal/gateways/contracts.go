@@ -97,4 +97,11 @@ type (
 	GeoIPApi interface {
 		GetLocationByIP(ip string) (string, error)
 	}
+	Transaction interface {
+		Commit(ctx context.Context) error
+		Rollback(ctx context.Context) error
+	}
+	TransactionsManager interface {
+		StartTransaction(ctx context.Context) (Transaction, error)
+	}
 )

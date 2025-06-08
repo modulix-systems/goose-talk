@@ -954,3 +954,94 @@ func (mr *MockGeoIPApiMockRecorder) GetLocationByIP(ip any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLocationByIP", reflect.TypeOf((*MockGeoIPApi)(nil).GetLocationByIP), ip)
 }
+
+// MockTransaction is a mock of Transaction interface.
+type MockTransaction struct {
+	ctrl     *gomock.Controller
+	recorder *MockTransactionMockRecorder
+	isgomock struct{}
+}
+
+// MockTransactionMockRecorder is the mock recorder for MockTransaction.
+type MockTransactionMockRecorder struct {
+	mock *MockTransaction
+}
+
+// NewMockTransaction creates a new mock instance.
+func NewMockTransaction(ctrl *gomock.Controller) *MockTransaction {
+	mock := &MockTransaction{ctrl: ctrl}
+	mock.recorder = &MockTransactionMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockTransaction) EXPECT() *MockTransactionMockRecorder {
+	return m.recorder
+}
+
+// Commit mocks base method.
+func (m *MockTransaction) Commit(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Commit", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Commit indicates an expected call of Commit.
+func (mr *MockTransactionMockRecorder) Commit(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockTransaction)(nil).Commit), ctx)
+}
+
+// Rollback mocks base method.
+func (m *MockTransaction) Rollback(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Rollback", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Rollback indicates an expected call of Rollback.
+func (mr *MockTransactionMockRecorder) Rollback(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rollback", reflect.TypeOf((*MockTransaction)(nil).Rollback), ctx)
+}
+
+// MockTransactionsManager is a mock of TransactionsManager interface.
+type MockTransactionsManager struct {
+	ctrl     *gomock.Controller
+	recorder *MockTransactionsManagerMockRecorder
+	isgomock struct{}
+}
+
+// MockTransactionsManagerMockRecorder is the mock recorder for MockTransactionsManager.
+type MockTransactionsManagerMockRecorder struct {
+	mock *MockTransactionsManager
+}
+
+// NewMockTransactionsManager creates a new mock instance.
+func NewMockTransactionsManager(ctrl *gomock.Controller) *MockTransactionsManager {
+	mock := &MockTransactionsManager{ctrl: ctrl}
+	mock.recorder = &MockTransactionsManagerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockTransactionsManager) EXPECT() *MockTransactionsManagerMockRecorder {
+	return m.recorder
+}
+
+// StartTransaction mocks base method.
+func (m *MockTransactionsManager) StartTransaction(ctx context.Context) (gateways.Transaction, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StartTransaction", ctx)
+	ret0, _ := ret[0].(gateways.Transaction)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StartTransaction indicates an expected call of StartTransaction.
+func (mr *MockTransactionsManagerMockRecorder) StartTransaction(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartTransaction", reflect.TypeOf((*MockTransactionsManager)(nil).StartTransaction), ctx)
+}

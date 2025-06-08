@@ -63,13 +63,12 @@ func ResolveConfigPath() string {
 	if err != nil {
 		panic(fmt.Sprintf("Failed to build config path. Error: %s", err))
 	}
-	newPath := path.Join(currDir, "config", mode)
-	newPath += ".yaml"
+	newPath := path.Join(currDir, "configs", mode)
 	// try both extensions
 	for _, ext := range []string{".yaml", "yml"} {
 		if _, err := os.Stat(newPath + ext); err == nil {
 			return newPath + ext
 		}
 	}
-	panic(fmt.Sprintf("Failed to build config path. Error: %s", err))
+	panic(fmt.Sprintf("Config for mode '%s' was not found", mode))
 }

@@ -16,7 +16,6 @@ type (
 		Friends            []User
 		CreatedAt          time.Time `json:"created_at" db:"created_at"`
 		UpdatedAt          time.Time `json:"updated_at" db:"updated_at"`
-		LastSeenAt         time.Time
 		IsActive           bool
 		BirthDate          time.Time
 		AboutMe            string
