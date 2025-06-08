@@ -25,10 +25,10 @@ func NewTestSuite(t *testing.T, ctx context.Context) (*Postgres, pgx.Tx) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// t.Cleanup(func() {
-	// 	if err := tx.Rollback(ctx); err != nil {
-	// 		t.Fatal(err)
-	// 	}
-	// })
+	t.Cleanup(func() {
+		if err := tx.Rollback(ctx); err != nil {
+			t.Fatal(err)
+		}
+	})
 	return pg, tx.(pgx.Tx)
 }

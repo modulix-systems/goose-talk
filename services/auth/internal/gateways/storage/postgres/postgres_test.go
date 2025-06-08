@@ -6,10 +6,19 @@ import (
 
 	postgres_repos "github.com/modulix-systems/goose-talk/internal/gateways/storage/postgres"
 	"github.com/modulix-systems/goose-talk/internal/services"
+	"github.com/modulix-systems/goose-talk/pkg/postgres"
 	"github.com/modulix-systems/goose-talk/tests/mocks"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
+
+func newTestSuite(t *testing.T) (*postgres_repos.Repositories, context.Context) {
+	ctx := context.Background()
+	pg, tx := postgres.NewTestSuite(t, ctx)
+	repos := postgres_repos.NewRepositorories(pg)
+	ctx = services.SetTransaction(ctx, tx)
+	return repos, ctx
+}
 
 func TestGetQueryableWithTx(t *testing.T) {
 	ctrl := gomock.NewController(t)

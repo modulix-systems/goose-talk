@@ -21,12 +21,12 @@ const (
 	ForeignKeyViolationErrCode pgErrCode = "23503"
 )
 
-type repositories struct {
+type Repositories struct {
 	UsersRepo *UsersRepo
 }
 
-func NewRepositorories(pg *postgres.Postgres) *repositories {
-	return &repositories{UsersRepo: &UsersRepo{pg}}
+func NewRepositorories(pg *postgres.Postgres) *Repositories {
+	return &Repositories{UsersRepo: &UsersRepo{pg}}
 }
 
 type Queryable interface {

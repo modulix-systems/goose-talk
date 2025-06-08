@@ -2,8 +2,10 @@ package postgres_repos
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 	"github.com/modulix-systems/goose-talk/internal/entity"
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage"
@@ -42,7 +44,23 @@ func (repo *UsersRepo) Insert(ctx context.Context, user *entity.User) (*entity.U
 	return res[0], nil
 }
 func (repo *UsersRepo) CheckExistsWithEmail(ctx context.Context, email string) (bool, error) {
-	return false, nil
+	queryable, err := GetQueryable(ctx, pgxPoolAdapter{repo.Pool})
+	if err != nil {
+		return false, err
+	}
+	query, args, err := repo.Builder.Select("id").From(`"user"`).Where(squirrel.Eq{"email": email}).ToSql()
+	if err != nil {
+		return false, fmt.Errorf("failed to build sql query: %w", err)
+	}
+	row := queryable.QueryRow(ctx, query, args...)
+	var userId int
+	if err := row.Scan(&userId); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 func (repo *UsersRepo) GetByLogin(ctx context.Context, login string) (*entity.User, error) {
 	return nil, nil

@@ -1,23 +1,18 @@
 package postgres_repos_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
+	"github.com/brianvoe/gofakeit/v7"
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage"
-	postgres_repos "github.com/modulix-systems/goose-talk/internal/gateways/storage/postgres"
-	"github.com/modulix-systems/goose-talk/internal/services"
-	"github.com/modulix-systems/goose-talk/pkg/postgres"
 	"github.com/modulix-systems/goose-talk/tests/suite/helpers"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestInsertUser(t *testing.T) {
-	ctx := context.Background()
-	pg, tx := postgres.NewTestSuite(t, ctx)
-	repos := postgres_repos.NewRepositorories(pg)
-	ctx = services.SetTransaction(ctx, tx)
+	repos, ctx := newTestSuite(t)
 	user := helpers.MockUser()
 
 	t.Run("success", func(t *testing.T) {
@@ -34,5 +29,23 @@ func TestInsertUser(t *testing.T) {
 		duplicateUser, err := repos.UsersRepo.Insert(ctx, user)
 		assert.Nil(t, duplicateUser)
 		assert.ErrorIs(t, err, storage.ErrAlreadyExists)
+	})
+}
+
+func TestCheckExistsWithEmail(t *testing.T) {
+	repos, ctx := newTestSuite(t)
+
+	t.Run("false", func(t *testing.T) {
+		isExists, err := repos.UsersRepo.CheckExistsWithEmail(ctx, gofakeit.Email())
+		assert.NoError(t, err)
+		assert.False(t, isExists)
+	})
+	t.Run("true", func(t *testing.T) {
+		user := helpers.MockUser()
+		_, err := repos.UsersRepo.Insert(ctx, user)
+		require.NoError(t, err)
+		isExists, err := repos.UsersRepo.CheckExistsWithEmail(ctx, user.Email)
+		assert.NoError(t, err)
+		assert.True(t, isExists)
 	})
 }
