@@ -88,3 +88,21 @@ func TestGetByID(t *testing.T) {
 		assert.Nil(t, user)
 	})
 }
+
+func TestUpdateIsActiveById(t *testing.T) {
+	repos, ctx := newTestSuite(t)
+	expectedUser, err := repos.UsersRepo.Insert(ctx, helpers.MockUser())
+	require.NoError(t, err)
+	expectedIsActive := gofakeit.Bool()
+	t.Run("success", func(t *testing.T) {
+		user, err := repos.UsersRepo.UpdateIsActiveById(ctx, expectedUser.ID, expectedIsActive)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedUser.ID, user.ID)
+		assert.Equal(t, expectedIsActive, user.IsActive)
+	})
+	t.Run("not found", func(t *testing.T) {
+		user, err := repos.UsersRepo.UpdateIsActiveById(ctx, -1, expectedIsActive)
+		assert.ErrorIs(t, err, storage.ErrNotFound)
+		assert.Nil(t, user)
+	})
+}

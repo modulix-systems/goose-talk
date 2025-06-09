@@ -17,31 +17,19 @@ type UsersRepo struct {
 }
 
 func (repo *UsersRepo) Insert(ctx context.Context, user *entity.User) (*entity.User, error) {
-	queryable, err := GetQueryable(ctx, pgxPoolAdapter{repo.Pool})
-	if err != nil {
-		return nil, err
-	}
-	query, args, err := repo.Builder.Insert(
+	query := repo.Builder.Insert(
 		`"user"(username, password, email, first_name, last_name, photo_url, birth_date, about_me)`,
 	).
 		Values(user.Username, user.Password, user.Email, user.FirstName, user.LastName, user.PhotoUrl, user.BirthDate, user.AboutMe).
-		Suffix("RETURNING *").
-		ToSql()
-	if err != nil {
-		return nil, fmt.Errorf("failed to build sql query: %w", err)
-	}
-	rows, err := queryable.Query(ctx, query, args...)
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute sql query: %w", err)
-	}
-	res, err := pgx.CollectRows(rows, pgx.RowToAddrOfStructByNameLax[entity.User])
+		Suffix("RETURNING *")
+	user, err := execAndGetOne[entity.User](ctx, query, repo.Pool)
 	if err != nil {
 		if getPgErrCode(err) == UniqueViolationErrCode {
 			return nil, storage.ErrAlreadyExists
 		}
-		return nil, fmt.Errorf("failed to collect row into user struct: %w", err)
+		return nil, err
 	}
-	return res[0], nil
+	return user, nil
 }
 func (repo *UsersRepo) CheckExistsWithEmail(ctx context.Context, email string) (bool, error) {
 	queryable, err := GetQueryable(ctx, pgxPoolAdapter{repo.Pool})
@@ -65,25 +53,19 @@ func (repo *UsersRepo) CheckExistsWithEmail(ctx context.Context, email string) (
 func (repo *UsersRepo) GetByLogin(ctx context.Context, login string) (*entity.User, error) {
 	query := repo.Builder.Select("*").From(`"user"`).
 		Where(squirrel.Or{squirrel.Eq{"email": login}, squirrel.Eq{"username": login}})
-	res, err := getMany[entity.User](ctx, query, repo.Pool)
-	if err != nil {
-		return nil, err
-	}
-	return &res[0], nil
+	return execAndGetOne[entity.User](ctx, query, repo.Pool)
 }
 
 func (repo *UsersRepo) GetByID(ctx context.Context, id int) (*entity.User, error) {
 	query := repo.Builder.Select("*").From(`"user"`).
 		Where(squirrel.Eq{"id": id})
-	res, err := getMany[entity.User](ctx, query, repo.Pool)
-	if err != nil {
-		return nil, err
-	}
-	return &res[0], nil
+	return execAndGetOne[entity.User](ctx, query, repo.Pool)
 }
 
 func (repo *UsersRepo) UpdateIsActiveById(ctx context.Context, userId int, isActive bool) (*entity.User, error) {
-	return nil, nil
+	query := repo.Builder.Update(`"user"`).Set("is_active", isActive).
+		Where(squirrel.Eq{"id": userId}).Suffix("RETURNING *")
+	return execAndGetOne[entity.User](ctx, query, repo.Pool)
 }
 func (repo *UsersRepo) AddPasskeyCredential(ctx context.Context, userId int, cred *entity.PasskeyCredential) error {
 	return nil

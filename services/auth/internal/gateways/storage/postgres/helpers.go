@@ -4,13 +4,16 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage"
 )
 
-func getMany[T any](ctx context.Context, qb squirrel.SelectBuilder, pool *pgxpool.Pool) ([]T, error) {
+type queryBuilder interface {
+	ToSql() (string, []any, error)
+}
+
+func execAndCollectRows[T any](ctx context.Context, qb queryBuilder, pool *pgxpool.Pool) ([]T, error) {
 	queryable, err := GetQueryable(ctx, pgxPoolAdapter{pool})
 	if err != nil {
 		return nil, err
@@ -31,4 +34,12 @@ func getMany[T any](ctx context.Context, qb squirrel.SelectBuilder, pool *pgxpoo
 		return nil, storage.ErrNotFound
 	}
 	return res, nil
+}
+
+func execAndGetOne[T any](ctx context.Context, qb queryBuilder, pool *pgxpool.Pool) (*T, error) {
+	res, err := execAndCollectRows[T](ctx, qb, pool)
+	if err != nil {
+		return nil, err
+	}
+	return &res[0], nil
 }
