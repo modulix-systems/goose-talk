@@ -72,3 +72,19 @@ func TestGetByLogin(t *testing.T) {
 		assert.Nil(t, user)
 	})
 }
+
+func TestGetByID(t *testing.T) {
+	repos, ctx := newTestSuite(t)
+	expectedUser, err := repos.UsersRepo.Insert(ctx, helpers.MockUser())
+	require.NoError(t, err)
+	t.Run("success", func(t *testing.T) {
+		user, err := repos.UsersRepo.GetByID(ctx, expectedUser.ID)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedUser.ID, user.ID)
+	})
+	t.Run("not found", func(t *testing.T) {
+		user, err := repos.UsersRepo.GetByID(ctx, -1)
+		assert.ErrorIs(t, err, storage.ErrNotFound)
+		assert.Nil(t, user)
+	})
+}

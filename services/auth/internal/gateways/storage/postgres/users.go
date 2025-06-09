@@ -63,32 +63,25 @@ func (repo *UsersRepo) CheckExistsWithEmail(ctx context.Context, email string) (
 	return true, nil
 }
 func (repo *UsersRepo) GetByLogin(ctx context.Context, login string) (*entity.User, error) {
-	queryable, err := GetQueryable(ctx, pgxPoolAdapter{repo.Pool})
+	query := repo.Builder.Select("*").From(`"user"`).
+		Where(squirrel.Or{squirrel.Eq{"email": login}, squirrel.Eq{"username": login}})
+	res, err := getMany[entity.User](ctx, query, repo.Pool)
 	if err != nil {
 		return nil, err
 	}
-	query, args, err := repo.Builder.Select("*").From(`"user"`).
-		Where(squirrel.Or{squirrel.Eq{"email": login}, squirrel.Eq{"username": login}}).ToSql()
-	fmt.Println("query", query, args)
-	if err != nil {
-		return nil, fmt.Errorf("failed to build sql query: %w", err)
-	}
-	rows, err := queryable.Query(ctx, query, args...)
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute sql query: %w", err)
-	}
-	res, err := pgx.CollectRows(rows, pgx.RowToAddrOfStructByNameLax[entity.User])
-	if err != nil {
-		return nil, fmt.Errorf("failed to collect row into user struct: %w", err)
-	}
-	if len(res) == 0 {
-		return nil, storage.ErrNotFound
-	}
-	return res[0], nil
+	return &res[0], nil
 }
+
 func (repo *UsersRepo) GetByID(ctx context.Context, id int) (*entity.User, error) {
-	return nil, nil
+	query := repo.Builder.Select("*").From(`"user"`).
+		Where(squirrel.Eq{"id": id})
+	res, err := getMany[entity.User](ctx, query, repo.Pool)
+	if err != nil {
+		return nil, err
+	}
+	return &res[0], nil
 }
+
 func (repo *UsersRepo) UpdateIsActiveById(ctx context.Context, userId int, isActive bool) (*entity.User, error) {
 	return nil, nil
 }
