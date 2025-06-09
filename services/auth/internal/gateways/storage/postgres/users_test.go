@@ -49,3 +49,26 @@ func TestCheckExistsWithEmail(t *testing.T) {
 		assert.True(t, isExists)
 	})
 }
+
+func TestGetByLogin(t *testing.T) {
+	repos, ctx := newTestSuite(t)
+	expectedUser, err := repos.UsersRepo.Insert(ctx, helpers.MockUser())
+	require.NoError(t, err)
+
+	t.Run("by username", func(t *testing.T) {
+		user, err := repos.UsersRepo.GetByLogin(ctx, expectedUser.Username)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedUser.ID, user.ID)
+	})
+
+	t.Run("by email", func(t *testing.T) {
+		user, err := repos.UsersRepo.GetByLogin(ctx, expectedUser.Email)
+		assert.NoError(t, err)
+		assert.Equal(t, expectedUser.ID, user.ID)
+	})
+	t.Run("not found", func(t *testing.T) {
+		user, err := repos.UsersRepo.GetByLogin(ctx, "not found")
+		assert.ErrorIs(t, err, storage.ErrNotFound)
+		assert.Nil(t, user)
+	})
+}

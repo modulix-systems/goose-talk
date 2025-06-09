@@ -5,26 +5,33 @@ volumes:
 services:
   postgres:
     image: postgres:17.1-alpine
-    container_name: goose-postgres
-    volumes: pgdata:/var/lib/postgresql
+    container_name: goose_postgres
+    volumes: 
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
       interval: 10s
       timeout: 5s
       retries: 5
-  rabbitmq:
-    container_name: goose-rabbitmq
-    image: rabbitmq:4.1-alpine
-    volumes: rabbitmq_data:/var/lib/rabbitmq
-  users:
-    build: ./users
-    volumes: ./users:/app
-  gateway:
-    build: ./gateway
-    volumes: ./gateway:/app
-    ports: 5050:8000
-    depends_on:
-      db:
-        condition: service_healthy
-      users:
-      rabbitmq:
+    env_file:
+      - .env
+  # rabbitmq:
+  #   container_name: goose-rabbitmq
+  #   image: rabbitmq:4.1-alpine
+  #   volumes: rabbitmq_data:/var/lib/rabbitmq
+  auth:
+    build: ./services/auth
+    volumes: 
+      - ./services/auth:/app
+  # gateway:
+  #   container_name: goose-gateway
+  #   build: ./gateway
+  #   volumes: ./gateway:/app
+  #   ports: 5050:8000
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #     auth:
+  #       condition: service_started
+  #     rabbitmq:
+  #       condition: service_healthy
