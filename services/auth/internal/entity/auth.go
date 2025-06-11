@@ -11,29 +11,14 @@ const (
 	PASSKEY_AUTH_TRANSPORT_INTERNAL PasskeyAuthTransport = "internal"
 )
 
-type TwoFATransport int
+type TwoFATransport string
 
 const (
-	TWO_FA_TELEGRAM TwoFATransport = iota + 1
-	TWO_FA_EMAIL
-	TWO_FA_SMS
-	TWO_FA_TOTP_APP
+	TWO_FA_TELEGRAM TwoFATransport = "telegram"
+	TWO_FA_EMAIL                   = "email"
+	TWO_FA_SMS                     = "sms"
+	TWO_FA_TOTP_APP                = "totp_app"
 )
-
-func (m TwoFATransport) String() string {
-	switch m {
-	case TWO_FA_TELEGRAM:
-		return "telegram"
-	case TWO_FA_EMAIL:
-		return "email"
-	case TWO_FA_SMS:
-		return "sms"
-	case TWO_FA_TOTP_APP:
-		return "totp_app"
-	default:
-		return "unknown"
-	}
-}
 
 var OtpTransports = []TwoFATransport{TWO_FA_EMAIL, TWO_FA_TELEGRAM, TWO_FA_TOTP_APP}
 
@@ -45,48 +30,49 @@ type (
 	// UserEmail and UserId are optional but at least one of them must be present
 	OTP struct {
 		Code      []byte
-		UserEmail string
-		UserId    int
-		CreatedAt time.Time
-		UpdatedAt time.Time
+		UserEmail string    `json:"user_email"`
+		UserId    int       `json:"user_id"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
 	}
 	// TwoFactorAuth entity representing 2FA auth
 	TwoFactorAuth struct {
 		// user can have only one related 2fa entity
-		UserId    int
-		Transport TwoFATransport
+		UserId    int            `json:"user_id"`
+		Transport TwoFATransport `json:"transport"`
 		// could be whether user's telegram, email address, etc
 		// or even optional (if required info is already present in user'entity) depending on Transport.
 		// The field can be optional e.g for email because it can be taken from user's acc
-		Contact string
+		Contact string `json:"contact"`
 		// secret key required for otp generation if TOTP delivery method is used
 		// stored as encrypted set of bytes
-		TotpSecret []byte
+		TotpSecret []byte `json:"totp_secret"`
 		// indicates whether user has 2fa enabled.
 		// By default true, but can be disabled on user's demand
-		Enabled bool
+		Enabled bool `json:"enabled"`
 	}
+
 	LoginToken struct {
 		// ClientId is unique identifier for client which requested token
-		ClientId         string
-		Val              string
-		ClientIdentity   *ClientIdentity
-		ClientIdentityId int
+		ClientId         string          `json:"client_id"`
+		Val              string          `json:"val"`
+		ClientIdentity   *ClientIdentity `json:"client_identity"`
+		ClientIdentityId int             `json:"client_identity_id"`
 		// AuthSessionId is optional and present only if token was approved
 		// to retrieve auth session details
-		AuthSessionId int
-		AuthSession   *UserSession
-		ExpiresAt     time.Time
+		AuthSessionId int          `json:"auth_session_id"`
+		AuthSession   *UserSession `json:"auth_session"`
+		ExpiresAt     time.Time    `json:"expires_at"`
 	}
 
 	PasskeyCredential struct {
-		ID         []byte
-		UserId     int
-		PublicKey  []byte
-		CreatedAt  time.Time
-		LastUsedAt time.Time
-		BackedUp   bool
-		Transports []PasskeyAuthTransport
+		ID         []byte                 `json:"id"`
+		UserId     int                    `json:"user_id"`
+		PublicKey  []byte                 `json:"public_key"`
+		CreatedAt  time.Time              `json:"created_at"`
+		LastUsedAt time.Time              `json:"last_used_at"`
+		BackedUp   bool                   `json:"backed_up"`
+		Transports []PasskeyAuthTransport `json:"transports"`
 	}
 )
 
