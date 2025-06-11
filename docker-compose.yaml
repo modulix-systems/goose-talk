@@ -20,6 +20,10 @@ services:
   #   image: rabbitmq:4.1-alpine
   #   volumes: rabbitmq_data:/var/lib/rabbitmq
   auth:
+    deploy:
+      resources:
+        limits:
+          memory: 500m
     build: ./services/auth
     volumes: 
       - ./services/auth:/app

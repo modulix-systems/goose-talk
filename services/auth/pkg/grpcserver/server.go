@@ -16,7 +16,6 @@ type Server struct {
 }
 
 func New(log logger.Interface, port string, authServer pb.AuthServiceServer) *Server {
-
 	gRPCServer := grpc.NewServer()
 	pb.RegisterAuthServiceServer(gRPCServer, authServer)
 	return &Server{log, gRPCServer, make(chan error, 1), port}
