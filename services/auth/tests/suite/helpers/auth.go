@@ -26,7 +26,7 @@ func MockUser() *entity.User {
 		Email:    gofakeit.Email(),
 		Password: []byte(RandomPassword()),
 		TwoFactorAuth: &entity.TwoFactorAuth{
-			DeliveryMethod: RandomChoose(
+			Transport: RandomChoose(
 				entity.TWO_FA_TELEGRAM, entity.TWO_FA_EMAIL,
 				entity.TWO_FA_SMS, entity.TWO_FA_TOTP_APP,
 			),

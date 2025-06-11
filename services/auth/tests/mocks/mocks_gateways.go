@@ -88,6 +88,21 @@ func (mr *MockUsersRepoMockRecorder) GetByID(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockUsersRepo)(nil).GetByID), ctx, id)
 }
 
+// GetByIDWithPasskeyCredentials mocks base method.
+func (m *MockUsersRepo) GetByIDWithPasskeyCredentials(ctx context.Context, id int) (*entity.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByIDWithPasskeyCredentials", ctx, id)
+	ret0, _ := ret[0].(*entity.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByIDWithPasskeyCredentials indicates an expected call of GetByIDWithPasskeyCredentials.
+func (mr *MockUsersRepoMockRecorder) GetByIDWithPasskeyCredentials(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByIDWithPasskeyCredentials", reflect.TypeOf((*MockUsersRepo)(nil).GetByIDWithPasskeyCredentials), ctx, id)
+}
+
 // GetByLogin mocks base method.
 func (m *MockUsersRepo) GetByLogin(ctx context.Context, login string) (*entity.User, error) {
 	m.ctrl.T.Helper()

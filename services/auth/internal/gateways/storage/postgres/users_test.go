@@ -5,12 +5,14 @@ import (
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
+	"github.com/modulix-systems/goose-talk/internal/entity"
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage"
 	"github.com/modulix-systems/goose-talk/tests/suite/helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+// TODO: insert two factor auth entity too if it's supplied along with user
 func TestInsertUser(t *testing.T) {
 	repos, ctx := newTestSuite(t)
 	user := helpers.MockUser()
@@ -55,16 +57,22 @@ func TestGetByLogin(t *testing.T) {
 	expectedUser, err := repos.UsersRepo.Insert(ctx, helpers.MockUser())
 	require.NoError(t, err)
 
-	t.Run("by username", func(t *testing.T) {
-		user, err := repos.UsersRepo.GetByLogin(ctx, expectedUser.Username)
+	assertSuccess := func(user *entity.User, err error) {
 		assert.NoError(t, err)
 		assert.Equal(t, expectedUser.ID, user.ID)
+		assert.NotNil(t, user.TwoFactorAuth)
+	}
+
+	t.Run("by username", func(t *testing.T) {
+		user, err := repos.UsersRepo.GetByLogin(ctx, expectedUser.Username)
+		assertSuccess(user, err)
+		assert.Equal(t, expectedUser.Username, user.Username)
 	})
 
 	t.Run("by email", func(t *testing.T) {
 		user, err := repos.UsersRepo.GetByLogin(ctx, expectedUser.Email)
-		assert.NoError(t, err)
-		assert.Equal(t, expectedUser.ID, user.ID)
+		assertSuccess(user, err)
+		assert.Equal(t, expectedUser.Email, user.Email)
 	})
 	t.Run("not found", func(t *testing.T) {
 		user, err := repos.UsersRepo.GetByLogin(ctx, "not found")
@@ -81,6 +89,7 @@ func TestGetByID(t *testing.T) {
 		user, err := repos.UsersRepo.GetByID(ctx, expectedUser.ID)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedUser.ID, user.ID)
+		assert.NotNil(t, user.TwoFactorAuth)
 	})
 	t.Run("not found", func(t *testing.T) {
 		user, err := repos.UsersRepo.GetByID(ctx, -1)
@@ -106,3 +115,21 @@ func TestUpdateIsActiveById(t *testing.T) {
 		assert.Nil(t, user)
 	})
 }
+
+// func TestAddPasskeyCredential(t *testing.T) {
+// 	repos, ctx := newTestSuite(t)
+// 	expectedUser, err := repos.UsersRepo.Insert(ctx, helpers.MockUser())
+// 	require.NoError(t, err)
+// 	expectedCredential := helpers.MockPasskeyCredential()
+// 	t.Run("success", func(t *testing.T) {
+// 		user, err := repos.UsersRepo.UpdateIsActiveById(ctx, expectedUser.ID, expectedIsActive)
+// 		assert.NoError(t, err)
+// 		assert.Equal(t, expectedUser.ID, user.ID)
+// 		assert.Equal(t, expectedIsActive, user.IsActive)
+// 	})
+// 	t.Run("user not found", func(t *testing.T) {
+// 		user, err := repos.UsersRepo.AddPasskeyCredential(ctx, -1, expectedIsActive)
+// 		assert.ErrorIs(t, err, storage.ErrNotFound)
+// 		assert.Nil(t, user)
+// 	})
+// }

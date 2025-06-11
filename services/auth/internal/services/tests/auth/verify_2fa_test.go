@@ -15,7 +15,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func mockVerify2FAPayload(twoFaTyp entity.TwoFADeliveryMethod) *schemas.Verify2FASchema {
+func mockVerify2FAPayload(twoFaTyp entity.TwoFATransport) *schemas.Verify2FASchema {
 	schema := &schemas.Verify2FASchema{
 		TwoFATyp: twoFaTyp,
 		Code:     "123456",
@@ -38,7 +38,7 @@ func TestVerify2FASuccess(t *testing.T) {
 	ctx := context.Background()
 	testCases := []struct {
 		name          string
-		twoFaTyp      entity.TwoFADeliveryMethod
+		twoFaTyp      entity.TwoFATransport
 		sessionExists bool
 	}{
 		{
@@ -97,7 +97,7 @@ func TestVerify2FAOtpNotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
-	for _, twoFaTyp := range entity.OtpDeliveryMethods {
+	for _, twoFaTyp := range entity.OtpTransports {
 		name := "2FA over " + twoFaTyp.String()
 		t.Run(name, func(t *testing.T) {
 			dto := mockVerify2FAPayload(twoFaTyp)
@@ -118,7 +118,7 @@ func TestVerify2FAInvalidOTP(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
 	mockOTP := helpers.MockOTP()
-	for _, twoFaTyp := range entity.OtpDeliveryMethods {
+	for _, twoFaTyp := range entity.OtpTransports {
 		name := "2FA over " + twoFaTyp.String()
 		t.Run(name, func(t *testing.T) {
 			dto := mockVerify2FAPayload(twoFaTyp)
@@ -147,7 +147,7 @@ func TestVerify2FADisabled(t *testing.T) {
 	mockOTP := helpers.MockOTP()
 	mockUser := helpers.MockUser()
 	mockUser.TwoFactorAuth.Enabled = false
-	for _, twoFaTyp := range entity.OtpDeliveryMethods {
+	for _, twoFaTyp := range entity.OtpTransports {
 		name := "2FA over " + twoFaTyp.String()
 		t.Run(name, func(t *testing.T) {
 			dto := mockVerify2FAPayload(twoFaTyp)
@@ -201,7 +201,7 @@ func TestVerify2FAOtpExpired(t *testing.T) {
 	ctx := context.Background()
 	mockOTP := helpers.MockOTP()
 	mockOTP.UpdatedAt = time.Now().Add(-authSuite.mockTTL)
-	for _, twoFaTyp := range entity.OtpDeliveryMethods {
+	for _, twoFaTyp := range entity.OtpTransports {
 		name := "2FA over " + twoFaTyp.String()
 		t.Run(name, func(t *testing.T) {
 			dto := mockVerify2FAPayload(twoFaTyp)
@@ -223,7 +223,7 @@ func TestVerify2FAUserNotActive(t *testing.T) {
 	mockUser := helpers.MockUser()
 	mockUser.TwoFactorAuth.Enabled = true
 	mockUser.IsActive = false
-	for _, twoFaTyp := range entity.OtpDeliveryMethods {
+	for _, twoFaTyp := range entity.OtpTransports {
 		name := "2FA over " + twoFaTyp.String()
 		t.Run(name, func(t *testing.T) {
 			dto := mockVerify2FAPayload(twoFaTyp)

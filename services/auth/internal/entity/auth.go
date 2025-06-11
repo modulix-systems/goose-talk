@@ -11,16 +11,16 @@ const (
 	PASSKEY_AUTH_TRANSPORT_INTERNAL PasskeyAuthTransport = "internal"
 )
 
-type TwoFADeliveryMethod int
+type TwoFATransport int
 
 const (
-	TWO_FA_TELEGRAM TwoFADeliveryMethod = iota
+	TWO_FA_TELEGRAM TwoFATransport = iota + 1
 	TWO_FA_EMAIL
 	TWO_FA_SMS
 	TWO_FA_TOTP_APP
 )
 
-func (m TwoFADeliveryMethod) String() string {
+func (m TwoFATransport) String() string {
 	switch m {
 	case TWO_FA_TELEGRAM:
 		return "telegram"
@@ -35,7 +35,7 @@ func (m TwoFADeliveryMethod) String() string {
 	}
 }
 
-var OtpDeliveryMethods = []TwoFADeliveryMethod{TWO_FA_EMAIL, TWO_FA_TELEGRAM, TWO_FA_TOTP_APP}
+var OtpTransports = []TwoFATransport{TWO_FA_EMAIL, TWO_FA_TELEGRAM, TWO_FA_TOTP_APP}
 
 type (
 	// OTP represents storage for verifications codes
@@ -53,10 +53,10 @@ type (
 	// TwoFactorAuth entity representing 2FA auth
 	TwoFactorAuth struct {
 		// user can have only one related 2fa entity
-		UserId         int
-		DeliveryMethod TwoFADeliveryMethod
+		UserId    int
+		Transport TwoFATransport
 		// could be whether user's telegram, email address, etc
-		// or even optional (if required info is already present in user'entity) depending on DeliveryMethod.
+		// or even optional (if required info is already present in user'entity) depending on Transport.
 		// The field can be optional e.g for email because it can be taken from user's acc
 		Contact string
 		// secret key required for otp generation if TOTP delivery method is used

@@ -13,7 +13,10 @@ type queryBuilder interface {
 	ToSql() (string, []any, error)
 }
 
-func execAndCollectRows[T any](ctx context.Context, qb queryBuilder, pool *pgxpool.Pool) ([]T, error) {
+func execAndCollectRows[T any](ctx context.Context, qb queryBuilder, pool *pgxpool.Pool, collectFunc pgx.RowToFunc[T]) ([]T, error) {
+	if collectFunc == nil {
+		collectFunc = pgx.RowToStructByNameLax[T]
+	}
 	queryable, err := GetQueryable(ctx, pgxPoolAdapter{pool})
 	if err != nil {
 		return nil, err
@@ -26,7 +29,7 @@ func execAndCollectRows[T any](ctx context.Context, qb queryBuilder, pool *pgxpo
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute sql query: %w", err)
 	}
-	res, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[T])
+	res, err := pgx.CollectRows(rows, collectFunc)
 	if err != nil {
 		return nil, fmt.Errorf("failed to collect row into user struct: %w", err)
 	}
@@ -36,8 +39,8 @@ func execAndCollectRows[T any](ctx context.Context, qb queryBuilder, pool *pgxpo
 	return res, nil
 }
 
-func execAndGetOne[T any](ctx context.Context, qb queryBuilder, pool *pgxpool.Pool) (*T, error) {
-	res, err := execAndCollectRows[T](ctx, qb, pool)
+func execAndGetOne[T any](ctx context.Context, qb queryBuilder, pool *pgxpool.Pool, collectFunc pgx.RowToFunc[T]) (*T, error) {
+	res, err := execAndCollectRows[T](ctx, qb, pool, collectFunc)
 	if err != nil {
 		return nil, err
 	}

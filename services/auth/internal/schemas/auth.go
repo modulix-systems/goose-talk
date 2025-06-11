@@ -31,7 +31,7 @@ type (
 	}
 	Verify2FASchema struct {
 		ClientIdentitySchema
-		TwoFATyp entity.TwoFADeliveryMethod
+		TwoFATyp entity.TwoFATransport
 		Email    string
 		Code     string
 		// SignInConfToken must be present only if TOTP 2fa type is used
@@ -44,12 +44,12 @@ type (
 	}
 	Add2FASchema struct {
 		UserId  int
-		Typ     entity.TwoFADeliveryMethod
+		Typ     entity.TwoFATransport
 		Contact string
 	}
 	Confirm2FASchema struct {
 		UserId  int
-		Typ     entity.TwoFADeliveryMethod
+		Typ     entity.TwoFATransport
 		Contact string
 		// TotpSecret can be ommited if Typ is not TOTP_APP
 		TotpSecret string

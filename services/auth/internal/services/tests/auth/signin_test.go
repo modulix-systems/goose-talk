@@ -111,7 +111,7 @@ func TestSignInSuccess2FAByUserEmail(t *testing.T) {
 	plainOTPCode := "securetoken"
 	mockUser := helpers.MockUser()
 	mockUser.TwoFactorAuth.Enabled = true
-	mockUser.TwoFactorAuth.DeliveryMethod = entity.TWO_FA_EMAIL
+	mockUser.TwoFactorAuth.Transport = entity.TWO_FA_EMAIL
 	mockUser.TwoFactorAuth.Contact = ""
 	setSignInWith2FAExpectations(ctx, authSuite, dto, mockUser, plainOTPCode)
 	authSuite.mockMailSender.EXPECT().Send2FAEmail(ctx, mockUser.Email, plainOTPCode).Return(nil)
@@ -131,7 +131,7 @@ func TestSignInSuccess2FAByContactEmail(t *testing.T) {
 	plainOTPCode := "securetoken"
 	mockUser := helpers.MockUser()
 	mockUser.TwoFactorAuth.Enabled = true
-	mockUser.TwoFactorAuth.DeliveryMethod = entity.TWO_FA_EMAIL
+	mockUser.TwoFactorAuth.Transport = entity.TWO_FA_EMAIL
 	setSignInWith2FAExpectations(ctx, authSuite, dto, mockUser, plainOTPCode)
 	authSuite.mockMailSender.EXPECT().
 		Send2FAEmail(ctx, mockUser.TwoFactorAuth.Contact, plainOTPCode).
@@ -152,7 +152,7 @@ func TestSignInSuccess2FAByContactTG(t *testing.T) {
 	plainOTPCode := "securetoken"
 	mockUser := helpers.MockUser()
 	mockUser.TwoFactorAuth.Enabled = true
-	mockUser.TwoFactorAuth.DeliveryMethod = entity.TWO_FA_TELEGRAM
+	mockUser.TwoFactorAuth.Transport = entity.TWO_FA_TELEGRAM
 	setSignInWith2FAExpectations(ctx, authSuite, dto, mockUser, plainOTPCode)
 	authSuite.mockTgAPI.EXPECT().
 		SendTextMsg(ctx, mockUser.TwoFactorAuth.Contact, fmt.Sprintf("Authorization code: %s", plainOTPCode)).
@@ -173,7 +173,7 @@ func TestSignInSuccess2FAByTotp(t *testing.T) {
 	plainOTPCode := "securetoken"
 	mockUser := helpers.MockUser()
 	mockUser.TwoFactorAuth.Enabled = true
-	mockUser.TwoFactorAuth.DeliveryMethod = entity.TWO_FA_TOTP_APP
+	mockUser.TwoFactorAuth.Transport = entity.TWO_FA_TOTP_APP
 	setSignInWith2FAExpectations(ctx, authSuite, dto, mockUser, plainOTPCode)
 
 	authInfo, err := authSuite.service.SignIn(ctx, dto)
@@ -189,10 +189,10 @@ func TestSignIn2FAUnsupportedMethod(t *testing.T) {
 	ctx := context.Background()
 	dto := mockSignInPayload()
 	plainOTPCode := "securetoken"
-	const unsupported2FAMethod entity.TwoFADeliveryMethod = -1
+	const unsupported2FAMethod entity.TwoFATransport = -1
 	mockUser := helpers.MockUser()
 	mockUser.TwoFactorAuth.Enabled = true
-	mockUser.TwoFactorAuth.DeliveryMethod = unsupported2FAMethod
+	mockUser.TwoFactorAuth.Transport = unsupported2FAMethod
 	setSignInWith2FAExpectations(ctx, authSuite, dto, mockUser, plainOTPCode)
 
 	authInfo, err := authSuite.service.SignIn(ctx, dto)

@@ -23,7 +23,7 @@ func TestConfirm2FASuccess(t *testing.T) {
 	mockOTP := helpers.MockOTP()
 	confirmationCode := string(mockOTP.Code)
 	testCases := []struct {
-		twoFaTyp entity.TwoFADeliveryMethod
+		twoFaTyp entity.TwoFATransport
 		contact  string
 	}{
 		{
@@ -58,9 +58,9 @@ func TestConfirm2FASuccess(t *testing.T) {
 		mockOTP.UserEmail = ""
 		mockOTP.UserId = dto.UserId
 		mock2FA := &entity.TwoFactorAuth{
-			UserId:         mockUser.ID,
-			DeliveryMethod: dto.Typ,
-			Enabled:        true,
+			UserId:    mockUser.ID,
+			Transport: dto.Typ,
+			Enabled:   true,
 		}
 		encryptedTotpSecret := []byte(dto.TotpSecret)
 		if tc.twoFaTyp == entity.TWO_FA_TOTP_APP {
@@ -89,7 +89,7 @@ func TestConfirm2FASuccess(t *testing.T) {
 			res, err := authSuite.service.Confirm2FaAddition(ctx, dto)
 			assert.NoError(t, err)
 			assert.Equal(t, mockUser.ID, res.UserId)
-			assert.Equal(t, tc.twoFaTyp, res.DeliveryMethod)
+			assert.Equal(t, tc.twoFaTyp, res.Transport)
 		})
 	}
 }
@@ -103,7 +103,7 @@ func TestConfirm2FAInvalidOTP(t *testing.T) {
 		assert.ErrorIs(t, err, auth.ErrOTPInvalidOrExpired)
 		assert.Empty(t, res)
 	}
-	for _, twoFaTyp := range entity.OtpDeliveryMethods {
+	for _, twoFaTyp := range entity.OtpTransports {
 		mockUser := helpers.MockUser()
 		mockOTP := helpers.MockOTP()
 		confirmationCode := string(mockOTP.Code)

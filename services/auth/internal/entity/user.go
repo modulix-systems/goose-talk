@@ -19,7 +19,7 @@ type (
 		IsActive           bool
 		BirthDate          time.Time
 		AboutMe            string
-		TwoFactorAuth      *TwoFactorAuth
+		TwoFactorAuth      *TwoFactorAuth `json:"two_factor_auth" db:"-"`
 		PasskeyCredentials []PasskeyCredential
 	}
 	// UserSession is a rolling auth session

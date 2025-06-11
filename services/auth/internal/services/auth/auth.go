@@ -265,7 +265,7 @@ func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (*a
 			return nil, err
 		}
 		contact := user.TwoFactorAuth.Contact
-		switch user.TwoFactorAuth.DeliveryMethod {
+		switch user.TwoFactorAuth.Transport {
 		case entity.TWO_FA_EMAIL:
 			toEmail := user.Email
 			if contact != "" {
@@ -372,9 +372,9 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 
 func (s *AuthService) Confirm2FaAddition(ctx context.Context, dto *schemas.Confirm2FASchema) (*entity.TwoFactorAuth, error) {
 	ent := &entity.TwoFactorAuth{
-		UserId:         dto.UserId,
-		DeliveryMethod: dto.Typ,
-		Enabled:        true,
+		UserId:    dto.UserId,
+		Transport: dto.Typ,
+		Enabled:   true,
 	}
 	var otp *entity.OTP
 	if dto.Typ == entity.TWO_FA_TOTP_APP {
@@ -455,7 +455,7 @@ func (s *AuthService) Add2FA(ctx context.Context, dto *schemas.Add2FASchema) (*T
 		}
 		return nil, err
 	}
-	if user.TwoFactorAuth != nil {
+	if user.Is2FAEnabled() {
 		return nil, Err2FaAlreadyAdded
 	}
 	switch dto.Typ {
@@ -630,7 +630,7 @@ func (s *AuthService) getPasskeySessionKey(userId int) string {
 }
 
 func (s *AuthService) BeginPasskeyRegistration(ctx context.Context, userId int) (gateways.WebAuthnRegistrationOptions, error) {
-	user, err := s.usersRepo.GetByID(ctx, userId)
+	user, err := s.usersRepo.GetByIDWithPasskeyCredentials(ctx, userId)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return nil, ErrUserNotFound

@@ -29,7 +29,7 @@ func TestAdd2FASuccess(t *testing.T) {
 		authSuite.mockSecurityProvider.EXPECT().HashPassword(plainOTPCode).Return(otp.Code, nil)
 		authSuite.mockCodeRepo.EXPECT().InsertOrUpdateCode(ctx, otp).Return(nil)
 	}
-	mockUser.TwoFactorAuth = nil
+	mockUser.TwoFactorAuth.Enabled = false
 	t.Run("Add 2fa by email", func(t *testing.T) {
 		for _, contact := range []string{gofakeit.Email(), ""} {
 			t.Run("With contact: "+contact, func(t *testing.T) {
@@ -98,7 +98,7 @@ func TestAdd2FAUnsupportedTyp(t *testing.T) {
 	ctx := context.Background()
 	mockUser := helpers.MockUser()
 	mockUser.TwoFactorAuth = nil
-	const unsupported2FAMethod entity.TwoFADeliveryMethod = -1
+	const unsupported2FAMethod entity.TwoFATransport = -1
 	authSuite.mockUsersRepo.EXPECT().GetByID(ctx, mockUser.ID).Return(mockUser, nil)
 
 	connInfo, err := authSuite.service.Add2FA(ctx, &schemas.Add2FASchema{UserId: mockUser.ID, Typ: unsupported2FAMethod})
@@ -112,9 +112,10 @@ func TestAdd2FaAlreadyExists(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
 	mockUser := helpers.MockUser()
+	mockUser.TwoFactorAuth.Enabled = true
 	authSuite.mockUsersRepo.EXPECT().GetByID(ctx, mockUser.ID).Return(mockUser, nil)
 
-	connInfo, err := authSuite.service.Add2FA(ctx, &schemas.Add2FASchema{UserId: mockUser.ID, Typ: helpers.RandomChoose(entity.OtpDeliveryMethods...)})
+	connInfo, err := authSuite.service.Add2FA(ctx, &schemas.Add2FASchema{UserId: mockUser.ID, Typ: helpers.RandomChoose(entity.OtpTransports...)})
 
 	assert.Empty(t, connInfo)
 	assert.ErrorIs(t, err, auth.Err2FaAlreadyAdded)
@@ -127,7 +128,7 @@ func TestAdd2FaUserNotFound(t *testing.T) {
 	mockUser := helpers.MockUser()
 	authSuite.mockUsersRepo.EXPECT().GetByID(ctx, mockUser.ID).Return(nil, storage.ErrNotFound)
 
-	connInfo, err := authSuite.service.Add2FA(ctx, &schemas.Add2FASchema{UserId: mockUser.ID, Typ: helpers.RandomChoose(entity.OtpDeliveryMethods...)})
+	connInfo, err := authSuite.service.Add2FA(ctx, &schemas.Add2FASchema{UserId: mockUser.ID, Typ: helpers.RandomChoose(entity.OtpTransports...)})
 
 	assert.Empty(t, connInfo)
 	assert.ErrorIs(t, err, auth.ErrUserNotFound)

@@ -15,6 +15,7 @@ type (
 		CheckExistsWithEmail(ctx context.Context, email string) (bool, error)
 		GetByLogin(ctx context.Context, login string) (*entity.User, error)
 		GetByID(ctx context.Context, id int) (*entity.User, error)
+		GetByIDWithPasskeyCredentials(ctx context.Context, id int) (*entity.User, error)
 		UpdateIsActiveById(ctx context.Context, userId int, isActive bool) (*entity.User, error)
 		AddPasskeyCredential(ctx context.Context, userId int, cred *entity.PasskeyCredential) error
 	}
