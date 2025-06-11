@@ -12,22 +12,47 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO: insert two factor auth entity too if it's supplied along with user
 func TestInsertUser(t *testing.T) {
 	repos, ctx := newTestSuite(t)
-	user := helpers.MockUser()
 
-	t.Run("success", func(t *testing.T) {
-		insertedUser, err := repos.UsersRepo.Insert(ctx, user)
+	checkUserValid := func(expectedUser *entity.User, insertedUser *entity.User, err error) {
 		assert.NoError(t, err)
 		assert.NotEmpty(t, insertedUser.ID)
 		assert.WithinDuration(t, time.Now(), insertedUser.CreatedAt, time.Second)
 		assert.WithinDuration(t, time.Now(), insertedUser.UpdatedAt, time.Second)
-		assert.Equal(t, user.Email, insertedUser.Email)
-		assert.Equal(t, user.IsActive, insertedUser.IsActive)
+		assert.Equal(t, expectedUser.Email, insertedUser.Email)
+		assert.Equal(t, expectedUser.IsActive, insertedUser.IsActive)
+	}
+
+	checkUserInDB := func(expectedUser *entity.User, insertedID int) *entity.User {
+		userFromDB, err := repos.UsersRepo.GetByID(ctx, insertedID)
+		require.NoError(t, err)
+		checkUserValid(expectedUser, userFromDB, err)
+		return userFromDB
+	}
+
+	t.Run("success", func(t *testing.T) {
+		user := helpers.MockUser()
+		user.TwoFactorAuth = nil
+		insertedUser, err := repos.UsersRepo.Insert(ctx, user)
+		checkUserValid(user, insertedUser, err)
+		checkUserInDB(user, insertedUser.ID)
+	})
+
+	t.Run("insert along with 2 fa related entity", func(t *testing.T) {
+		user := helpers.MockUser()
+		insertedUser, err := repos.UsersRepo.Insert(ctx, user)
+		checkUserValid(user, insertedUser, err)
+		require.NotNil(t, insertedUser.TwoFactorAuth)
+		assert.Equal(t, insertedUser.ID, insertedUser.TwoFactorAuth.UserId)
+		assert.Equal(t, user.TwoFactorAuth.Transport, insertedUser.TwoFactorAuth.Transport)
 	})
 
 	t.Run("already exists", func(t *testing.T) {
+		user := helpers.MockUser()
+		user.TwoFactorAuth = nil
+		_, err := repos.UsersRepo.Insert(ctx, user)
+		require.NoError(t, err)
 		duplicateUser, err := repos.UsersRepo.Insert(ctx, user)
 		assert.Nil(t, duplicateUser)
 		assert.ErrorIs(t, err, storage.ErrAlreadyExists)
@@ -60,7 +85,8 @@ func TestGetByLogin(t *testing.T) {
 	assertSuccess := func(user *entity.User, err error) {
 		assert.NoError(t, err)
 		assert.Equal(t, expectedUser.ID, user.ID)
-		assert.NotNil(t, user.TwoFactorAuth)
+		require.NotNil(t, user.TwoFactorAuth)
+		assert.Equal(t, user.ID, user.TwoFactorAuth.UserId)
 	}
 
 	t.Run("by username", func(t *testing.T) {

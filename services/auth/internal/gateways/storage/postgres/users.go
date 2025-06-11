@@ -92,7 +92,6 @@ func RowToUserStruct(row pgx.CollectableRow) (entity.User, error) {
 	if err := json.Unmarshal(userJson, &user); err != nil {
 		return user, err
 	}
-
 	return user, nil
 }
 
@@ -102,18 +101,30 @@ type UsersRepo struct {
 
 func (repo *UsersRepo) Insert(ctx context.Context, user *entity.User) (*entity.User, error) {
 	query := repo.Builder.Insert(
-		`"user"(username, password, email, first_name, last_name, photo_url, birth_date, about_me)`,
+		`"user"(username, password, email, first_name, last_name, photo_url, birth_date, about_me, is_active)`,
 	).
-		Values(user.Username, user.Password, user.Email, user.FirstName, user.LastName, user.PhotoUrl, user.BirthDate, user.AboutMe).
+		Values(user.Username, user.Password, user.Email, user.FirstName, user.LastName, user.PhotoUrl, user.BirthDate, user.AboutMe, user.IsActive).
 		Suffix("RETURNING *")
-	user, err := execAndGetOne[entity.User](ctx, query, repo.Pool, nil)
+	insertedUser, err := execAndGetOne[entity.User](ctx, query, repo.Pool, nil)
 	if err != nil {
 		if getPgErrCode(err) == UniqueViolationErrCode {
 			return nil, storage.ErrAlreadyExists
 		}
 		return nil, err
 	}
-	return user, nil
+	if user.TwoFactorAuth != nil {
+		query = repo.Builder.Insert(
+			`"two_factor_auth"(user_id, enabled, transport, contact, totp_secret)`,
+		).
+			Values(insertedUser.ID, user.TwoFactorAuth.Enabled, user.TwoFactorAuth.Transport, user.TwoFactorAuth.Contact, user.TwoFactorAuth.TotpSecret).
+			Suffix("RETURNING *")
+		twoFA, err := execAndGetOne[entity.TwoFactorAuth](ctx, query, repo.Pool, nil)
+		if err != nil {
+			return nil, err
+		}
+		insertedUser.TwoFactorAuth = twoFA
+	}
+	return insertedUser, nil
 }
 func (repo *UsersRepo) CheckExistsWithEmail(ctx context.Context, email string) (bool, error) {
 	queryable, err := GetQueryable(ctx, pgxPoolAdapter{repo.Pool})
