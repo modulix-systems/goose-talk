@@ -71,7 +71,7 @@ func TestConfirm2FASuccess(t *testing.T) {
 		if tc.twoFaTyp == entity.TWO_FA_EMAIL || tc.twoFaTyp == entity.TWO_FA_SMS {
 			mock2FA.Contact = dto.Contact
 		}
-		name := "2 fa over " + tc.twoFaTyp.String()
+		name := "2 fa over " + string(tc.twoFaTyp)
 		if tc.contact != "" {
 			name += " with contact"
 		}
@@ -112,7 +112,7 @@ func TestConfirm2FAInvalidOTP(t *testing.T) {
 			Typ:              twoFaTyp,
 			ConfirmationCode: confirmationCode,
 		}
-		t.Run("2 fa over "+twoFaTyp.String(), func(t *testing.T) {
+		t.Run("2 fa over "+string(twoFaTyp), func(t *testing.T) {
 			if twoFaTyp == entity.TWO_FA_TOTP_APP {
 				t.Run("invalid totp", func(t *testing.T) {
 					dto.TotpSecret = gofakeit.UUID()

@@ -42,17 +42,17 @@ func TestVerify2FASuccess(t *testing.T) {
 		sessionExists bool
 	}{
 		{
-			name:          "2FA over " + entity.TWO_FA_EMAIL.String(),
+			name:          "2FA over " + string(entity.TWO_FA_EMAIL),
 			twoFaTyp:      entity.TWO_FA_EMAIL,
 			sessionExists: gofakeit.Bool(),
 		},
 		{
-			name:          "2FA over " + entity.TWO_FA_TELEGRAM.String(),
+			name:          "2FA over " + string(entity.TWO_FA_TELEGRAM),
 			twoFaTyp:      entity.TWO_FA_TELEGRAM,
 			sessionExists: gofakeit.Bool(),
 		},
 		{
-			name:          "2FA over " + entity.TWO_FA_TOTP_APP.String(),
+			name:          "2FA over " + string(entity.TWO_FA_TOTP_APP),
 			twoFaTyp:      entity.TWO_FA_TOTP_APP,
 			sessionExists: gofakeit.Bool(),
 		},
@@ -98,7 +98,7 @@ func TestVerify2FAOtpNotFound(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
 	for _, twoFaTyp := range entity.OtpTransports {
-		name := "2FA over " + twoFaTyp.String()
+		name := "2FA over " + string(twoFaTyp)
 		t.Run(name, func(t *testing.T) {
 			dto := mockVerify2FAPayload(twoFaTyp)
 			authSuite.mockCodeRepo.EXPECT().
@@ -119,7 +119,7 @@ func TestVerify2FAInvalidOTP(t *testing.T) {
 	ctx := context.Background()
 	mockOTP := helpers.MockOTP()
 	for _, twoFaTyp := range entity.OtpTransports {
-		name := "2FA over " + twoFaTyp.String()
+		name := "2FA over " + string(twoFaTyp)
 		t.Run(name, func(t *testing.T) {
 			dto := mockVerify2FAPayload(twoFaTyp)
 			mockOTP.UserEmail = dto.Email
@@ -148,7 +148,7 @@ func TestVerify2FADisabled(t *testing.T) {
 	mockUser := helpers.MockUser()
 	mockUser.TwoFactorAuth.Enabled = false
 	for _, twoFaTyp := range entity.OtpTransports {
-		name := "2FA over " + twoFaTyp.String()
+		name := "2FA over " + string(twoFaTyp)
 		t.Run(name, func(t *testing.T) {
 			dto := mockVerify2FAPayload(twoFaTyp)
 			mockOTP.UserEmail = dto.Email
@@ -202,7 +202,7 @@ func TestVerify2FAOtpExpired(t *testing.T) {
 	mockOTP := helpers.MockOTP()
 	mockOTP.UpdatedAt = time.Now().Add(-authSuite.mockTTL)
 	for _, twoFaTyp := range entity.OtpTransports {
-		name := "2FA over " + twoFaTyp.String()
+		name := "2FA over " + string(twoFaTyp)
 		t.Run(name, func(t *testing.T) {
 			dto := mockVerify2FAPayload(twoFaTyp)
 			mockOTP.UserEmail = dto.Email
@@ -224,7 +224,7 @@ func TestVerify2FAUserNotActive(t *testing.T) {
 	mockUser.TwoFactorAuth.Enabled = true
 	mockUser.IsActive = false
 	for _, twoFaTyp := range entity.OtpTransports {
-		name := "2FA over " + twoFaTyp.String()
+		name := "2FA over " + string(twoFaTyp)
 		t.Run(name, func(t *testing.T) {
 			dto := mockVerify2FAPayload(twoFaTyp)
 			mockOTP.UserEmail = dto.Email

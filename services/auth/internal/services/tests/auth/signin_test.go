@@ -189,7 +189,7 @@ func TestSignIn2FAUnsupportedMethod(t *testing.T) {
 	ctx := context.Background()
 	dto := mockSignInPayload()
 	plainOTPCode := "securetoken"
-	const unsupported2FAMethod entity.TwoFATransport = -1
+	const unsupported2FAMethod entity.TwoFATransport = "unsupported"
 	mockUser := helpers.MockUser()
 	mockUser.TwoFactorAuth.Enabled = true
 	mockUser.TwoFactorAuth.Transport = unsupported2FAMethod

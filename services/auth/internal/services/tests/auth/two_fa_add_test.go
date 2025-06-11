@@ -98,7 +98,7 @@ func TestAdd2FAUnsupportedTyp(t *testing.T) {
 	ctx := context.Background()
 	mockUser := helpers.MockUser()
 	mockUser.TwoFactorAuth = nil
-	const unsupported2FAMethod entity.TwoFATransport = -1
+	const unsupported2FAMethod entity.TwoFATransport = "unsupported"
 	authSuite.mockUsersRepo.EXPECT().GetByID(ctx, mockUser.ID).Return(mockUser, nil)
 
 	connInfo, err := authSuite.service.Add2FA(ctx, &schemas.Add2FASchema{UserId: mockUser.ID, Typ: unsupported2FAMethod})

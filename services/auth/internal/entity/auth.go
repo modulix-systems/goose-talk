@@ -15,9 +15,9 @@ type TwoFATransport string
 
 const (
 	TWO_FA_TELEGRAM TwoFATransport = "telegram"
-	TWO_FA_EMAIL                   = "email"
-	TWO_FA_SMS                     = "sms"
-	TWO_FA_TOTP_APP                = "totp_app"
+	TWO_FA_EMAIL    TwoFATransport = "email"
+	TWO_FA_SMS      TwoFATransport = "sms"
+	TWO_FA_TOTP_APP TwoFATransport = "totp_app"
 )
 
 var OtpTransports = []TwoFATransport{TWO_FA_EMAIL, TWO_FA_TELEGRAM, TWO_FA_TOTP_APP}
