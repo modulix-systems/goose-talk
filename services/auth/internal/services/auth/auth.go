@@ -115,7 +115,7 @@ func (s *AuthService) removeOTP(ctx context.Context, otp *entity.OTP) error {
 
 // newAuthSession inserts a new session or updates existing one based on set of params
 // if new session was inserted - sends 'warning' email
-func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, sessionEnt *entity.UserSession) (*entity.UserSession, error) {
+func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, sessionEnt *entity.UserSession, rememberMe bool) (*entity.UserSession, error) {
 	// Try to find matching session by set of params, if it wasn't found - create new one
 	// or update otherwise
 	session, err := s.sessionsRepo.GetByParamsMatch(ctx, sessionEnt.ClientIdentity.IPAddr, sessionEnt.ClientIdentity.DeviceInfo, user.ID)
@@ -134,12 +134,17 @@ func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, ses
 		return nil, err
 	}
 	// activate session back if it was deactivated and update it's token
+	sessionTTL := s.defaultSessionTTL
+	if rememberMe {
+		sessionTTL = s.longLivedSessionTTL
+	}
 	return s.sessionsRepo.UpdateById(
 		ctx,
 		session.ID,
 		&schemas.SessionUpdatePayload{
 			DeactivatedAt: &time.Time{},
 			LastSeenAt:    time.Now(),
+			ExpiresAt:     time.Now().Add(sessionTTL),
 		},
 	)
 }
@@ -300,7 +305,7 @@ func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (*a
 			IPAddr:     dto.IPAddr,
 			Location:   userLocation,
 		},
-	})
+	}, dto.RememberMe)
 	if err != nil {
 		return nil, err
 	}
@@ -360,7 +365,7 @@ func (s *AuthService) Verify2FA(ctx context.Context, dto *schemas.Verify2FASchem
 			IPAddr:     dto.IPAddr,
 			Location:   userLocation,
 		},
-	})
+	}, dto.RememberMe)
 	if err != nil {
 		return nil, err
 	}
@@ -615,7 +620,7 @@ func (s *AuthService) AcceptLoginToken(ctx context.Context, userId int, tokenVal
 		UserId:           user.ID,
 		ClientIdentityId: token.ClientIdentityId,
 		ClientIdentity:   token.ClientIdentity,
-	})
+	}, false)
 	if err != nil {
 		return nil, err
 	}

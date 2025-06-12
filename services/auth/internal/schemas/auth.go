@@ -31,9 +31,10 @@ type (
 	}
 	Verify2FASchema struct {
 		ClientIdentitySchema
-		TwoFATyp entity.TwoFATransport
-		Email    string
-		Code     string
+		TwoFATyp   entity.TwoFATransport
+		Email      string
+		Code       string
+		RememberMe bool
 		// SignInConfToken must be present only if TOTP 2fa type is used
 		SignInConfToken string
 	}

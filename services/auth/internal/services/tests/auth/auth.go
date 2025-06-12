@@ -98,7 +98,6 @@ func setAuthSessionExpectations(t *testing.T, ctx context.Context, authSuite *Au
 		authSuite.mockSessionsRepo.EXPECT().
 			GetByParamsMatch(ctx, expectedIP, expectedDeviceInfo, mockUser.ID).
 			Return(mockSession, nil)
-		// TODO: update expires at too
 		authSuite.mockSessionsRepo.EXPECT().UpdateById(
 			ctx, mockSession.ID,
 			gomock.Any()).
@@ -107,7 +106,7 @@ func setAuthSessionExpectations(t *testing.T, ctx context.Context, authSuite *Au
 				assert.NotNil(t, payload.DeactivatedAt)
 				assert.Equal(t, *payload.DeactivatedAt, time.Time{})
 				assert.WithinDuration(t, time.Now(), payload.LastSeenAt, time.Second)
-				// assert.True(t, payload.ExpiresAt.After(time.Now()))
+				assert.True(t, payload.ExpiresAt.After(time.Now()))
 				return mockSession, nil
 			})
 	} else {
