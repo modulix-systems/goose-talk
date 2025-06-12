@@ -1,0 +1,10 @@
+
+CREATE TABLE IF NOT EXISTS passkey_credential (
+  id TEXT PRIMARY KEY,
+  user_id INT NOT NULL REFERENCES "user"(id),
+  public_key BYTEA NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  last_used_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  backed_up BOOL NOT NULL DEFAULT false,
+  transports TEXT[] NOT NULL
+);
