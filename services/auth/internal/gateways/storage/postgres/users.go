@@ -154,7 +154,11 @@ func (repo *UsersRepo) GetByLogin(ctx context.Context, login string) (*entity.Us
 
 func (repo *UsersRepo) fetchPasskeyCredentials(ctx context.Context, userId int) ([]entity.PasskeyCredential, error) {
 	query := repo.Builder.Select("*").From("passkey_credential").Where(squirrel.Eq{"user_id": userId})
-	return ExecAndGetMany[entity.PasskeyCredential](ctx, query, repo.Pool, nil)
+	creds, err := ExecAndGetMany[entity.PasskeyCredential](ctx, query, repo.Pool, nil)
+	if err != nil && !errors.Is(err, storage.ErrNotFound) {
+		return nil, err
+	}
+	return creds, nil
 }
 
 func (repo *UsersRepo) GetByID(ctx context.Context, id int) (*entity.User, error) {
@@ -170,6 +174,22 @@ func (repo *UsersRepo) UpdateIsActiveById(ctx context.Context, userId int, isAct
 	return ExecAndGetOne[entity.User](ctx, query, repo.Pool, nil)
 }
 func (repo *UsersRepo) AddPasskeyCredential(ctx context.Context, userId int, cred *entity.PasskeyCredential) error {
+	qb := repo.Builder.Insert(`"passkey_credential"(id, public_key, user_id, transports, backed_up)`).
+		Values(cred.ID, cred.PublicKey, userId, cred.Transports, cred.BackedUp)
+	queryable, err := GetQueryable(ctx, PgxPoolAdapter{repo.Pool})
+	if err != nil {
+		return err
+	}
+	query, args, err := qb.ToSql()
+	if err != nil {
+		return err
+	}
+	if _, err := queryable.Exec(ctx, query, args...); err != nil {
+		if getPgErrCode(err) == ForeignKeyViolationErrCode {
+			return storage.ErrNotFound
+		}
+		return err
+	}
 	return nil
 }
 

@@ -1,7 +1,6 @@
 package postgres_repos_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -156,28 +155,32 @@ func assertUserHasCred(t *testing.T, credsList []entity.PasskeyCredential, expec
 	assert.True(t, userHasCred)
 }
 
-// func TestAddPasskeyCredential(t *testing.T) {
-// 	repos, ctx := newTestSuite(t)
-// 	expectedUser, err := repos.UsersRepo.Insert(ctx, helpers.MockUser())
-// 	require.NoError(t, err)
-// 	expectedCredential := helpers.MockPasskeyCredential()
-// 	t.Run("success", func(t *testing.T) {
-// 		err := repos.UsersRepo.AddPasskeyCredential(ctx, expectedUser.ID, expectedCredential)
-// 		assert.NoError(t, err)
-// 		user, err := repos.UsersRepo.GetByIDWithPasskeyCredentials(ctx, expectedUser.ID)
-// 		require.NoError(t, err)
-// 		require.NotNil(t, user)
-// 		assertUserHasCred(t, user.PasskeyCredentials, expectedCredential)
-// 	})
-// 	t.Run("user not found", func(t *testing.T) {
-// 		err := repos.UsersRepo.AddPasskeyCredential(ctx, -1, expectedCredential)
-// 		assert.ErrorIs(t, err, storage.ErrNotFound)
-// 	})
-// }
+func TestAddPasskeyCredential(t *testing.T) {
+	repos, ctx := newTestSuite(t)
+	expectedUser, err := repos.UsersRepo.Insert(ctx, helpers.MockUser())
+	require.NoError(t, err)
+	expectedCredential := helpers.MockPasskeyCredential()
+	expectedCredential.UserId = expectedUser.ID
+	t.Run("success", func(t *testing.T) {
+		err := repos.UsersRepo.AddPasskeyCredential(ctx, expectedUser.ID, expectedCredential)
+		assert.NoError(t, err)
+		user, err := repos.UsersRepo.GetByIDWithPasskeyCredentials(ctx, expectedUser.ID)
+		require.NoError(t, err)
+		require.NotNil(t, user)
+		assertUserHasCred(t, user.PasskeyCredentials, expectedCredential)
+	})
+	t.Run("user not found", func(t *testing.T) {
+		// change id to avoid unique violation
+		expectedCredential.ID = gofakeit.UUID()
+		err := repos.UsersRepo.AddPasskeyCredential(ctx, -1, expectedCredential)
+		assert.ErrorIs(t, err, storage.ErrNotFound)
+	})
+}
 
 func TestGetByIDWithPasskeyCredentials(t *testing.T) {
 	repos, ctx := newTestSuite(t)
 	expectedUser, err := repos.UsersRepo.Insert(ctx, helpers.MockUser())
+	require.NoError(t, err)
 	expectedCredential := helpers.MockPasskeyCredential()
 	expectedCredential.UserId = expectedUser.ID
 	qb := repos.UsersRepo.Builder.Insert(`"passkey_credential"(id, public_key, user_id, transports)`).
@@ -185,7 +188,6 @@ func TestGetByIDWithPasskeyCredentials(t *testing.T) {
 	queryable, err := postgres_repos.GetQueryable(ctx, postgres_repos.PgxPoolAdapter{repos.UsersRepo.Pool})
 	require.NoError(t, err)
 	query, args := qb.MustSql()
-	fmt.Println("query", query)
 	_, err = queryable.Exec(ctx, query, args...)
 	require.NoError(t, err)
 
@@ -194,6 +196,15 @@ func TestGetByIDWithPasskeyCredentials(t *testing.T) {
 		assert.NoError(t, err)
 		require.NotNil(t, user)
 		assertUserHasCred(t, user.PasskeyCredentials, expectedCredential)
+	})
+
+	t.Run("success no credentials", func(t *testing.T) {
+		expectedUser, err := repos.UsersRepo.Insert(ctx, helpers.MockUser())
+		require.NoError(t, err)
+		user, err := repos.UsersRepo.GetByIDWithPasskeyCredentials(ctx, expectedUser.ID)
+		assert.NoError(t, err)
+		require.NotNil(t, user)
+		assert.Nil(t, user.PasskeyCredentials)
 	})
 
 	t.Run("not found user", func(t *testing.T) {
