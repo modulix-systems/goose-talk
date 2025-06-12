@@ -105,7 +105,7 @@ func (repo *UsersRepo) Insert(ctx context.Context, user *entity.User) (*entity.U
 	).
 		Values(user.Username, user.Password, user.Email, user.FirstName, user.LastName, user.PhotoUrl, user.BirthDate, user.AboutMe, user.IsActive).
 		Suffix("RETURNING *")
-	insertedUser, err := execAndGetOne[entity.User](ctx, query, repo.Pool, nil)
+	insertedUser, err := ExecAndGetOne[entity.User](ctx, query, repo.Pool, nil)
 	if err != nil {
 		if getPgErrCode(err) == UniqueViolationErrCode {
 			return nil, storage.ErrAlreadyExists
@@ -118,7 +118,7 @@ func (repo *UsersRepo) Insert(ctx context.Context, user *entity.User) (*entity.U
 		).
 			Values(insertedUser.ID, user.TwoFactorAuth.Enabled, user.TwoFactorAuth.Transport, user.TwoFactorAuth.Contact, user.TwoFactorAuth.TotpSecret).
 			Suffix("RETURNING *")
-		twoFA, err := execAndGetOne[entity.TwoFactorAuth](ctx, query, repo.Pool, nil)
+		twoFA, err := ExecAndGetOne[entity.TwoFactorAuth](ctx, query, repo.Pool, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -127,7 +127,7 @@ func (repo *UsersRepo) Insert(ctx context.Context, user *entity.User) (*entity.U
 	return insertedUser, nil
 }
 func (repo *UsersRepo) CheckExistsWithEmail(ctx context.Context, email string) (bool, error) {
-	queryable, err := GetQueryable(ctx, pgxPoolAdapter{repo.Pool})
+	queryable, err := GetQueryable(ctx, PgxPoolAdapter{repo.Pool})
 	if err != nil {
 		return false, err
 	}
@@ -149,30 +149,39 @@ func (repo *UsersRepo) GetByLogin(ctx context.Context, login string) (*entity.Us
 	qb := repo.Builder.Select(userSelect).From(`"user"`).
 		LeftJoin(`two_factor_auth ON two_factor_auth.user_id="user".id`).
 		Where(squirrel.Or{squirrel.Eq{"email": login}, squirrel.Eq{"username": login}})
-	return execAndGetOne[entity.User](ctx, qb, repo.Pool, RowToUserStruct)
+	return ExecAndGetOne[entity.User](ctx, qb, repo.Pool, RowToUserStruct)
 }
 
 func (repo *UsersRepo) fetchPasskeyCredentials(ctx context.Context, userId int) ([]entity.PasskeyCredential, error) {
-	query := repo.Builder.Select("passkey_credential").Where(squirrel.Eq{"user_id": userId})
-	return execAndCollectRows[entity.PasskeyCredential](ctx, query, repo.Pool, nil)
+	query := repo.Builder.Select("*").From("passkey_credential").Where(squirrel.Eq{"user_id": userId})
+	return ExecAndGetMany[entity.PasskeyCredential](ctx, query, repo.Pool, nil)
 }
 
 func (repo *UsersRepo) GetByID(ctx context.Context, id int) (*entity.User, error) {
 	query := repo.Builder.Select(userSelect).From(`"user"`).
 		LeftJoin(`two_factor_auth ON two_factor_auth.user_id="user".id`).
 		Where(squirrel.Eq{"id": id})
-	return execAndGetOne[entity.User](ctx, query, repo.Pool, RowToUserStruct)
+	return ExecAndGetOne[entity.User](ctx, query, repo.Pool, RowToUserStruct)
 }
 
 func (repo *UsersRepo) UpdateIsActiveById(ctx context.Context, userId int, isActive bool) (*entity.User, error) {
 	query := repo.Builder.Update(`"user"`).Set("is_active", isActive).
 		Where(squirrel.Eq{"id": userId}).Suffix("RETURNING *")
-	return execAndGetOne[entity.User](ctx, query, repo.Pool, nil)
+	return ExecAndGetOne[entity.User](ctx, query, repo.Pool, nil)
 }
 func (repo *UsersRepo) AddPasskeyCredential(ctx context.Context, userId int, cred *entity.PasskeyCredential) error {
 	return nil
 }
 
-func (repo *UsersRepo) GetByIDWithPasskeyCredentials(ctx context.Context, id int) (*entity.User, error) {
-	return nil, nil
+func (repo *UsersRepo) GetByIDWithPasskeyCredentials(ctx context.Context, userId int) (*entity.User, error) {
+	user, err := repo.GetByID(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+	creds, err := repo.fetchPasskeyCredentials(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+	user.PasskeyCredentials = creds
+	return user, nil
 }

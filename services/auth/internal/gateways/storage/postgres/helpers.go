@@ -13,11 +13,11 @@ type queryBuilder interface {
 	ToSql() (string, []any, error)
 }
 
-func execAndCollectRows[T any](ctx context.Context, qb queryBuilder, pool *pgxpool.Pool, collectFunc pgx.RowToFunc[T]) ([]T, error) {
+func ExecAndGetMany[T any](ctx context.Context, qb queryBuilder, pool *pgxpool.Pool, collectFunc pgx.RowToFunc[T]) ([]T, error) {
 	if collectFunc == nil {
 		collectFunc = pgx.RowToStructByNameLax[T]
 	}
-	queryable, err := GetQueryable(ctx, pgxPoolAdapter{pool})
+	queryable, err := GetQueryable(ctx, PgxPoolAdapter{pool})
 	if err != nil {
 		return nil, err
 	}
@@ -39,8 +39,8 @@ func execAndCollectRows[T any](ctx context.Context, qb queryBuilder, pool *pgxpo
 	return res, nil
 }
 
-func execAndGetOne[T any](ctx context.Context, qb queryBuilder, pool *pgxpool.Pool, collectFunc pgx.RowToFunc[T]) (*T, error) {
-	res, err := execAndCollectRows[T](ctx, qb, pool, collectFunc)
+func ExecAndGetOne[T any](ctx context.Context, qb queryBuilder, pool *pgxpool.Pool, collectFunc pgx.RowToFunc[T]) (*T, error) {
+	res, err := ExecAndGetMany[T](ctx, qb, pool, collectFunc)
 	if err != nil {
 		return nil, err
 	}

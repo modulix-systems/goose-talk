@@ -59,10 +59,10 @@ func getPgErrCode(err error) pgErrCode {
 	return ""
 }
 
-type pgxPoolAdapter struct {
-	pool *pgxpool.Pool
+type PgxPoolAdapter struct {
+	Pool *pgxpool.Pool
 }
 
-func (a pgxPoolAdapter) Acquire(ctx context.Context) (Queryable, error) {
-	return a.pool.Acquire(ctx)
+func (a PgxPoolAdapter) Acquire(ctx context.Context) (Queryable, error) {
+	return a.Pool.Acquire(ctx)
 }

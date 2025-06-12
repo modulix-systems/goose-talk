@@ -1,6 +1,7 @@
 package webauthn
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 
@@ -79,7 +80,7 @@ func (p *WebAuthnProvider) VerifyRegistrationOptions(userId int, rawCredential [
 		adaptedTransports = append(adaptedTransports, entity.PasskeyAuthTransport(transport))
 	}
 	return &entity.PasskeyCredential{
-		ID:         credential.ID,
+		ID:         base64.RawURLEncoding.EncodeToString(credential.ID),
 		PublicKey:  credential.PublicKey,
 		UserId:     userId,
 		BackedUp:   credential.Flags.BackupState,

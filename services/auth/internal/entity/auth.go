@@ -66,7 +66,7 @@ type (
 	}
 
 	PasskeyCredential struct {
-		ID         []byte                 `json:"id"`
+		ID         string                 `json:"id"`
 		UserId     int                    `json:"user_id"`
 		PublicKey  []byte                 `json:"public_key"`
 		CreatedAt  time.Time              `json:"created_at"`

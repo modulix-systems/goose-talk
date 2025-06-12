@@ -98,7 +98,7 @@ func MockPasskeySession() *gateways.PasskeyTmpSession {
 
 func MockPasskeyCredential() *entity.PasskeyCredential {
 	return &entity.PasskeyCredential{
-		ID:        []byte(gofakeit.UUID()),
+		ID:        gofakeit.UUID(),
 		PublicKey: []byte(gofakeit.UUID()),
 		UserId:    gofakeit.Number(1, 1000),
 		Transports: []entity.PasskeyAuthTransport{
