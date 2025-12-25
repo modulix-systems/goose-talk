@@ -16,21 +16,30 @@ import (
 )
 
 func Exec(migrationsPath string) {
-	var storagePath string
-	flag.StringVar(&storagePath, "storage-path", "", "path to storage (e.g: schema://user:password@host:port/dbname)")
+	var resetDB bool
+	flag.BoolVar(&resetDB, "reset", false, "specify if you want to reset the database before running migration")
+	os.Args = os.Args[2:]
 	flag.Parse()
-	if storagePath == "" {
-		cfgPath := config.ResolveConfigPath()
-		cfg := config.MustLoad(cfgPath)
-		storagePath = cfg.PG.Dsn
-	}
-	m, err := migrate.New("file://"+migrationsPath, storagePath)
+
+	cfgPath := config.ResolveConfigPath()
+	cfg := config.MustLoad(cfgPath)
+
+	m, err := migrate.New("file://"+migrationsPath, cfg.PG.Dsn)
 	if err != nil {
 		panic(err)
 	}
+
+	if resetDB {
+		fmt.Println("Resetting database...")
+		if err := m.Drop(); err != nil {
+			panic(err)
+		}
+		fmt.Println("Database reset")
+	}
+
 	var direction string
-	if len(os.Args) > 2 {
-		direction = os.Args[2]
+	if len(os.Args) > 0 {
+		direction = os.Args[0]
 	} else {
 		direction = "up"
 	}
@@ -41,8 +50,8 @@ func Exec(migrationsPath string) {
 		}
 	case "down":
 		var steps string
-		if len(os.Args) > 2 {
-			steps = os.Args[2]
+		if len(os.Args) > 0 {
+			steps = os.Args[0]
 		}
 		if migrated := migrateDown(steps, m); !migrated {
 			return
@@ -59,10 +68,13 @@ func migrateUp(m *migrate.Migrate) (migrated bool) {
 			fmt.Println("No migrations to apply")
 			return
 		}
-		if fixed := checkAndFixDirty(err, m); !fixed {
-			panic(err)
+
+		var dirtyErr migrate.ErrDirty
+		if errors.As(err, &dirtyErr) {
+			tryRecoverDirtyMigration(dirtyErr, m)
 		}
-		return
+
+		panic(err)
 	}
 	migrated = true
 	return
@@ -79,10 +91,13 @@ func migrateDown(steps string, m *migrate.Migrate) (migrated bool) {
 				fmt.Println("No migrations to apply")
 				return
 			}
-			if fixed := checkAndFixDirty(err, m); !fixed {
-				panic(err)
+
+			var dirtyErr migrate.ErrDirty
+			if errors.As(err, &dirtyErr) {
+				tryRecoverDirtyMigration(dirtyErr, m)
 			}
-			return
+
+			panic(err)
 		}
 		migrated = true
 		return
@@ -97,14 +112,17 @@ func migrateDown(steps string, m *migrate.Migrate) (migrated bool) {
 	case "\n", "no":
 		fmt.Println("Aborting...")
 	case "yes":
-		if err := m.Down(); err != nil {
+		if err = m.Down(); err != nil {
 			if errors.Is(err, migrate.ErrNoChange) {
 				fmt.Println("No migrations to apply")
 				return
 			}
-			if fixed := checkAndFixDirty(err, m); !fixed {
-				panic(err)
+
+			var dirtyErr migrate.ErrDirty
+			if errors.As(err, &dirtyErr) {
+				tryRecoverDirtyMigration(dirtyErr, m)
 			}
+
 			return
 		}
 		migrated = true
@@ -114,15 +132,8 @@ func migrateDown(steps string, m *migrate.Migrate) (migrated bool) {
 	return
 }
 
-func checkAndFixDirty(err error, m *migrate.Migrate) (isDirty bool) {
-	var dirtyErr migrate.ErrDirty
-	if !errors.As(err, &dirtyErr) {
-		return
-	}
+func tryRecoverDirtyMigration(dirtyErr migrate.ErrDirty, m *migrate.Migrate) {
 	if err := m.Force(dirtyErr.Version - 1); err != nil {
-		panic(fmt.Sprintf("Error during recovering dirty error: %s", err))
+		panic(fmt.Errorf("Error during recovering dirty error: %w", err))
 	}
-	isDirty = true
-	fmt.Printf("Fixed dirty migrations error. Try again please")
-	return
 }

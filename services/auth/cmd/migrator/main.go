@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/modulix-systems/goose-talk/cmd/migrator/makemigrations"
 	"github.com/modulix-systems/goose-talk/cmd/migrator/runmigrations"
@@ -22,12 +23,18 @@ func main() {
 			panic(err)
 		}
 	}
-	switch os.Args[1] {
-	case "migrate":
-		runmigrations.Exec(migrationsPath)
-	case "make-migrations":
-		makemigrations.Exec(migrationsPath)
-	default:
+
+	if len(os.Args) < 2 {
 		panic("Invalid command. Options are: migrate, make-migrations")
+	}
+
+	subcommand := strings.ToLower(os.Args[1])
+	if subcommand == "migrate" {
+		runmigrations.Exec(migrationsPath)
+		return
+	}
+	if subcommand == "make-migrations" {
+		makemigrations.Exec(migrationsPath)
+		return
 	}
 }
