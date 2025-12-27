@@ -90,8 +90,8 @@ func MockPasskeySession() *gateways.PasskeyTmpSession {
 		UserId:    []byte(gofakeit.Numerify("###")),
 		Challenge: gofakeit.Sentence(10),
 		CredParams: []gateways.PasskeyCredentialParam{
-			gateways.PasskeyCredentialParam{Type: gofakeit.AppName(), Alg: gofakeit.Number(1, 10)},
-			gateways.PasskeyCredentialParam{Type: gofakeit.AppName(), Alg: gofakeit.Number(1, 10)},
+			{Type: gofakeit.AppName(), Alg: gofakeit.Number(1, 10)},
+			{Type: gofakeit.AppName(), Alg: gofakeit.Number(1, 10)},
 		},
 	}
 }

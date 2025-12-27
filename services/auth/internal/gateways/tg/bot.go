@@ -1,14 +1,14 @@
 package tg
 
 type TgAPI struct {
-	baseUrl string
-	botUrl  string
+	apiBaseUrl string
+	botUrl     string
 }
 
 func New(botToken string) *TgAPI {
 	return &TgAPI{
-		baseUrl: "https://api.telegram.org/bot" + botToken,
-		botUrl:  "https://t.me/goose_talk_2fa_bot",
+		apiBaseUrl: "https://api.telegram.org/bot" + botToken,
+		botUrl:     "https://t.me/goose_talk_2fa_bot",
 	}
 }
 

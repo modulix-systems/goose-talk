@@ -6,6 +6,7 @@ import (
 	"path"
 
 	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/modulix-systems/goose-talk/internal/utils"
 	"github.com/modulix-systems/goose-talk/pkg/logger"
 )
 
@@ -13,7 +14,6 @@ type (
 	// Config -.
 	Config struct {
 		PG      PG
-		Metrics Metrics
 		Log     Log
 		Server  Server
 	}
@@ -25,12 +25,8 @@ type (
 
 	// PG -.
 	PG struct {
-		PoolMax int    `env:"PG_POOL_MAX,required"`
 		Dsn     string `env:"PG_URL,required"`
-	}
-
-	Metrics struct {
-		Enabled bool `env:"METRICS_ENABLED" envDefault:"true"`
+		MaxPoolSize int `env:"PG_MAX_POOL_SIZE" env-default:"10"`
 	}
 
 	Log struct {
@@ -57,15 +53,15 @@ func MustLoad(configPath string) *Config {
 func ResolveConfigPath() string {
 	mode := os.Getenv("MODE")
 	if mode == "" {
-		panic("Unable to determine config path. MODE env variable is not set")
+		mode = "local"
+		fmt.Println("MODE is not defined, use local by default")
 	}
-	currDir, err := os.Getwd()
-	if err != nil {
-		panic(fmt.Sprintf("Failed to build config path. Error: %s", err))
-	}
-	newPath := path.Join(currDir, "configs", mode)
-	// try both extensions
-	for _, ext := range []string{".yaml", "yml"} {
+
+	rootPath := utils.FindRootPath()
+	newPath := path.Join(rootPath, "configs", mode)
+	configExtensions := []string{".yaml", "yml"}
+	
+	for _, ext := range configExtensions {
 		if _, err := os.Stat(newPath + ext); err == nil {
 			return newPath + ext
 		}

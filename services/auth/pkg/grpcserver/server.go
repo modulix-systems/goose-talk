@@ -3,23 +3,28 @@ package grpcserver
 import (
 	"net"
 
-	pb "buf.build/gen/go/co3n/goose-proto/grpc/go/auth/v1/authv1grpc"
 	"github.com/modulix-systems/goose-talk/pkg/logger"
 	"google.golang.org/grpc"
 )
 
 type Server struct {
+	grpc.ServiceRegistrar
+
 	log      logger.Interface
 	server   *grpc.Server
 	ServeErr chan error
 	Port     string
 }
 
-func New(log logger.Interface, port string, authServer pb.AuthServiceServer) *Server {
+func New(log logger.Interface, port string) *Server {
 	gRPCServer := grpc.NewServer()
-	pb.RegisterAuthServiceServer(gRPCServer, authServer)
-	return &Server{log, gRPCServer, make(chan error, 1), port}
+	errChan := make(chan error, 1)
+	return &Server{log: log, server: gRPCServer, ServeErr: errChan, Port: port}
 }
+
+	func (s *Server) RegisterService(desc *grpc.ServiceDesc, impl any) {
+		s.server.RegisterService(desc,impl)
+	}
 
 func (s *Server) Run() {
 	listener, err := net.Listen("tcp", ":"+s.Port)
