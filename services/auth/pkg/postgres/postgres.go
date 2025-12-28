@@ -46,12 +46,10 @@ func New(dsn string, opts ...Option) (*Postgres, error) {
 
 	poolConfig, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
-		return nil, fmt.Errorf("postgres - NewPostgres - pgxpool.ParseConfig: %w", err)
+		return nil, fmt.Errorf("postgres - New - pgxpool.ParseConfig: %w", err)
 	}
 
-	poolConfig.MaxConns = int32(
-		pg.maxPoolSize,
-	) //nolint:gosec // skip integer overflow conversion int -> int32
+	poolConfig.MaxConns = int32(pg.maxPoolSize)
 
 	for pg.connAttempts > 0 {
 		pg.Pool, err = pgxpool.NewWithConfig(context.Background(), poolConfig)

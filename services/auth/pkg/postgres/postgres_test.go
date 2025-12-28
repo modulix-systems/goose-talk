@@ -11,12 +11,11 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-
 func TestGetQueryableWithTx(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockConnProvider := mocks.NewMockSupportsAcquire(ctrl)
 	expectedTx := mocks.NewMockQueryable(ctrl)
-	ctx := context.WithValue(context.Background(), config.TransactionCtxKey, expectedTx)
+	ctx := context.WithValue(context.Background(), config.TRANSACTION_CTX_KEY, expectedTx)
 	queryable, err := postgres.GetQueryable(ctx, mockConnProvider)
 	assert.NoError(t, err)
 	assert.Equal(t, expectedTx, queryable)

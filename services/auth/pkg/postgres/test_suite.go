@@ -16,7 +16,7 @@ func NewTestSuite(t *testing.T, ctx context.Context) (*Postgres, pgx.Tx) {
 		t.Fatal("Unable to find root path")
 	}
 	cfg := config.MustLoad(filepath.Join(rootPath, "configs", "tests.yaml"))
-	pg, err := New(cfg.PG.Dsn)
+	pg, err := New(cfg.Postgres.Url)
 	if err != nil {
 		t.Fatal(err)
 	}

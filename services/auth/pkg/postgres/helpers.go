@@ -28,7 +28,7 @@ type SupportsAcquire interface {
 }
 
 func GetQueryable(ctx context.Context, connProvider SupportsAcquire) (Queryable, error) {
-	tx := ctx.Value(config.TransactionCtxKey)
+	tx := ctx.Value(config.TRANSACTION_CTX_KEY)
 	if tx != nil {
 		return tx.(Queryable), nil
 	}
@@ -46,7 +46,6 @@ type PgxPoolAdapter struct {
 func (a PgxPoolAdapter) Acquire(ctx context.Context) (Queryable, error) {
 	return a.Pool.Acquire(ctx)
 }
-
 
 func ExecAndGetMany[T any](ctx context.Context, qb queryBuilder, pool *pgxpool.Pool, collectFunc pgx.RowToFunc[T]) ([]T, error) {
 	if collectFunc == nil {
