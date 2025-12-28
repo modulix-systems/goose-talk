@@ -66,7 +66,7 @@ func TestSignupSuccess(t *testing.T) {
 		expectedLocation := gofakeit.City()
 		authSuite.mockGeoIPApi.EXPECT().GetLocationByIP(dto.IPAddr).Return(expectedLocation, nil)
 		authSuite.mockSessionsRepo.EXPECT().Insert(ctx, gomock.Any()).
-			DoAndReturn(func(ctx context.Context, session *entity.UserSession) (*entity.UserSession, error) {
+			DoAndReturn(func(ctx context.Context, session *entity.AuthSession) (*entity.AuthSession, error) {
 				assert.Equal(t, expectedSession.UserId, session.UserId)
 				assert.Equal(t, expectedSession.ID, session.ID)
 				assert.Equal(t, dto.IPAddr, session.ClientIdentity.IPAddr)
@@ -89,7 +89,7 @@ func TestSignupSuccess(t *testing.T) {
 		}
 		authSuite.mockMailSender.EXPECT().SendGreetingEmail(ctx, dto.Email, expectedName)
 	}
-	makeAssertions := func(authSession *entity.UserSession, err error) {
+	makeAssertions := func(authSession *entity.AuthSession, err error) {
 		assert.NoError(t, err)
 		assert.True(t, authSession.IsActive())
 		assert.Equal(t, expectedSession.ID, authSession.ID)
@@ -120,7 +120,7 @@ func TestSignupNotFoundCode(t *testing.T) {
 	authSession, err := authSuite.service.SignUp(ctx, dto)
 
 	assert.Empty(t, authSession)
-	assert.ErrorIs(t, err, auth.ErrOTPInvalidOrExpired)
+	assert.ErrorIs(t, err, auth.ErrOtpIsNotValid)
 }
 
 func TestSignupExpiredCode(t *testing.T) {
@@ -142,7 +142,7 @@ func TestSignupExpiredCode(t *testing.T) {
 	authSession, err := authSuite.service.SignUp(ctx, dto)
 
 	assert.Empty(t, authSession)
-	assert.ErrorIs(t, err, auth.ErrOTPInvalidOrExpired)
+	assert.ErrorIs(t, err, auth.ErrOtpIsNotValid)
 }
 
 func TestSignUpUserExists(t *testing.T) {

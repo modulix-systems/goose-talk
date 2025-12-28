@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/modulix-systems/goose-talk/internal/entity"
-	"github.com/modulix-systems/goose-talk/internal/schemas"
 )
 
 //go:generate mockgen -source=contracts.go -destination=../../tests/mocks/mocks_gateways.go -package=mocks
@@ -18,79 +17,58 @@ type (
 		GetByIDWithPasskeyCredentials(ctx context.Context, id int) (*entity.User, error)
 		UpdateIsActiveById(ctx context.Context, userId int, isActive bool) (*entity.User, error)
 		AddPasskeyCredential(ctx context.Context, userId int, cred *entity.PasskeyCredential) error
+		SetTwoFa(ctx context.Context, ent *entity.TwoFactorAuth) (*entity.TwoFactorAuth, error)
+		UpdateTwoFaContact(ctx context.Context, userId int, contact string) error
 	}
 	UserSessionsRepo interface {
-		Insert(ctx context.Context, session *entity.UserSession) (*entity.UserSession, error)
-		Delete(ctx context.Context, ip string) error
-		GetAllForUser(
-			ctx context.Context,
-			userId int,
-			activeOnly bool,
-		) ([]entity.UserSession, error)
-		UpdateById(
-			ctx context.Context,
-			sessionId string,
-			payload *schemas.SessionUpdatePayload,
-		) (*entity.UserSession, error)
-		UpdateForUserById(
-			ctx context.Context,
-			userId int,
-			sessionId string,
-			deactivatedAt time.Time,
-		) error
-		GetByParamsMatch(
-			ctx context.Context,
-			ip string,
-			deviceInfo string,
-			userId int,
-		) (*entity.UserSession, error)
-		GetById(ctx context.Context, sessionId string) (*entity.UserSession, error)
+		CreateWithTTL(ctx context.Context, session *entity.AuthSession, ttl time.Duration) (*entity.AuthSession, error)
+		DeleteById(ctx context.Context, id string) error
+		GetAllByUserId(ctx context.Context, userId int) ([]entity.AuthSession, error)
+		GetByLoginData(ctx context.Context, ip string, deviceInfo string, userId int) (*entity.AuthSession, error)
+		GetById(ctx context.Context, id string) (*entity.AuthSession, error)
+		UpdateById(ctx context.Context, sessionId string, lastSeenAt time.Time, ttl time.Duration) (*entity.AuthSession, error)
 	}
 	OtpRepo interface {
 		GetByEmail(ctx context.Context, email string) (*entity.OTP, error)
 		GetByUserId(ctx context.Context, userId int) (*entity.OTP, error)
-		DeleteByEmailOrUserId(ctx context.Context, email string, userId int) error
-		InsertOrUpdateCode(ctx context.Context, otp *entity.OTP) error
+		Delete(ctx context.Context, otp *entity.OTP) error
+		CreateWithTTL(ctx context.Context, otp *entity.OTP, ttl time.Duration) error
 	}
-	LoginTokenRepo interface {
-		Insert(ctx context.Context, token *entity.LoginToken) (*entity.LoginToken, error)
-		GetByClientId(ctx context.Context, sessionId string) (*entity.LoginToken, error)
-		GetByValue(ctx context.Context, val string) (*entity.LoginToken, error)
-		DeleteByClientId(ctx context.Context, sessionId string) error
-		UpdateAuthSessionByClientId(ctx context.Context, clientId string, authSessionId string) error
-	}
-	TwoFactorAuthRepo interface {
-		Insert(ctx context.Context, ent *entity.TwoFactorAuth) (*entity.TwoFactorAuth, error)
-		UpdateContactForUser(ctx context.Context, userId int, contact string) error
+	QRLoginTokenRepo interface {
+		CreateWithTTL(ctx context.Context, token *entity.QRCodeLoginToken, ttl time.Duration) (*entity.QRCodeLoginToken, error)
+		GetByValue(ctx context.Context, val string) (*entity.QRCodeLoginToken, error)
+		DeleteAllByClientId(ctx context.Context, sessionId string) error
+		DeleteByValue(ctx context.Context, val string) error
 	}
 	SecurityProvider interface {
 		GenerateOTPCode() string
 		GenerateTOTPEnrollUrlWithSecret(accName string) (string, string)
 		ValidateTOTP(code string, secret string) bool
 		HashPassword(password string) ([]byte, error)
-		ComparePasswords(hashed []byte, plain string) (bool, error)
-		EncryptSymmetric(plaintext string) ([]byte, error)
-		DecryptSymmetric(encrypted []byte) (string, error)
+		ComparePasswords(hashed []byte, plain string) error
+		EncryptSymmetric(plaintext string, key string) ([]byte, error)
+		DecryptSymmetric(encrypted []byte, key string) (string, error)
 		GenerateSecretTokenUrlSafe(entropy int) string
 		GenerateSessionId() string
+		GeneratePrivateKey() string
 	}
-	KeyValueStorage interface {
-		Set(key string, value string, expiresIn time.Duration) error
-		Get(key string) (string, error)
+	PasskeySessionsRepo interface {
+		Create(ctx context.Context, session *entity.PasskeyRegistrationSession) error
+		GetByUserId(ctx context.Context, userId int) (*entity.PasskeyRegistrationSession, error)
 	}
 	WebAuthnRegistrationOptions []byte
 	WebAuthnProvider            interface {
-		GenerateRegistrationOptions(user *entity.User) (WebAuthnRegistrationOptions, *PasskeyTmpSession, error)
-		VerifyRegistrationOptions(userId int, rawCredential []byte, prevSession *PasskeyTmpSession) (*entity.PasskeyCredential, error)
+		GenerateRegistrationOptions(user *entity.User) (WebAuthnRegistrationOptions, *entity.PasskeyRegistrationSession, error)
+		VerifyRegistrationOptions(userId int, rawCredential []byte, prevSession *entity.PasskeyRegistrationSession) (*entity.PasskeyCredential, error)
 	}
-	NotificationsService interface {
+	NotificationsClient interface {
 		SendSignUpConfirmationEmail(ctx context.Context, to string, otp string) error
 		SendGreetingEmail(ctx context.Context, to string, name string) error
 		Send2FAEmail(ctx context.Context, to string, otp string) error
 		SendAccDeactivationEmail(ctx context.Context, to string) error
-		SendSignInNewDeviceEmail(ctx context.Context, to string, newSession *entity.UserSession) error
+		SendSignInNewDeviceEmail(ctx context.Context, to string, newSession *entity.AuthSession) error
 	}
-	TelegramBotAPI interface {
+	TelegramBotClient interface {
 		SendTextMsg(ctx context.Context, chatId string, text string) error
 		GetStartLinkWithCode(code string) string
 		GetLatestMsg(ctx context.Context) (*TelegramMsg, error)

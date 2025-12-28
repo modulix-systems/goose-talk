@@ -1,7 +1,7 @@
 package security
 
 import (
-	"errors"
+	"fmt"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -14,13 +14,10 @@ func (s *SecurityProvider) HashPassword(plainPassword string) ([]byte, error) {
 	return hashedPassword, nil
 }
 
-func (s *SecurityProvider) ComparePasswords(hashed []byte, plain string) (bool, error) {
+func (s *SecurityProvider) ComparePasswords(hashed []byte, plain string) (error) {
 	err := bcrypt.CompareHashAndPassword(hashed, []byte(plain))
 	if err != nil {
-		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-			return false, nil
-		}
-		return false, err
+		return fmt.Errorf("SecurityProvider - ComparePasswords - bcrypt.CompareHashAndPassword: %w", err)
 	}
-	return true, nil
+	return nil
 }

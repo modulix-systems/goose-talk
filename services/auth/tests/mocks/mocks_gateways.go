@@ -187,10 +187,10 @@ func (mr *MockUserSessionsRepoMockRecorder) Delete(ctx, ip any) *gomock.Call {
 }
 
 // GetAllForUser mocks base method.
-func (m *MockUserSessionsRepo) GetAllForUser(ctx context.Context, userId int, activeOnly bool) ([]entity.UserSession, error) {
+func (m *MockUserSessionsRepo) GetAllForUser(ctx context.Context, userId int, activeOnly bool) ([]entity.AuthSession, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllForUser", ctx, userId, activeOnly)
-	ret0, _ := ret[0].([]entity.UserSession)
+	ret0, _ := ret[0].([]entity.AuthSession)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -202,10 +202,10 @@ func (mr *MockUserSessionsRepoMockRecorder) GetAllForUser(ctx, userId, activeOnl
 }
 
 // GetById mocks base method.
-func (m *MockUserSessionsRepo) GetById(ctx context.Context, sessionId string) (*entity.UserSession, error) {
+func (m *MockUserSessionsRepo) GetById(ctx context.Context, sessionId string) (*entity.AuthSession, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetById", ctx, sessionId)
-	ret0, _ := ret[0].(*entity.UserSession)
+	ret0, _ := ret[0].(*entity.AuthSession)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -217,10 +217,10 @@ func (mr *MockUserSessionsRepoMockRecorder) GetById(ctx, sessionId any) *gomock.
 }
 
 // GetByParamsMatch mocks base method.
-func (m *MockUserSessionsRepo) GetByParamsMatch(ctx context.Context, ip, deviceInfo string, userId int) (*entity.UserSession, error) {
+func (m *MockUserSessionsRepo) GetByParamsMatch(ctx context.Context, ip, deviceInfo string, userId int) (*entity.AuthSession, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByParamsMatch", ctx, ip, deviceInfo, userId)
-	ret0, _ := ret[0].(*entity.UserSession)
+	ret0, _ := ret[0].(*entity.AuthSession)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -232,10 +232,10 @@ func (mr *MockUserSessionsRepoMockRecorder) GetByParamsMatch(ctx, ip, deviceInfo
 }
 
 // Insert mocks base method.
-func (m *MockUserSessionsRepo) Insert(ctx context.Context, session *entity.UserSession) (*entity.UserSession, error) {
+func (m *MockUserSessionsRepo) Insert(ctx context.Context, session *entity.AuthSession) (*entity.AuthSession, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Insert", ctx, session)
-	ret0, _ := ret[0].(*entity.UserSession)
+	ret0, _ := ret[0].(*entity.AuthSession)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -247,10 +247,10 @@ func (mr *MockUserSessionsRepoMockRecorder) Insert(ctx, session any) *gomock.Cal
 }
 
 // UpdateById mocks base method.
-func (m *MockUserSessionsRepo) UpdateById(ctx context.Context, sessionId string, payload *schemas.SessionUpdatePayload) (*entity.UserSession, error) {
+func (m *MockUserSessionsRepo) UpdateById(ctx context.Context, sessionId string, payload *schemas.SessionUpdatePayload) (*entity.AuthSession, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateById", ctx, sessionId, payload)
-	ret0, _ := ret[0].(*entity.UserSession)
+	ret0, _ := ret[0].(*entity.AuthSession)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -396,10 +396,10 @@ func (mr *MockLoginTokenRepoMockRecorder) DeleteByClientId(ctx, sessionId any) *
 }
 
 // GetByClientId mocks base method.
-func (m *MockLoginTokenRepo) GetByClientId(ctx context.Context, sessionId string) (*entity.LoginToken, error) {
+func (m *MockLoginTokenRepo) GetByClientId(ctx context.Context, sessionId string) (*entity.QRCodeLoginToken, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByClientId", ctx, sessionId)
-	ret0, _ := ret[0].(*entity.LoginToken)
+	ret0, _ := ret[0].(*entity.QRCodeLoginToken)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -411,10 +411,10 @@ func (mr *MockLoginTokenRepoMockRecorder) GetByClientId(ctx, sessionId any) *gom
 }
 
 // GetByValue mocks base method.
-func (m *MockLoginTokenRepo) GetByValue(ctx context.Context, val string) (*entity.LoginToken, error) {
+func (m *MockLoginTokenRepo) GetByValue(ctx context.Context, val string) (*entity.QRCodeLoginToken, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByValue", ctx, val)
-	ret0, _ := ret[0].(*entity.LoginToken)
+	ret0, _ := ret[0].(*entity.QRCodeLoginToken)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -426,10 +426,10 @@ func (mr *MockLoginTokenRepoMockRecorder) GetByValue(ctx, val any) *gomock.Call 
 }
 
 // Insert mocks base method.
-func (m *MockLoginTokenRepo) Insert(ctx context.Context, token *entity.LoginToken) (*entity.LoginToken, error) {
+func (m *MockLoginTokenRepo) Insert(ctx context.Context, token *entity.QRCodeLoginToken) (*entity.QRCodeLoginToken, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Insert", ctx, token)
-	ret0, _ := ret[0].(*entity.LoginToken)
+	ret0, _ := ret[0].(*entity.QRCodeLoginToken)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -740,11 +740,11 @@ func (m *MockWebAuthnProvider) EXPECT() *MockWebAuthnProviderMockRecorder {
 }
 
 // GenerateRegistrationOptions mocks base method.
-func (m *MockWebAuthnProvider) GenerateRegistrationOptions(user *entity.User) (gateways.WebAuthnRegistrationOptions, *gateways.PasskeyTmpSession, error) {
+func (m *MockWebAuthnProvider) GenerateRegistrationOptions(user *entity.User) (gateways.WebAuthnRegistrationOptions, *gateways.PasskeyRegistrationSession, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GenerateRegistrationOptions", user)
 	ret0, _ := ret[0].(gateways.WebAuthnRegistrationOptions)
-	ret1, _ := ret[1].(*gateways.PasskeyTmpSession)
+	ret1, _ := ret[1].(*gateways.PasskeyRegistrationSession)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
@@ -756,7 +756,7 @@ func (mr *MockWebAuthnProviderMockRecorder) GenerateRegistrationOptions(user any
 }
 
 // VerifyRegistrationOptions mocks base method.
-func (m *MockWebAuthnProvider) VerifyRegistrationOptions(userId int, rawCredential []byte, prevSession *gateways.PasskeyTmpSession) (*entity.PasskeyCredential, error) {
+func (m *MockWebAuthnProvider) VerifyRegistrationOptions(userId int, rawCredential []byte, prevSession *gateways.PasskeyRegistrationSession) (*entity.PasskeyCredential, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "VerifyRegistrationOptions", userId, rawCredential, prevSession)
 	ret0, _ := ret[0].(*entity.PasskeyCredential)
@@ -837,7 +837,7 @@ func (mr *MockNotificationsServiceMockRecorder) SendGreetingEmail(ctx, to, name 
 }
 
 // SendSignInNewDeviceEmail mocks base method.
-func (m *MockNotificationsService) SendSignInNewDeviceEmail(ctx context.Context, to string, newSession *entity.UserSession) error {
+func (m *MockNotificationsService) SendSignInNewDeviceEmail(ctx context.Context, to string, newSession *entity.AuthSession) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendSignInNewDeviceEmail", ctx, to, newSession)
 	ret0, _ := ret[0].(error)

@@ -8,140 +8,131 @@ import (
 	"github.com/modulix-systems/goose-talk/internal/entity"
 	"github.com/modulix-systems/goose-talk/internal/gateways"
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage"
-	"github.com/modulix-systems/goose-talk/internal/schemas"
 	"github.com/modulix-systems/goose-talk/pkg/logger"
 )
 
 type AuthService struct {
-	usersRepo            gateways.UsersRepo
-	notificationsServive gateways.NotificationsService
-	tgApi                gateways.TelegramBotAPI
-	securityProvider     gateways.SecurityProvider
-	otpRepo              gateways.OtpRepo
-	otpTTL               time.Duration
-	defaultSessionTTL    time.Duration
-	longLivedSessionTTL  time.Duration
-	SessionTTLThreshold  time.Duration
-	SessionTTLAddend     time.Duration
-	loginTokenTTL        time.Duration
-	sessionsRepo         gateways.UserSessionsRepo
-	geoIPApi             gateways.GeoIPApi
-	twoFactorAuthRepo    gateways.TwoFactorAuthRepo
-	loginTokenRepo       gateways.LoginTokenRepo
-	loginTokenLen        int
-	webAuthnProvider     gateways.WebAuthnProvider
-	keyValueStorage      gateways.KeyValueStorage
-	log                  logger.Interface
+	usersRepo           gateways.UsersRepo
+	notificationsClient gateways.NotificationsClient
+	tgApi               gateways.TelegramBotClient
+	securityProvider    gateways.SecurityProvider
+	otpRepo             gateways.OtpRepo
+	passkeySessionsRepo gateways.PasskeySessionsRepo
+	otpTTL              time.Duration
+	defaultSessionTTL   time.Duration
+	longLivedSessionTTL time.Duration
+	loginTokenTTL       time.Duration
+	sessionsRepo        gateways.UserSessionsRepo
+	geoIPApi            gateways.GeoIPApi
+	loginTokenRepo      gateways.QRLoginTokenRepo
+	webAuthnProvider    gateways.WebAuthnProvider
+	log                 logger.Interface
 }
 
 func New(
 	usersRepo gateways.UsersRepo,
-	notificationsServive gateways.NotificationsService,
+	sessionsRepo gateways.UserSessionsRepo,
+	loginTokenRepo gateways.QRLoginTokenRepo,
 	otpRepo gateways.OtpRepo,
+	passkeySessionRepo gateways.PasskeySessionsRepo,
+
+	notificationsClient gateways.NotificationsClient,
+	webAuthnProvider gateways.WebAuthnProvider,
+	securityProvider gateways.SecurityProvider,
+	tgApi gateways.TelegramBotClient,
+	geoIPApi gateways.GeoIPApi,
+
 	otpTTL time.Duration,
 	loginTokenTTL time.Duration,
 	defaultSessionTTL time.Duration,
 	longLivedSessionTTL time.Duration,
-	securityProvider gateways.SecurityProvider,
-	tgApi gateways.TelegramBotAPI,
-	sessionsRepo gateways.UserSessionsRepo,
-	geoIPApi gateways.GeoIPApi,
-	twoFactorAuthRepo gateways.TwoFactorAuthRepo,
-	loginTokenRepo gateways.LoginTokenRepo,
-	webAuthnProvider gateways.WebAuthnProvider,
-	keyValueStorage gateways.KeyValueStorage,
+
 	log logger.Interface,
 ) *AuthService {
 	return &AuthService{
-		usersRepo:            usersRepo,
-		notificationsServive: notificationsServive,
-		otpRepo:              otpRepo,
-		otpTTL:               otpTTL,
-		defaultSessionTTL:    defaultSessionTTL,
-		longLivedSessionTTL:  longLivedSessionTTL,
-		loginTokenTTL:        loginTokenTTL,
-		securityProvider:     securityProvider,
-		tgApi:                tgApi,
-		sessionsRepo:         sessionsRepo,
-		geoIPApi:             geoIPApi,
-		twoFactorAuthRepo:    twoFactorAuthRepo,
-		loginTokenRepo:       loginTokenRepo,
-		loginTokenLen:        16,
-		webAuthnProvider:     webAuthnProvider,
-		keyValueStorage:      keyValueStorage,
-		log:                  log,
-		SessionTTLThreshold:  30 * time.Minute,
-		SessionTTLAddend:     15 * time.Minute,
+		usersRepo:           usersRepo,
+		passkeySessionsRepo: passkeySessionRepo,
+		notificationsClient: notificationsClient,
+		otpRepo:             otpRepo,
+		otpTTL:              otpTTL,
+		defaultSessionTTL:   defaultSessionTTL,
+		longLivedSessionTTL: longLivedSessionTTL,
+		loginTokenTTL:       loginTokenTTL,
+		securityProvider:    securityProvider,
+		tgApi:               tgApi,
+		sessionsRepo:        sessionsRepo,
+		geoIPApi:            geoIPApi,
+		loginTokenRepo:      loginTokenRepo,
+		webAuthnProvider:    webAuthnProvider,
+		log:                 log,
 	}
 }
 
-// createOTP generates, hashes and saves hashed otp token to database
+// createOtp generates, hashes and saves hashed otp token to database
 // returning plain code and insertion error for caller to handle
-func (s *AuthService) createOTP(ctx context.Context, email string, userId int) (string, error) {
+func (s *AuthService) createOtp(ctx context.Context, email string, userId int) (string, error) {
 	if email == "" && userId == 0 {
-		panic("createOTP: email or userId must be provided")
+		panic("AuthService - createOtp - email or userId must be provided")
 	}
-	otpCode := s.securityProvider.GenerateOTPCode()
-	hashedOtpCode, err := s.securityProvider.HashPassword(otpCode)
+
+	plainCode := s.securityProvider.GenerateOTPCode()
+
+	hashedCode, err := s.securityProvider.HashPassword(plainCode)
 	if err != nil {
 		return "", err
 	}
-	return otpCode, s.otpRepo.InsertOrUpdateCode(
-		ctx,
-		&entity.OTP{Code: hashedOtpCode, UserEmail: email, UserId: userId},
-	)
-}
 
-func (s *AuthService) checkOTP(ctx context.Context, otp *entity.OTP, compareWith string) error {
-	if otp.IsExpired(s.otpTTL) {
-		return ErrOTPInvalidOrExpired
-	}
-	matched, err := s.securityProvider.ComparePasswords(otp.Code, compareWith)
-	if err != nil {
-		return err
-	}
-	if !matched {
-		return ErrOTPInvalidOrExpired
-	}
-	return nil
-}
+	otp := &entity.OTP{Code: hashedCode, UserEmail: email, UserId: userId}
 
-func (s *AuthService) removeOTP(ctx context.Context, otp *entity.OTP) error {
-	return s.otpRepo.DeleteByEmailOrUserId(ctx, otp.UserEmail, otp.UserId)
+	return plainCode, s.otpRepo.CreateWithTTL(ctx, otp, s.otpTTL)
 }
 
 // newAuthSession inserts a new session or updates existing one based on set of params
-// if new session was inserted - sends 'warning' email
-func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, sessionEnt *entity.UserSession, rememberMe bool) (*entity.UserSession, error) {
-	// Try to find matching session by set of params, if it wasn't found - create new one
-	// or update otherwise
-	session, err := s.sessionsRepo.GetByParamsMatch(ctx, sessionEnt.ClientIdentity.IPAddr, sessionEnt.ClientIdentity.DeviceInfo, user.ID)
-	if err != nil {
-		if errors.Is(err, storage.ErrNotFound) {
-			session, err = s.sessionsRepo.Insert(ctx, sessionEnt)
-			if err != nil {
-				return nil, err
-			}
-			if err = s.notificationsServive.SendSignInNewDeviceEmail(ctx, user.Email, session); err != nil {
-				s.log.Error("Failed to send 'sign in from new device' notification after creating new session", "sessionId", session.ID)
-				return nil, err
-			}
-			return session, nil
-		}
+// if new session was created - sends 'warning' email
+func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, ip string, deviceInfo string, rememberMe bool) (*entity.AuthSession, error) {
+	existingSession, err := s.sessionsRepo.GetByLoginData(ctx, ip, deviceInfo, user.ID)
+	if err != nil && !errors.Is(err, storage.ErrNotFound) {
 		return nil, err
 	}
-	// activate session back if it was deactivated and update it's token
+
+	if existingSession != nil {
+		if err := s.sessionsRepo.DeleteById(ctx, existingSession.ID); err != nil {
+			return nil, err
+		}
+	}
+
 	sessionTTL := s.defaultSessionTTL
 	if rememberMe {
 		sessionTTL = s.longLivedSessionTTL
 	}
-	return s.sessionsRepo.UpdateById(
+
+	location, err := s.geoIPApi.GetLocationByIP(ip)
+	if err != nil {
+		return nil, err
+	}
+
+	newSession, err := s.sessionsRepo.CreateWithTTL(
 		ctx,
-		session.ID,
-		&schemas.SessionUpdatePayload{
-			DeactivatedAt: &time.Time{},
-			LastSeenAt:    time.Now(),
-			ExpiresAt:     time.Now().Add(sessionTTL),
+		&entity.AuthSession{
+			ID:          s.securityProvider.GenerateSessionId(),
+			UserId:      user.ID,
+			IPAddr:      ip,
+			DeviceInfo:  deviceInfo,
+			Location:    location,
+			IsLongLived: rememberMe,
 		},
+		sessionTTL,
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	if existingSession == nil {
+		if err = s.notificationsClient.SendSignInNewDeviceEmail(ctx, user.Email, newSession); err != nil {
+			s.log.Error("AuthService - newAuthSession - notificationsClient.SendSignInNewDeviceEmail: %w", err, "sessionID", newSession.ID)
+			return nil, err
+		}
+	}
+
+	return newSession, nil
 }

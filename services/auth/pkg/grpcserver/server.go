@@ -22,19 +22,18 @@ func New(log logger.Interface, port string) *Server {
 	return &Server{log: log, server: gRPCServer, ServeErr: errChan, Port: port}
 }
 
-	func (s *Server) RegisterService(desc *grpc.ServiceDesc, impl any) {
-		s.server.RegisterService(desc,impl)
-	}
+func (s *Server) RegisterService(desc *grpc.ServiceDesc, impl any) {
+	s.server.RegisterService(desc, impl)
+}
 
 func (s *Server) Run() {
 	listener, err := net.Listen("tcp", ":"+s.Port)
 	if err != nil {
-		s.log.Error("Failed to listen", "error", err, "port", s.Port)
-		panic(err)
+		s.log.Fatal("Failed to listen on :%s: %w", s.Port, err)
 	}
-	s.log.Info("Starting gRPC server", "address", listener.Addr())
+	s.log.Info("Starting gRPC server on: %s", listener.Addr())
 	if err := s.server.Serve(listener); err != nil {
-		s.log.Error("Failed to serve gRPC server", "error", err)
+		s.log.Error("Failed to serve gRPC server: %w", err)
 		s.ServeErr <- err
 	}
 }

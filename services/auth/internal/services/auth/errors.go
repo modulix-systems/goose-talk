@@ -3,8 +3,8 @@ package auth
 import "errors"
 
 var (
-	ErrOTPInvalidOrExpired = errors.New("entered code is invalid or expired. Please take a new one and try again")
-	Err2FANotEnabled       = errors.New(
+	ErrOtpIsNotValid = errors.New("entered code is invalid or expired. Please obtain a new one and try again")
+	Err2FANotEnabled = errors.New(
 		"you have not enabled two factor authentication for your account",
 	)
 	ErrUserAlreadyExists    = errors.New("user with provided email already exists")
@@ -13,9 +13,9 @@ var (
 	ErrUnsupported2FAMethod = errors.New(
 		"two factor authentication method associated with your account is not supported. Please use another one",
 	)
-	Err2FaAlreadyAdded = errors.New("two factor authentication is already associated with your account")
-	ErrDisabledAccount = errors.New(
-		"your account is disabled. Try to contact support to resolve this issue",
+	Err2FaAlreadyAdded    = errors.New("two factor authentication is already associated with your account")
+	ErrDeactivatedAccount = errors.New(
+		"your account has been deactivated. Try to contact support to resolve this issue",
 	)
 	ErrSessionNotFound                  = errors.New("no active session found")
 	ErrInvalidLoginToken                = errors.New("your login token is invalid. Please obtain a new one")

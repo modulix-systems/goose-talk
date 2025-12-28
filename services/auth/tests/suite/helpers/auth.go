@@ -37,7 +37,7 @@ func MockUser() *entity.User {
 	}
 }
 
-func MockUserSession(active bool) *entity.UserSession {
+func MockUserSession(active bool) *entity.AuthSession {
 	created := gofakeit.DateRange(time.Now().AddDate(0, -1, 0), time.Now())
 	lastSeen := gofakeit.DateRange(created, time.Now())
 
@@ -46,7 +46,7 @@ func MockUserSession(active bool) *entity.UserSession {
 		deactivated = gofakeit.DateRange(lastSeen, time.Now())
 	}
 
-	return &entity.UserSession{
+	return &entity.AuthSession{
 		ID:             gofakeit.UUID(),
 		UserId:         gofakeit.Number(1, 1000),
 		ClientIdentity: MockClientIdentity(),
@@ -60,15 +60,13 @@ func MockOTP() *entity.OTP {
 	return &entity.OTP{
 		Code:      []byte(gofakeit.Numerify("######")),
 		UserEmail: gofakeit.Email(),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
 	}
 }
 
-func MockLoginToken(ttl time.Duration) *entity.LoginToken {
-	return &entity.LoginToken{
+func MockLoginToken(ttl time.Duration) *entity.QRCodeLoginToken {
+	return &entity.QRCodeLoginToken{
 		ClientId:         gofakeit.UUID(),
-		Val:              gofakeit.UUID(),
+		Value:            gofakeit.UUID(),
 		ClientIdentity:   MockClientIdentity(),
 		ClientIdentityId: gofakeit.Number(1, 1000),
 		AuthSessionId:    gofakeit.Number(0, 1000),
@@ -85,8 +83,8 @@ func MockClientIdentity() *entity.ClientIdentity {
 	}
 }
 
-func MockPasskeySession() *gateways.PasskeyTmpSession {
-	return &gateways.PasskeyTmpSession{
+func MockPasskeySession() *gateways.PasskeyRegistrationSession {
+	return &gateways.PasskeyRegistrationSession{
 		UserId:    []byte(gofakeit.Numerify("###")),
 		Challenge: gofakeit.Sentence(10),
 		CredParams: []gateways.PasskeyCredentialParam{

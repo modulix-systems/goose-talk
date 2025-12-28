@@ -226,7 +226,7 @@ func TestSignInNotActiveUser(t *testing.T) {
 	authInfo, err := authSuite.service.SignIn(ctx, dto)
 
 	assert.Empty(t, authInfo)
-	assert.ErrorIs(t, err, auth.ErrDisabledAccount)
+	assert.ErrorIs(t, err, auth.ErrDeactivatedAccount)
 
 }
 

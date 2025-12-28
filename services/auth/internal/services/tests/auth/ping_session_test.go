@@ -33,7 +33,7 @@ func TestPingSessionSuccess(t *testing.T) {
 		authSuite.mockSessionsRepo.EXPECT().GetById(ctx, expectedSessionId).Return(mockSession, nil)
 		authSuite.mockSessionsRepo.EXPECT().UpdateById(
 			ctx, mockSession.ID, gomock.Any()).
-			DoAndReturn(func(ctx context.Context, sessionId string, payload *schemas.SessionUpdatePayload) (*entity.UserSession, error) {
+			DoAndReturn(func(ctx context.Context, sessionId string, payload *schemas.SessionUpdatePayload) (*entity.AuthSession, error) {
 				assert.WithinDuration(t, payload.LastSeenAt, time.Now(), time.Second)
 				assert.Equal(t, mockSession.ExpiresAt.Add(authSuite.service.SessionTTLAddend), payload.ExpiresAt)
 				assert.Empty(t, payload.DeactivatedAt)
@@ -46,7 +46,7 @@ func TestPingSessionSuccess(t *testing.T) {
 		authSuite.mockSessionsRepo.EXPECT().GetById(ctx, expectedSessionId).Return(mockSession, nil)
 		authSuite.mockSessionsRepo.EXPECT().UpdateById(
 			ctx, mockSession.ID, gomock.Any()).
-			DoAndReturn(func(ctx context.Context, sessionId string, payload *schemas.SessionUpdatePayload) (*entity.UserSession, error) {
+			DoAndReturn(func(ctx context.Context, sessionId string, payload *schemas.SessionUpdatePayload) (*entity.AuthSession, error) {
 				assert.WithinDuration(t, payload.LastSeenAt, time.Now(), time.Second)
 				assert.Empty(t, payload.DeactivatedAt)
 				return mockSession, nil

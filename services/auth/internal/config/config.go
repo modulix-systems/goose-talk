@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/modulix-systems/goose-talk/internal/utils"
@@ -13,20 +14,37 @@ import (
 type (
 	// Config -.
 	Config struct {
-		PG      PG
-		Log     Log
-		Server  Server
+		Postgres            Postgres
+		Redis               Redis
+		Log                 Log
+		App                 App
+		Tgbot               Tgbot
+		Port                string        `env-default:"8000"`
+		OtpTTL              time.Duration `env:"OTP_TTL" env-default:"5m"`
+		TotpTTL             time.Duration `env:"TOTP_TTL" env-default:"1m"`
+		LoginTokenTTL       time.Duration `env:"LOGIN_TOKEN_TTL" env-default:"1m"`
+		DefaultSessionTTL   time.Duration `env:"DEFAULT_SESSION_TTL" env-default:"72h"`
+		LongLivedSessionTTL time.Duration `env:"LONG_LIVED_SESSION_TTL" env-default:"720h"`
 	}
 
-	Server struct {
-		Port     string
-		Hostname string
+	App struct {
+		Name    string `env:"APP_NAME" env-default:"Goose Talk"`
+		Version string `env:"APP_VERSION" env-default:"v0.0.1"`
+		Url     string `env:"APP_URL,required"`
 	}
 
-	// PG -.
-	PG struct {
-		Dsn     string `env:"PG_URL,required"`
-		MaxPoolSize int `env:"PG_MAX_POOL_SIZE" env-default:"10"`
+	Postgres struct {
+		Url         string `env:"PG_URL,required"`
+		MaxPoolSize int    `env:"PG_MAX_POOL_SIZE"`
+	}
+
+	Redis struct {
+		Url         string `env:"REDIS_URL,required"`
+		MaxPoolSize int    `env:"REDIS_MAX_POOL_SIZE"`
+	}
+
+	Tgbot struct {
+		Token string `env:"TG_BOT_TOKEN,required"`
 	}
 
 	Log struct {
@@ -60,7 +78,7 @@ func ResolveConfigPath() string {
 	rootPath := utils.FindRootPath()
 	newPath := path.Join(rootPath, "configs", mode)
 	configExtensions := []string{".yaml", "yml"}
-	
+
 	for _, ext := range configExtensions {
 		if _, err := os.Stat(newPath + ext); err == nil {
 			return newPath + ext

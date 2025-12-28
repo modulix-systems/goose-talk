@@ -14,7 +14,6 @@ type (
 		FirstName        string
 		LastName         string
 		ConfirmationCode string
-		RememberMe       bool
 		ClientIdentitySchema
 	}
 	SignInSchema struct {
@@ -39,7 +38,6 @@ type (
 		SignInConfToken string
 	}
 	SessionUpdatePayload struct {
-		DeactivatedAt *time.Time
 		LastSeenAt    time.Time
 		ExpiresAt     time.Time
 	}

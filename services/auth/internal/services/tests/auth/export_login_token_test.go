@@ -14,7 +14,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func fakeExportLoginTokenPayload(fromEnt *entity.LoginToken) *schemas.ExportLoginTokenSchema {
+func fakeExportLoginTokenPayload(fromEnt *entity.QRCodeLoginToken) *schemas.ExportLoginTokenSchema {
 	return &schemas.ExportLoginTokenSchema{
 		ClientId: fromEnt.ClientId,
 		ClientIdentitySchema: schemas.ClientIdentitySchema{
@@ -24,14 +24,14 @@ func fakeExportLoginTokenPayload(fromEnt *entity.LoginToken) *schemas.ExportLogi
 	}
 }
 
-func setInsertExpectation(t *testing.T, ctx context.Context, authSuite *AuthTestSuite, expectedLoginToken *entity.LoginToken, withClientId bool) {
+func setInsertExpectation(t *testing.T, ctx context.Context, authSuite *AuthTestSuite, expectedLoginToken *entity.QRCodeLoginToken, withClientId bool) {
 	t.Helper()
 	tokenVal := gofakeit.LetterN(16)
 	authSuite.mockSecurityProvider.EXPECT().GenerateSecretTokenUrlSafe(16).Return(tokenVal)
 	authSuite.mockLoginTokenRepo.EXPECT().Insert(ctx, gomock.Any()).
-		DoAndReturn(func(ctx context.Context, token *entity.LoginToken) (*entity.LoginToken, error) {
+		DoAndReturn(func(ctx context.Context, token *entity.QRCodeLoginToken) (*entity.QRCodeLoginToken, error) {
 			assert.Equal(t, expectedLoginToken.ClientId, token.ClientId)
-			assert.Equal(t, tokenVal, token.Val)
+			assert.Equal(t, tokenVal, token.Value)
 			assert.WithinDuration(t, time.Now().Add(authSuite.mockTTL), token.ExpiresAt, time.Second)
 			if withClientId {
 				assert.Equal(t, expectedLoginToken.ClientIdentity.IPAddr, token.ClientIdentity.IPAddr)

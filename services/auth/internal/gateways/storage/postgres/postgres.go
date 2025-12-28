@@ -30,7 +30,7 @@ func NewTestSuite(t *testing.T) *TestSuite {
 	repos := New(pg)
 
 	return &TestSuite{
-		TxCtx:        context.WithValue(ctx, config.TransactionCtxKey, tx),
+		TxCtx:        context.WithValue(ctx, config.TRANSACTION_CTX_KEY, tx),
 		Repositories: *repos,
 		Tx:           tx,
 	}

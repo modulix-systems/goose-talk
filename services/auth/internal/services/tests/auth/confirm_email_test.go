@@ -11,7 +11,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestConfirmEmailSuccess(t *testing.T) {
+func TestRequestEmailConfirmationCodeSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	mockEmail := gofakeit.Email()
@@ -27,24 +27,24 @@ func TestConfirmEmailSuccess(t *testing.T) {
 	authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode().Return(plainOTPCode)
 	authSuite.mockSecurityProvider.EXPECT().HashPassword(plainOTPCode).Return(hashedOTPCode, nil)
 
-	err := authSuite.service.ConfirmEmail(ctx, mockEmail)
+	err := authSuite.service.RequestEmailConfirmationCode(ctx, mockEmail)
 
 	assert.NoError(t, err)
 }
 
-func TestConfirmEmailUserExists(t *testing.T) {
+func TestRequestEmailConfirmationCodeUserExists(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	mockEmail := gofakeit.Email()
 	ctx := context.Background()
 	authSuite.mockUsersRepo.EXPECT().CheckExistsWithEmail(ctx, mockEmail).Return(true, nil)
 
-	err := authSuite.service.ConfirmEmail(ctx, mockEmail)
+	err := authSuite.service.RequestEmailConfirmationCode(ctx, mockEmail)
 
 	assert.ErrorIs(t, err, auth.ErrUserAlreadyExists)
 }
 
-func TestConfirmEmailCodeAlreadyExists(t *testing.T) {
+func TestRequestEmailConfirmationCodeCodeAlreadyExists(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	mockEmail := gofakeit.Email()
@@ -59,7 +59,7 @@ func TestConfirmEmailCodeAlreadyExists(t *testing.T) {
 		Return(nil)
 	authSuite.mockSecurityProvider.EXPECT().GenerateOTPCode().Return(otpCode)
 
-	err := authSuite.service.ConfirmEmail(ctx, mockEmail)
+	err := authSuite.service.RequestEmailConfirmationCode(ctx, mockEmail)
 
 	assert.NoError(t, err)
 

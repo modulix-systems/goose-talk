@@ -32,7 +32,7 @@ type (
 	// session created during start of passkey registration process
 	// required for further verification
 	PasskeyRegistrationSession struct {
-		UserId     []byte
+		UserId     int
 		Challenge  string
 		CredParams []PasskeyCredentialParam
 	}

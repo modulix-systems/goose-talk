@@ -125,3 +125,11 @@ func (repo *Repository) GetByIDWithPasskeyCredentials(ctx context.Context, userI
 	user.PasskeyCredentials = creds
 	return user, nil
 }
+
+func (repo *Repository) SetTwoFa(ctx context.Context, ent *entity.TwoFactorAuth) (*entity.TwoFactorAuth, error) {
+	return nil, nil
+}
+
+func (repo *Repository) UpdateTwoFaContact(ctx context.Context, userId int, contact string) error {
+	return nil
+}

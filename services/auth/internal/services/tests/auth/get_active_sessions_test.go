@@ -14,7 +14,7 @@ import (
 func TestGetActiveSessionsSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
-	mockSessions := []entity.UserSession{
+	mockSessions := []entity.AuthSession{
 		*helpers.MockUserSession(true),
 		*helpers.MockUserSession(true),
 	}

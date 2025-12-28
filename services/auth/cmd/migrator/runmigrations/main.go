@@ -24,7 +24,7 @@ func Exec(migrationsPath string) {
 	cfgPath := config.ResolveConfigPath()
 	cfg := config.MustLoad(cfgPath)
 
-	m, err := migrate.New("file://"+migrationsPath, cfg.PG.Dsn)
+	m, err := migrate.New("file://"+migrationsPath, cfg.Postgres.Url)
 	if err != nil {
 		panic(err)
 	}

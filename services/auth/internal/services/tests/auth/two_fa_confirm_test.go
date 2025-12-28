@@ -100,7 +100,7 @@ func TestConfirm2FAInvalidOTP(t *testing.T) {
 	ctx := context.Background()
 	actAndAssert := func(dto *schemas.Confirm2FASchema) {
 		res, err := authSuite.service.Confirm2FaAddition(ctx, dto)
-		assert.ErrorIs(t, err, auth.ErrOTPInvalidOrExpired)
+		assert.ErrorIs(t, err, auth.ErrOtpIsNotValid)
 		assert.Empty(t, res)
 	}
 	for _, twoFaTyp := range entity.OtpTransports {
