@@ -14,8 +14,6 @@ var OtpTransports = []TwoFATransport{TWO_FA_EMAIL, TWO_FA_TELEGRAM, TWO_FA_TOTP_
 type (
 	// OTP represents storage for verifications codes
 	// Only one code can be present for one user/email.
-	// In case if token already exists and requested for the same email again - it should be updated.
-	// Use UpdatedAt date to check TTL expiration.
 	// UserEmail and UserId are optional but at least one of them must be present
 	OTP struct {
 		Code      []byte

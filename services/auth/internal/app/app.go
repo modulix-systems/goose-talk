@@ -14,7 +14,7 @@ import (
 	"github.com/modulix-systems/goose-talk/internal/gateways/notifications"
 	"github.com/modulix-systems/goose-talk/internal/gateways/security"
 	postgres_repos "github.com/modulix-systems/goose-talk/internal/gateways/storage/postgres"
-	redis_repos "github.com/modulix-systems/goose-talk/internal/gateways/storage/redis"
+	"github.com/modulix-systems/goose-talk/internal/gateways/storage/redisrepos"
 	"github.com/modulix-systems/goose-talk/internal/gateways/tg_bot"
 	"github.com/modulix-systems/goose-talk/internal/gateways/webauthn"
 	"github.com/modulix-systems/goose-talk/internal/services/auth"
@@ -49,7 +49,7 @@ func Run(cfg *config.Config) {
 	defer rdb.Close()
 
 	pgRepos := postgres_repos.New(pg)
-	redisRepos := redis_repos.New(rdb)
+	redisRepos := redisrepos.New(rdb)
 
 	appUrl, err := url.Parse(cfg.App.Url)
 	if err != nil {
