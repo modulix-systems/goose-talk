@@ -1,4 +1,4 @@
-package users_repo_test
+package pgrepos_test
 
 import (
 	"testing"
@@ -7,14 +7,14 @@ import (
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/modulix-systems/goose-talk/internal/entity"
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage"
-	postgres_repos "github.com/modulix-systems/goose-talk/internal/gateways/storage/postgres"
+	"github.com/modulix-systems/goose-talk/internal/gateways/storage/pgrepos"
 	"github.com/modulix-systems/goose-talk/tests/suite/helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInsertUser(t *testing.T) {
-	testSuite := postgres_repos.NewTestSuite(t)
+	testSuite := pgrepos.NewTestSuite(t)
 
 	checkUserValid := func(expectedUser *entity.User, insertedUser *entity.User) {
 		assert.NotEmpty(t, insertedUser.ID)
@@ -62,7 +62,7 @@ func TestInsertUser(t *testing.T) {
 }
 
 func TestCheckExistsWithEmail(t *testing.T) {
-	testSuite := postgres_repos.NewTestSuite(t)
+	testSuite := pgrepos.NewTestSuite(t)
 
 	t.Run("false", func(t *testing.T) {
 		isExists, err := testSuite.Users.CheckExistsWithEmail(testSuite.TxCtx, gofakeit.Email())
@@ -80,7 +80,7 @@ func TestCheckExistsWithEmail(t *testing.T) {
 }
 
 func TestGetByLogin(t *testing.T) {
-	testSuite := postgres_repos.NewTestSuite(t)
+	testSuite := pgrepos.NewTestSuite(t)
 	expectedUser, err := testSuite.Users.Insert(testSuite.TxCtx, helpers.MockUser())
 	require.NoError(t, err)
 
@@ -110,7 +110,7 @@ func TestGetByLogin(t *testing.T) {
 }
 
 func TestGetByID(t *testing.T) {
-	testSuite := postgres_repos.NewTestSuite(t)
+	testSuite := pgrepos.NewTestSuite(t)
 	expectedUser, err := testSuite.Users.Insert(testSuite.TxCtx, helpers.MockUser())
 	require.NoError(t, err)
 	t.Run("success", func(t *testing.T) {
@@ -127,7 +127,7 @@ func TestGetByID(t *testing.T) {
 }
 
 func TestUpdateIsActiveById(t *testing.T) {
-	testSuite := postgres_repos.NewTestSuite(t)
+	testSuite := pgrepos.NewTestSuite(t)
 	expectedUser, err := testSuite.Users.Insert(testSuite.TxCtx, helpers.MockUser())
 	require.NoError(t, err)
 	expectedIsActive := gofakeit.Bool()
@@ -157,7 +157,7 @@ func assertUserHasCred(t *testing.T, credsList []entity.PasskeyCredential, expec
 }
 
 func TestAddPasskeyCredential(t *testing.T) {
-	testSuite := postgres_repos.NewTestSuite(t)
+	testSuite := pgrepos.NewTestSuite(t)
 	expectedUser, err := testSuite.Users.Insert(testSuite.TxCtx, helpers.MockUser())
 	require.NoError(t, err)
 	expectedCredential := helpers.MockPasskeyCredential()
@@ -179,7 +179,7 @@ func TestAddPasskeyCredential(t *testing.T) {
 }
 
 func TestGetByIDWithPasskeyCredentials(t *testing.T) {
-	testSuite := postgres_repos.NewTestSuite(t)
+	testSuite := pgrepos.NewTestSuite(t)
 	expectedUser, err := testSuite.Users.Insert(testSuite.TxCtx, helpers.MockUser())
 	require.NoError(t, err)
 	expectedCredential := helpers.MockPasskeyCredential()

@@ -1,4 +1,4 @@
-package postgres_repos
+package pgrepos
 
 import (
 	"context"
@@ -6,16 +6,15 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/modulix-systems/goose-talk/internal/config"
-	users_repo "github.com/modulix-systems/goose-talk/internal/gateways/storage/postgres/users"
 	"github.com/modulix-systems/goose-talk/pkg/postgres"
 )
 
 type Repositories struct {
-	Users *users_repo.Repository
+	Users *UsersRepo
 }
 
 func New(pg *postgres.Postgres) *Repositories {
-	return &Repositories{Users: &users_repo.Repository{pg}}
+	return &Repositories{Users: &UsersRepo{pg}}
 }
 
 type TestSuite struct {

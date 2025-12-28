@@ -13,7 +13,7 @@ import (
 	geoip "github.com/modulix-systems/goose-talk/internal/gateways/geo-ip"
 	"github.com/modulix-systems/goose-talk/internal/gateways/notifications"
 	"github.com/modulix-systems/goose-talk/internal/gateways/security"
-	postgres_repos "github.com/modulix-systems/goose-talk/internal/gateways/storage/postgres"
+	"github.com/modulix-systems/goose-talk/internal/gateways/storage/pgrepos"
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage/redisrepos"
 	"github.com/modulix-systems/goose-talk/internal/gateways/tg_bot"
 	"github.com/modulix-systems/goose-talk/internal/gateways/webauthn"
@@ -48,7 +48,7 @@ func Run(cfg *config.Config) {
 	}
 	defer rdb.Close()
 
-	pgRepos := postgres_repos.New(pg)
+	pgRepos := pgrepos.New(pg)
 	redisRepos := redisrepos.New(rdb)
 
 	appUrl, err := url.Parse(cfg.App.Url)
