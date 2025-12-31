@@ -51,50 +51,69 @@ func New(level LogLevel) *Logger {
 
 // Debug -.
 func (l *Logger) Debug(message interface{}, args ...interface{}) {
-	l.msg("debug", message, args...)
+	l.log(l.logger.Debug(), message, args...)
 }
 
 // Info -.
 func (l *Logger) Info(message string, args ...interface{}) {
-	l.log(message, args...)
+	l.log(l.logger.Info(), message, args...)
 }
 
 // Warn -.
 func (l *Logger) Warn(message string, args ...interface{}) {
-	l.log(message, args...)
+	l.log(l.logger.Warn(), message, args...)
 }
 
 // Error -.
 func (l *Logger) Error(message interface{}, args ...interface{}) {
-	if l.logger.GetLevel() == zerolog.DebugLevel {
-		l.Debug(message, args...)
-	}
-
-	l.msg("error", message, args...)
+	l.log(l.logger.Error(), message, args...)
 }
 
 // Fatal -.
 func (l *Logger) Fatal(message interface{}, args ...interface{}) {
-	l.msg("fatal", message, args...)
-
-	os.Exit(1)
+	l.log(l.logger.Fatal(), message, args...)
 }
 
-func (l *Logger) log(message string, args ...interface{}) {
-	if len(args) == 0 {
-		l.logger.Info().Msg(message)
-	} else {
-		l.logger.Info().Msgf(message, args...)
-	}
-}
+func (l *Logger) log(logEvent *zerolog.Event, message interface{}, args ...interface{}) {
+	var messageContent string
 
-func (l *Logger) msg(level string, message interface{}, args ...interface{}) {
 	switch msg := message.(type) {
 	case error:
-		l.log(msg.Error(), args...)
+		messageContent = msg.Error()
 	case string:
-		l.log(msg, args...)
+		messageContent = msg
 	default:
-		l.log(fmt.Sprintf("%s message %v has unknown type %v", level, message, msg), args...)
+		panic(fmt.Sprintf("message %v has unknown type %v", message, msg))
 	}
+
+	if len(args) == 0 || len(args)%2 != 0 {
+		logEvent.Msg(messageContent)
+		return
+	}
+
+	for i := 0; i < len(args)-1; i++ {
+		argKey := args[i]
+		argValue := args[i+1]
+
+		key, ok := argKey.(string)
+		if !ok {
+			panic("Log argument key should always be a string")
+		}
+
+		switch val := argValue.(type) {
+		case string:
+			fmt.Println("attach string arg", key, val)
+			logEvent = logEvent.Str(key, val)
+		case int:
+			fmt.Println("attach int arg", key, val)
+			logEvent = logEvent.Int(key, val)
+		case float64:
+			fmt.Println("attach float arg", key, val)
+			logEvent = logEvent.Float64(key, val)
+		default:
+			panic(fmt.Sprintf("Unknown value '%v' of type: %T", val, val))
+		}
+	}
+
+	logEvent.Msg(messageContent)
 }

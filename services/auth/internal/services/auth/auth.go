@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/modulix-systems/goose-talk/internal/entity"
@@ -129,7 +130,7 @@ func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, ip 
 
 	if existingSession == nil {
 		if err = s.notificationsClient.SendSignInNewDeviceEmail(ctx, user.Email, newSession); err != nil {
-			s.log.Error("AuthService - newAuthSession - notificationsClient.SendSignInNewDeviceEmail: %w", err, "sessionID", newSession.ID)
+			s.log.Error(fmt.Errorf("AuthService - newAuthSession - notificationsClient.SendSignInNewDeviceEmail: %w", err), "sessionID", newSession.ID)
 			return nil, err
 		}
 	}

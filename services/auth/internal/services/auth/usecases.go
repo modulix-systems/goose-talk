@@ -33,7 +33,7 @@ func (s *AuthService) SignUp(
 
 	err = s.securityProvider.ComparePasswords(otp.Code, dto.ConfirmationCode)
 	if err != nil {
-		s.log.Error("AuthService.SignUp - invalid otp: %w", err)
+		s.log.Error(fmt.Errorf("AuthService.SignUp - invalid otp: %w", err))
 		return nil, ErrOtpIsNotValid
 	}
 
@@ -121,7 +121,7 @@ func (s *AuthService) SignIn(ctx context.Context, dto *schemas.SignInSchema) (*a
 
 	err = s.securityProvider.ComparePasswords(user.Password, dto.Password)
 	if err != nil {
-		s.log.Error("AuthService.SignIn - securityProvider.ComparePasswords: %w", err)
+		s.log.Error(fmt.Errorf("AuthService.SignIn - securityProvider.ComparePasswords: %w", err))
 		return nil, ErrInvalidCredentials
 	}
 
@@ -181,14 +181,15 @@ func (s *AuthService) VerifyTwoFa(ctx context.Context, dto *schemas.Verify2FASch
 
 	err = s.securityProvider.ComparePasswords(otp.Code, otpToCompare)
 	if err != nil {
-		s.log.Error("AuthService.Verify2FA - invalid otp: %w", err)
+		s.log.Error(fmt.Errorf("AuthService.Verify2FA - invalid otp: %w", err))
 		return nil, ErrOtpIsNotValid
 	}
 
 	user, err := s.usersRepo.GetByLogin(ctx, otp.UserEmail)
 	if err != nil {
+		s.log.Error(fmt.Errorf("Failed to get user by email in existing OTP token: %w", err), "email", otp.UserEmail)
 		if errors.Is(err, storage.ErrNotFound) {
-			s.log.Error("Failed to get user by email in existing OTP token", "email", otp.UserEmail)
+			return nil, ErrUserNotFound
 		}
 		return nil, err
 	}
@@ -258,7 +259,7 @@ func (s *AuthService) ConfirmTwoFaAddition(ctx context.Context, dto *schemas.Con
 
 		err = s.securityProvider.ComparePasswords(otp.Code, dto.ConfirmationCode)
 		if err != nil {
-			s.log.Error("AuthService.ConfirmTwoFaAddition - securityProvider.ComparePasswords: %w", err)
+			s.log.Error(fmt.Errorf("AuthService.ConfirmTwoFaAddition - securityProvider.ComparePasswords: %w", err))
 			return nil, ErrOtpIsNotValid
 		}
 
@@ -317,7 +318,7 @@ func (s *AuthService) handleAddTwoFaTelegram(ctx context.Context, userId int) (s
 
 			msg, err := s.tgApi.GetLatestMsg(ctx)
 			if err != nil {
-				s.log.Error("AuthService - handleAddTwoFaTelegram - s.tgApi.GetLatestMsg: %w", err)
+				s.log.Error(fmt.Errorf("AuthService - handleAddTwoFaTelegram - s.tgApi.GetLatestMsg: %w", err))
 			}
 
 			msgParts := strings.Split(msg.Text, " ")
@@ -327,13 +328,13 @@ func (s *AuthService) handleAddTwoFaTelegram(ctx context.Context, userId int) (s
 
 			err = s.usersRepo.UpdateTwoFaContact(ctx, userId, msg.ChatId)
 			if err != nil {
-				s.log.Error("AuthService - handleAddTwoFaTelegram - s.usersRepo.UpdateTwoFaContact: %w", err)
+				s.log.Error(fmt.Errorf("AuthService - handleAddTwoFaTelegram - s.usersRepo.UpdateTwoFaContact: %w", err))
 				continue
 			}
 
 			err = s.tgApi.SendTextMsg(ctx, msg.ChatId, fmt.Sprintf("Authorization code: %s", otpCode))
 			if err != nil {
-				s.log.Error("AuthService - handleAddTwoFaTelegram - s.tgApi.SendTextMsg: %w", err)
+				s.log.Error(fmt.Errorf("AuthService - handleAddTwoFaTelegram - s.tgApi.SendTextMsg: %w", err))
 				continue
 			}
 
@@ -392,7 +393,7 @@ func (s *AuthService) GetActiveSessions(
 ) ([]entity.AuthSession, error) {
 	sessions, err := s.sessionsRepo.GetAllByUserId(ctx, userId)
 	if err != nil {
-		s.log.Error("AuthService.GetActiveSessions - sessionsRepo.GetAllByUserId: %w", err, "userId", userId)
+		s.log.Error(fmt.Errorf("AuthService.GetActiveSessions - sessionsRepo.GetAllByUserId: %w", err), "userId", userId)
 		return nil, err
 	}
 

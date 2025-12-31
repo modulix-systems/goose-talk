@@ -24,5 +24,5 @@ func (c *Client) GetLocationByIP(ip string) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("%s, %s", resp["city"].(string), resp["country"].(string)), nil
+	return fmt.Sprintf("%s, %s", resp["city"], resp["country"]), nil
 }

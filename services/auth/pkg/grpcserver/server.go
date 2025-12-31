@@ -1,6 +1,7 @@
 package grpcserver
 
 import (
+	"fmt"
 	"net"
 
 	"github.com/modulix-systems/goose-talk/pkg/logger"
@@ -29,11 +30,11 @@ func (s *Server) RegisterService(desc *grpc.ServiceDesc, impl any) {
 func (s *Server) Run() {
 	listener, err := net.Listen("tcp", ":"+s.Port)
 	if err != nil {
-		s.log.Fatal("Failed to listen on :%s: %w", s.Port, err)
+		s.log.Fatal(fmt.Errorf("grpcserver - Run - net.Listen: %w", err), "port", s.Port)
 	}
-	s.log.Info("Starting gRPC server on: %s", listener.Addr())
+	s.log.Info("Starting gRPC server", "address", listener.Addr().String())
 	if err := s.server.Serve(listener); err != nil {
-		s.log.Error("Failed to serve gRPC server: %w", err)
+		s.log.Error(fmt.Errorf("Serve grpc server error: %w", err))
 		s.ServeErr <- err
 	}
 }

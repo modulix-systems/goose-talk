@@ -56,7 +56,7 @@ func Run(cfg *config.Config) {
 		log.Fatal(fmt.Errorf("app - Run - url.Parse: %w", err))
 	}
 
-	notificationsClient := notifications.New()
+	notificationsClient := notifications.New(log)
 	geoipClient := geoip.New()
 	securityProvider := security.New(cfg.TotpTTL, config.OTP_LENGTH)
 	webauthnProvider := webauthn.New(cfg.App.Name, appUrl.Host, []string{appUrl.Host})
@@ -87,7 +87,7 @@ func Run(cfg *config.Config) {
 
 	grpcServer := grpcserver.New(log, cfg.Port)
 	rpc_v1.Register(grpcServer, authService, log)
-	
+
 	go grpcServer.Run()
 
 	// Waiting signal
@@ -96,7 +96,7 @@ func Run(cfg *config.Config) {
 
 	select {
 	case s := <-interrupt:
-		log.Info("app - Run - signal: %s", s.String())
+		log.Info("app - Run - interrupt signal", "signalName", s.String())
 	case err = <-grpcServer.ServeErr:
 		log.Error(fmt.Errorf("app - Run - grpcServer.ServeErr: %w", err))
 	}
