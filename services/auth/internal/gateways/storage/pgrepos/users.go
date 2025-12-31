@@ -40,7 +40,7 @@ func (repo *UsersRepo) Insert(ctx context.Context, user *entity.User) (*entity.U
 }
 
 func (repo *UsersRepo) CheckExistsWithEmail(ctx context.Context, email string) (bool, error) {
-	queryable, err := postgres.GetQueryable(ctx, postgres.PgxPoolAdapter{repo.Pool})
+	queryable, err := postgres.GetQueryable(ctx, repo.Pool)
 	if err != nil {
 		return false, err
 	}
@@ -91,7 +91,7 @@ func (repo *UsersRepo) CreatePasskeyCredential(ctx context.Context, userId int, 
 	qb := repo.Builder.Insert(`"passkey_credential"`).
 		Columns("id", "public_key", "user_id", "transports", "backed_up").
 		Values(cred.ID, cred.PublicKey, userId, cred.Transports, cred.BackedUp)
-	queryable, err := postgres.GetQueryable(ctx, postgres.PgxPoolAdapter{repo.Pool})
+	queryable, err := postgres.GetQueryable(ctx, repo.Pool)
 	if err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func (repo *UsersRepo) CreateTwoFa(ctx context.Context, ent *entity.TwoFactorAut
 func (repo *UsersRepo) UpdateTwoFaContact(ctx context.Context, userId int, contact string) error {
 	qb := repo.Builder.Update("two_factor_auth").Set("contact", contact).Where(squirrel.Eq{"user_id": userId})
 
-	queryable, err := postgres.GetQueryable(ctx, postgres.PgxPoolAdapter{repo.Pool})
+	queryable, err := postgres.GetQueryable(ctx, repo.Pool)
 	if err != nil {
 		return err
 	}

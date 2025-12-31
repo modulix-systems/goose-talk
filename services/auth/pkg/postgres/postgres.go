@@ -26,7 +26,7 @@ type Postgres struct {
 	connTimeout  time.Duration
 
 	Builder squirrel.StatementBuilderType
-	Pool    *pgxpool.Pool
+	Pool    *PGPool
 }
 
 // New -.
@@ -52,8 +52,10 @@ func New(dsn string, opts ...Option) (*Postgres, error) {
 	poolConfig.MaxConns = int32(pg.maxPoolSize)
 
 	for pg.connAttempts > 0 {
-		pg.Pool, err = pgxpool.NewWithConfig(context.Background(), poolConfig)
+		var pool *pgxpool.Pool
+		pool, err = pgxpool.NewWithConfig(context.Background(), poolConfig)
 		if err == nil {
+			pg.Pool = &PGPool{pool}
 			break
 		}
 
@@ -79,10 +81,10 @@ func (p *Postgres) Close() {
 }
 
 type pgTransactionManager struct {
-	pool *pgxpool.Pool
+	pool *PGPool
 }
 
-func NewTransactionManager(pool *pgxpool.Pool) *pgTransactionManager {
+func NewTransactionManager(pool *PGPool) *pgTransactionManager {
 	return &pgTransactionManager{
 		pool: pool,
 	}
@@ -90,4 +92,12 @@ func NewTransactionManager(pool *pgxpool.Pool) *pgTransactionManager {
 
 func (m *pgTransactionManager) StartTransaction(ctx context.Context) (gateways.Transaction, error) {
 	return m.pool.BeginTx(ctx, pgx.TxOptions{})
+}
+
+type PGPool struct {
+	*pgxpool.Pool
+}
+
+func (p *PGPool) Acquire(ctx context.Context) (Queryable, error) {
+	return p.Pool.Acquire(ctx)
 }

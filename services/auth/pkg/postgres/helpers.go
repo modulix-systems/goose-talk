@@ -8,7 +8,6 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/modulix-systems/goose-talk/internal/config"
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage"
 )
@@ -39,19 +38,11 @@ func GetQueryable(ctx context.Context, acquirable SupportsAcquire) (Queryable, e
 	return conn, nil
 }
 
-type PgxPoolAdapter struct {
-	Pool *pgxpool.Pool
-}
-
-func (a PgxPoolAdapter) Acquire(ctx context.Context) (Queryable, error) {
-	return a.Pool.Acquire(ctx)
-}
-
-func ExecAndGetMany[T any](ctx context.Context, qb queryBuilder, pool *pgxpool.Pool, mapper pgx.RowToFunc[T]) ([]T, error) {
+func ExecAndGetMany[T any](ctx context.Context, qb queryBuilder, pool *PGPool, mapper pgx.RowToFunc[T]) ([]T, error) {
 	if mapper == nil {
 		mapper = pgx.RowToStructByNameLax[T]
 	}
-	queryable, err := GetQueryable(ctx, PgxPoolAdapter{pool})
+	queryable, err := GetQueryable(ctx, pool)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +64,7 @@ func ExecAndGetMany[T any](ctx context.Context, qb queryBuilder, pool *pgxpool.P
 	return res, nil
 }
 
-func ExecAndGetOne[T any](ctx context.Context, qb queryBuilder, pool *pgxpool.Pool, mapper pgx.RowToFunc[T]) (*T, error) {
+func ExecAndGetOne[T any](ctx context.Context, qb queryBuilder, pool *PGPool, mapper pgx.RowToFunc[T]) (*T, error) {
 	res, err := ExecAndGetMany(ctx, qb, pool, mapper)
 	if err != nil {
 		return nil, err
