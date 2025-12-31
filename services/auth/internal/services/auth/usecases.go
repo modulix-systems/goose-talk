@@ -272,7 +272,7 @@ func (s *AuthService) ConfirmTwoFaAddition(ctx context.Context, dto *schemas.Con
 		twoFactorAuth.Contact = dto.Contact
 	}
 
-	twoFactorAuth, err = s.usersRepo.SetTwoFa(ctx, twoFactorAuth)
+	twoFactorAuth, err = s.usersRepo.CreateTwoFa(ctx, twoFactorAuth)
 	if err != nil {
 		return nil, err
 	}
@@ -514,7 +514,7 @@ func (s *AuthService) FinishPasskeyRegistration(ctx context.Context, userId int,
 		return err
 	}
 
-	if err := s.usersRepo.AddPasskeyCredential(ctx, userId, cred); err != nil {
+	if err := s.usersRepo.CreatePasskeyCredential(ctx, userId, cred); err != nil {
 		return err
 	}
 

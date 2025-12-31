@@ -16,8 +16,8 @@ type (
 		GetByID(ctx context.Context, id int) (*entity.User, error)
 		GetByIDWithPasskeyCredentials(ctx context.Context, id int) (*entity.User, error)
 		UpdateIsActiveById(ctx context.Context, userId int, isActive bool) (*entity.User, error)
-		AddPasskeyCredential(ctx context.Context, userId int, cred *entity.PasskeyCredential) error
-		SetTwoFa(ctx context.Context, ent *entity.TwoFactorAuth) (*entity.TwoFactorAuth, error)
+		CreatePasskeyCredential(ctx context.Context, userId int, cred *entity.PasskeyCredential) error
+		CreateTwoFa(ctx context.Context, ent *entity.TwoFactorAuth) (*entity.TwoFactorAuth, error)
 		UpdateTwoFaContact(ctx context.Context, userId int, contact string) error
 	}
 	UserSessionsRepo interface {

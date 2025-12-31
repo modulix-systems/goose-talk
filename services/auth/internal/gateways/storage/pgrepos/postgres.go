@@ -21,6 +21,7 @@ type TestSuite struct {
 	Repositories
 	TxCtx context.Context
 	Tx    pgx.Tx
+	Pg    *postgres.Postgres
 }
 
 func NewTestSuite(t *testing.T) *TestSuite {
@@ -32,5 +33,6 @@ func NewTestSuite(t *testing.T) *TestSuite {
 		TxCtx:        context.WithValue(ctx, config.TRANSACTION_CTX_KEY, tx),
 		Repositories: *repos,
 		Tx:           tx,
+		Pg:           pg,
 	}
 }

@@ -3,7 +3,6 @@ package pgrepos
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
@@ -18,10 +17,9 @@ type UsersRepo struct {
 }
 
 func (repo *UsersRepo) Insert(ctx context.Context, user *entity.User) (*entity.User, error) {
-	query := repo.Builder.Insert(
-		`"user"(username, password, email, first_name, last_name, photo_url, birth_date, about_me, is_active)`,
-	).
-		Values(user.Username, user.Password, user.Email, user.FirstName, user.LastName, user.PhotoUrl, user.BirthDate, user.AboutMe, user.IsActive).
+	query := repo.Builder.Insert(`"user"`).
+		Columns("username", "password", "email", "first_name", "last_name", "photo_url", "birth_date", "about_me", "is_active", "private_key").
+		Values(user.Username, user.Password, user.Email, user.FirstName, user.LastName, user.PhotoUrl, user.BirthDate, user.AboutMe, user.IsActive, user.PrivateKey).
 		Suffix("RETURNING *")
 	insertedUser, err := postgres.ExecAndGetOne[entity.User](ctx, query, repo.Pool, nil)
 	if err != nil {
@@ -31,12 +29,8 @@ func (repo *UsersRepo) Insert(ctx context.Context, user *entity.User) (*entity.U
 		return nil, err
 	}
 	if user.TwoFactorAuth != nil {
-		query = repo.Builder.Insert(
-			`"two_factor_auth"(user_id, enabled, transport, contact, totp_secret)`,
-		).
-			Values(insertedUser.ID, user.TwoFactorAuth.Enabled, user.TwoFactorAuth.Transport, user.TwoFactorAuth.Contact, user.TwoFactorAuth.TotpSecret).
-			Suffix("RETURNING *")
-		twoFA, err := postgres.ExecAndGetOne[entity.TwoFactorAuth](ctx, query, repo.Pool, nil)
+		user.TwoFactorAuth.UserId = insertedUser.ID
+		twoFA, err := repo.CreateTwoFa(ctx, user.TwoFactorAuth)
 		if err != nil {
 			return nil, err
 		}
@@ -50,10 +44,9 @@ func (repo *UsersRepo) CheckExistsWithEmail(ctx context.Context, email string) (
 	if err != nil {
 		return false, err
 	}
-	query, args, err := repo.Builder.Select("id").From(`"user"`).Where(squirrel.Eq{"email": email}).ToSql()
-	if err != nil {
-		return false, fmt.Errorf("failed to build sql query: %w", err)
-	}
+
+	query, args := repo.Builder.Select("id").From(`"user"`).Where(squirrel.Eq{"email": email}).MustSql()
+
 	row := queryable.QueryRow(ctx, query, args...)
 	var userId int
 	if err := row.Scan(&userId); err != nil {
@@ -94,17 +87,16 @@ func (repo *UsersRepo) UpdateIsActiveById(ctx context.Context, userId int, isAct
 	return postgres.ExecAndGetOne[entity.User](ctx, query, repo.Pool, nil)
 }
 
-func (repo *UsersRepo) AddPasskeyCredential(ctx context.Context, userId int, cred *entity.PasskeyCredential) error {
-	qb := repo.Builder.Insert(`"passkey_credential"(id, public_key, user_id, transports, backed_up)`).
+func (repo *UsersRepo) CreatePasskeyCredential(ctx context.Context, userId int, cred *entity.PasskeyCredential) error {
+	qb := repo.Builder.Insert(`"passkey_credential"`).
+		Columns("id", "public_key", "user_id", "transports", "backed_up").
 		Values(cred.ID, cred.PublicKey, userId, cred.Transports, cred.BackedUp)
 	queryable, err := postgres.GetQueryable(ctx, postgres.PgxPoolAdapter{repo.Pool})
 	if err != nil {
 		return err
 	}
-	query, args, err := qb.ToSql()
-	if err != nil {
-		return err
-	}
+	query, args := qb.MustSql()
+
 	if _, err := queryable.Exec(ctx, query, args...); err != nil {
 		if postgres.IsForeightKeyViolationError(err) {
 			return storage.ErrNotFound
@@ -127,10 +119,42 @@ func (repo *UsersRepo) GetByIDWithPasskeyCredentials(ctx context.Context, userId
 	return user, nil
 }
 
-func (repo *UsersRepo) SetTwoFa(ctx context.Context, ent *entity.TwoFactorAuth) (*entity.TwoFactorAuth, error) {
-	return nil, nil
+func (repo *UsersRepo) CreateTwoFa(ctx context.Context, ent *entity.TwoFactorAuth) (*entity.TwoFactorAuth, error) {
+	qb := repo.Builder.Insert("two_factor_auth").
+		Columns("user_id", "transport", "contact", "totp_secret").
+		Values(ent.UserId, ent.Transport, ent.Contact, ent.TotpSecret).
+		Suffix("RETURNING *")
+
+	twoFA, err := postgres.ExecAndGetOne[entity.TwoFactorAuth](ctx, qb, repo.Pool, nil)
+
+	if err != nil {
+		if postgres.IsForeightKeyViolationError(err) {
+			return nil, storage.ErrNotFound
+		}
+		if postgres.IsUniqueViolationError(err) {
+			return nil, storage.ErrAlreadyExists
+		}
+		return nil, err
+	}
+
+	return twoFA, nil
 }
 
 func (repo *UsersRepo) UpdateTwoFaContact(ctx context.Context, userId int, contact string) error {
+	qb := repo.Builder.Update("two_factor_auth").Set("contact", contact).Where(squirrel.Eq{"user_id": userId})
+
+	queryable, err := postgres.GetQueryable(ctx, postgres.PgxPoolAdapter{repo.Pool})
+	if err != nil {
+		return err
+	}
+	query, args := qb.MustSql()
+
+	if _, err := queryable.Exec(ctx, query, args...); err != nil {
+		if postgres.IsForeightKeyViolationError(err) {
+			return storage.ErrNotFound
+		}
+		return err
+	}
+
 	return nil
 }

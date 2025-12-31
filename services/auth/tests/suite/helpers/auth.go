@@ -5,12 +5,12 @@ import (
 
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/modulix-systems/goose-talk/internal/entity"
-	"github.com/modulix-systems/goose-talk/internal/gateways"
 )
 
 func MockUser() *entity.User {
+	userId :=  gofakeit.Number(1, 100000)
 	return &entity.User{
-		ID:        gofakeit.Number(1, 100000),
+		ID:       userId,
 		Username:  gofakeit.Username(),
 		FirstName: gofakeit.FirstName(),
 		LastName:  gofakeit.LastName(),
@@ -25,7 +25,9 @@ func MockUser() *entity.User {
 		IsActive: true,
 		Email:    gofakeit.Email(),
 		Password: []byte(RandomPassword()),
+		PrivateKey: gofakeit.BitcoinPrivateKey(),
 		TwoFactorAuth: &entity.TwoFactorAuth{
+			UserId: userId,
 			Transport: RandomChoose(
 				entity.TWO_FA_TELEGRAM, entity.TWO_FA_EMAIL,
 				entity.TWO_FA_SMS, entity.TWO_FA_TOTP_APP,
@@ -37,22 +39,18 @@ func MockUser() *entity.User {
 	}
 }
 
-func MockUserSession(active bool) *entity.AuthSession {
+func MockUserSession() *entity.AuthSession {
 	created := gofakeit.DateRange(time.Now().AddDate(0, -1, 0), time.Now())
 	lastSeen := gofakeit.DateRange(created, time.Now())
-
-	var deactivated time.Time
-	if !active {
-		deactivated = gofakeit.DateRange(lastSeen, time.Now())
-	}
 
 	return &entity.AuthSession{
 		ID:             gofakeit.UUID(),
 		UserId:         gofakeit.Number(1, 1000),
-		ClientIdentity: MockClientIdentity(),
 		LastSeenAt:     lastSeen,
 		CreatedAt:      created,
-		DeactivatedAt:  deactivated,
+		IPAddr:     gofakeit.IPv4Address(),
+		Location:   gofakeit.City(),
+		DeviceInfo: gofakeit.UserAgent(),
 	}
 }
 
@@ -67,27 +65,16 @@ func MockLoginToken(ttl time.Duration) *entity.QRCodeLoginToken {
 	return &entity.QRCodeLoginToken{
 		ClientId:         gofakeit.UUID(),
 		Value:            gofakeit.UUID(),
-		ClientIdentity:   MockClientIdentity(),
-		ClientIdentityId: gofakeit.Number(1, 1000),
-		AuthSessionId:    gofakeit.Number(0, 1000),
-		AuthSession:      MockUserSession(true),
-		ExpiresAt:        time.Now().Add(ttl),
-	}
-}
-
-func MockClientIdentity() *entity.ClientIdentity {
-	return &entity.ClientIdentity{
 		IPAddr:     gofakeit.IPv4Address(),
-		Location:   gofakeit.City(),
 		DeviceInfo: gofakeit.UserAgent(),
 	}
 }
 
-func MockPasskeySession() *gateways.PasskeyRegistrationSession {
-	return &gateways.PasskeyRegistrationSession{
-		UserId:    []byte(gofakeit.Numerify("###")),
+func MockPasskeySession() *entity.PasskeyRegistrationSession {
+	return &entity.PasskeyRegistrationSession{
+		UserId:    gofakeit.Number(1, 1000),
 		Challenge: gofakeit.Sentence(10),
-		CredParams: []gateways.PasskeyCredentialParam{
+		CredParams: []entity.PasskeyCredentialParam{
 			{Type: gofakeit.AppName(), Alg: gofakeit.Number(1, 10)},
 			{Type: gofakeit.AppName(), Alg: gofakeit.Number(1, 10)},
 		},

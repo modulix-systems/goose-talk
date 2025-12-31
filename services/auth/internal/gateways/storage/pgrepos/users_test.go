@@ -8,6 +8,7 @@ import (
 	"github.com/modulix-systems/goose-talk/internal/entity"
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage"
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage/pgrepos"
+	"github.com/modulix-systems/goose-talk/pkg/postgres"
 	"github.com/modulix-systems/goose-talk/tests/suite/helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -156,14 +157,14 @@ func assertUserHasCred(t *testing.T, credsList []entity.PasskeyCredential, expec
 	assert.True(t, userHasCred)
 }
 
-func TestAddPasskeyCredential(t *testing.T) {
+func TestCreatePasskeyCredential(t *testing.T) {
 	testSuite := pgrepos.NewTestSuite(t)
 	expectedUser, err := testSuite.Users.Insert(testSuite.TxCtx, helpers.MockUser())
 	require.NoError(t, err)
 	expectedCredential := helpers.MockPasskeyCredential()
 	expectedCredential.UserId = expectedUser.ID
 	t.Run("success", func(t *testing.T) {
-		err := testSuite.Users.AddPasskeyCredential(testSuite.TxCtx, expectedUser.ID, expectedCredential)
+		err := testSuite.Users.CreatePasskeyCredential(testSuite.TxCtx, expectedUser.ID, expectedCredential)
 		assert.NoError(t, err)
 		user, err := testSuite.Users.GetByIDWithPasskeyCredentials(testSuite.TxCtx, expectedUser.ID)
 		require.NoError(t, err)
@@ -173,7 +174,7 @@ func TestAddPasskeyCredential(t *testing.T) {
 	t.Run("user not found", func(t *testing.T) {
 		// change id to avoid unique violation
 		expectedCredential.ID = gofakeit.UUID()
-		err := testSuite.Users.AddPasskeyCredential(testSuite.TxCtx, -1, expectedCredential)
+		err := testSuite.Users.CreatePasskeyCredential(testSuite.TxCtx, -1, expectedCredential)
 		assert.ErrorIs(t, err, storage.ErrNotFound)
 	})
 }
@@ -211,4 +212,50 @@ func TestGetByIDWithPasskeyCredentials(t *testing.T) {
 		assert.ErrorIs(t, err, storage.ErrNotFound)
 		assert.Nil(t, user)
 	})
+}
+
+func TestCreateTwoFa(t *testing.T) {
+	testSuite := pgrepos.NewTestSuite(t)
+
+	mockUser := helpers.MockUser()
+	mockTwoFa := *mockUser.TwoFactorAuth
+	mockUser.TwoFactorAuth = nil
+	mockUser, err := testSuite.Users.Insert(testSuite.TxCtx, mockUser)
+	require.NoError(t, err)
+	mockTwoFa.UserId = mockUser.ID
+	expectedTwoFa, err := testSuite.Users.CreateTwoFa(testSuite.TxCtx, &mockTwoFa)
+	require.NoError(t, err)
+	require.NotNil(t, expectedTwoFa.UserId)
+
+	actualTwoFa, err := postgres.ExecAndGetOne[entity.TwoFactorAuth](
+		testSuite.TxCtx,
+		testSuite.Users.Builder.Select("user_id, transport").From("two_factor_auth"),
+		testSuite.Pg.Pool,
+		nil,
+	)
+	require.NoError(t, err)
+	assert.Equal(t, expectedTwoFa.UserId, actualTwoFa.UserId)
+	assert.Equal(t, expectedTwoFa.Transport, actualTwoFa.Transport)
+}
+
+func TestUpdateTwoFaContact(t *testing.T) {
+	testSuite := pgrepos.NewTestSuite(t)
+
+	expectedContact := gofakeit.Username()
+	mockUser := helpers.MockUser()
+	mockUser, err := testSuite.Users.Insert(testSuite.TxCtx, mockUser)
+	require.NoError(t, err)
+	require.NotEmpty(t, mockUser.TwoFactorAuth)
+
+	err = testSuite.Users.UpdateTwoFaContact(testSuite.TxCtx, mockUser.TwoFactorAuth.UserId, expectedContact)
+	require.NoError(t, err)
+
+	actualTwoFa, err := postgres.ExecAndGetOne[entity.TwoFactorAuth](
+		testSuite.TxCtx,
+		testSuite.Users.Builder.Select("contact").From("two_factor_auth"),
+		testSuite.Pg.Pool,
+		nil,
+	)
+	require.NoError(t, err)
+	assert.Equal(t, expectedContact, actualTwoFa.Contact)
 }
