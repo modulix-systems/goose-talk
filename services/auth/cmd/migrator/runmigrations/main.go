@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/modulix-systems/goose-talk/cmd/migrator/migrator"
 	"github.com/modulix-systems/goose-talk/internal/config"
 )
 
@@ -24,14 +24,14 @@ func Exec(migrationsPath string) {
 	cfgPath := config.ResolveConfigPath()
 	cfg := config.MustLoad(cfgPath)
 
-	m, err := migrate.New("file://"+migrationsPath, cfg.Postgres.Url)
+	migrator, err := migrator.New("file://"+migrationsPath, cfg.Postgres.Url)
 	if err != nil {
 		panic(err)
 	}
 
 	if resetDB {
 		fmt.Println("Resetting database...")
-		if err := m.Drop(); err != nil {
+		if err := migrator.Drop(); err != nil {
 			panic(err)
 		}
 		fmt.Println("Database reset")
@@ -45,7 +45,7 @@ func Exec(migrationsPath string) {
 	}
 	switch strings.ToLower(direction) {
 	case "up":
-		if migrated := migrateUp(m); !migrated {
+		if migrated := migrateUp(migrator); !migrated {
 			return
 		}
 	case "down":
@@ -53,7 +53,7 @@ func Exec(migrationsPath string) {
 		if len(os.Args) > 0 {
 			steps = os.Args[0]
 		}
-		if migrated := migrateDown(steps, m); !migrated {
+		if migrated := migrateDown(steps, migrator); !migrated {
 			return
 		}
 	default:
@@ -62,7 +62,7 @@ func Exec(migrationsPath string) {
 	fmt.Println("Migrations applied successfully")
 }
 
-func migrateUp(m *migrate.Migrate) (migrated bool) {
+func migrateUp(m *migrator.Migrator) (migrated bool) {
 	if err := m.Up(); err != nil {
 		if errors.Is(err, migrate.ErrNoChange) {
 			fmt.Println("No migrations to apply")
@@ -80,7 +80,7 @@ func migrateUp(m *migrate.Migrate) (migrated bool) {
 	return
 }
 
-func migrateDown(steps string, m *migrate.Migrate) (migrated bool) {
+func migrateDown(steps string, m *migrator.Migrator) (migrated bool) {
 	if steps != "" {
 		stepsInt, err := strconv.Atoi(steps)
 		if err != nil {
@@ -132,7 +132,7 @@ func migrateDown(steps string, m *migrate.Migrate) (migrated bool) {
 	return
 }
 
-func tryRecoverDirtyMigration(dirtyErr migrate.ErrDirty, m *migrate.Migrate) {
+func tryRecoverDirtyMigration(dirtyErr migrate.ErrDirty, m *migrator.Migrator) {
 	if err := m.Force(dirtyErr.Version - 1); err != nil {
 		panic(fmt.Errorf("Error during recovering dirty error: %w", err))
 	}
