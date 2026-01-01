@@ -102,13 +102,10 @@ func (l *Logger) log(logEvent *zerolog.Event, message interface{}, args ...inter
 
 		switch val := argValue.(type) {
 		case string:
-			fmt.Println("attach string arg", key, val)
 			logEvent = logEvent.Str(key, val)
 		case int:
-			fmt.Println("attach int arg", key, val)
 			logEvent = logEvent.Int(key, val)
 		case float64:
-			fmt.Println("attach float arg", key, val)
 			logEvent = logEvent.Float64(key, val)
 		default:
 			panic(fmt.Sprintf("Unknown value '%v' of type: %T", val, val))

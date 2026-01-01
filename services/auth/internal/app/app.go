@@ -10,12 +10,12 @@ import (
 
 	"github.com/modulix-systems/goose-talk/internal/config"
 	rpc_v1 "github.com/modulix-systems/goose-talk/internal/controller/grpc/v1"
-	geoip "github.com/modulix-systems/goose-talk/internal/gateways/geo-ip"
+	"github.com/modulix-systems/goose-talk/internal/gateways/geoip"
 	"github.com/modulix-systems/goose-talk/internal/gateways/notifications"
 	"github.com/modulix-systems/goose-talk/internal/gateways/security"
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage/pgrepos"
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage/redisrepos"
-	"github.com/modulix-systems/goose-talk/internal/gateways/tg_bot"
+	"github.com/modulix-systems/goose-talk/internal/gateways/tgbot"
 	"github.com/modulix-systems/goose-talk/internal/gateways/webauthn"
 	"github.com/modulix-systems/goose-talk/internal/services/auth"
 	"github.com/modulix-systems/goose-talk/pkg/grpcserver"
@@ -61,9 +61,9 @@ func Run(cfg *config.Config) {
 	securityProvider := security.New(cfg.TotpTTL, config.OTP_LENGTH)
 	webauthnProvider := webauthn.New(cfg.App.Name, appUrl.Host, []string{appUrl.Host})
 
-	tgBotClient, err := tg_bot.New(cfg.Tgbot.Token)
+	tgBotClient, err := tgbot.New(cfg.Tgbot.Token)
 	if err != nil {
-		log.Fatal(fmt.Errorf("app - Run - tg_bot.New: %w", err))
+		log.Fatal(fmt.Errorf("app - Run - tgbot.New: %w", err))
 	}
 
 	authService := auth.New(

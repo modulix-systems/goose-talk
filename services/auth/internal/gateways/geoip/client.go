@@ -19,10 +19,12 @@ func New() *Client {
 func (c *Client) GetLocationByIP(ip string) (string, error) {
 	query := url.Values{}
 	query.Set("fields", "city,country")
-	resp, err := c.httpClient.Get(ip, query)
+
+	var response GetLocationResponse
+	err := c.httpClient.Get(ip, query, &response)
 	if err != nil {
 		return "", err
 	}
 
-	return fmt.Sprintf("%s, %s", resp["city"], resp["country"]), nil
+	return fmt.Sprintf("%s, %s", response.City, response.Country), nil
 }

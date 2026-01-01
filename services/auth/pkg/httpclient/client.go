@@ -1,11 +1,13 @@
 package httpclient
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 type Client struct {
@@ -27,31 +29,59 @@ func New(baseUrl string, opts ...Option) *Client {
 	return client
 }
 
-func (c *Client) Get(path string, query url.Values) (map[string]any, error) {
-	reqUrl, err := url.JoinPath(c.baseUrl, path, query.Encode())
+func (c *Client) makeRequest(path string, method string, dst any, query url.Values, body any) error {
+	method = strings.ToUpper(method)
+	reqUrl, err := url.JoinPath(c.baseUrl, path)
 	if err != nil {
-		return nil, fmt.Errorf("httpclient - Get - url.JoinPath: %w", err)
+		return fmt.Errorf("httpclient - %s '%s' - url.JoinPath: %w", method, path, err)
 	}
-	resp, err := c.baseClient.Get(reqUrl)
+	reqUrl += fmt.Sprintf("?%s", query.Encode())
+
+	var resp *http.Response
+	switch method {
+	case "GET":
+		resp, err = c.baseClient.Get(reqUrl)
+	case "POST":
+		if body == nil {
+			body = map[string]any{}
+		}
+		encodedBody, err := json.Marshal(body)
+		if err != nil {
+			return fmt.Errorf("httpclient - %s '%s' - json.Marshal: %w", method, path, err)
+		}
+		bufferedBody := bytes.NewBuffer(encodedBody)
+		resp, err = c.baseClient.Post(reqUrl, "application/json", bufferedBody)
+	}
 	if err != nil {
-		return nil, fmt.Errorf("httpclient - Get '%s' - baseClient.Get: %w", reqUrl, err)
+		return fmt.Errorf("httpclient - %s '%s' - baseClient: %w", method, path, err)
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		return nil, fmt.Errorf("httpclient - Get '%s' - request failed with status: %d", reqUrl, resp.StatusCode)
+		return fmt.Errorf("httpclient - %s '%s' - request failed with status '%d'", method, path, resp.StatusCode)
+	}
+
+	if dst == nil {
+		return nil
 	}
 
 	buffer, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("httpclient - Get '%s' - %s - io.ReadAll: %w", reqUrl, resp.Status, err)
+		return fmt.Errorf("httpclient - %s '%s' - %s - io.ReadAll: %w", method, path, resp.Status, err)
 	}
 
-	var data map[string]any
-	if err := json.Unmarshal(buffer, &data); err != nil {
-		return nil, fmt.Errorf("httpclient - Get '%s' - %s - json.Unmarshal('%s'): %w", reqUrl, resp.Status, string(buffer), err)
+	if err := json.Unmarshal(buffer, &dst); err != nil {
+		return fmt.Errorf("httpclient - %s '%s' - %s - json.Unmarshal('%s'): %w", method, path, resp.Status, string(buffer), err)
 	}
 
-	return data, nil
+	return nil
+}
+
+func (c *Client) Get(path string, query url.Values, dst any) error {
+	return c.makeRequest(path, "GET", dst, query, nil)
+}
+
+func (c *Client) Post(path string, data any, dst any) error {
+	return c.makeRequest(path, "POST", dst, url.Values{}, data)
 }
