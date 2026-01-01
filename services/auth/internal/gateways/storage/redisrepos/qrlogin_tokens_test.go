@@ -24,7 +24,6 @@ func TestCreateQRLoginTokenWithTTL(t *testing.T) {
 	actualTTL, err := testSuite.RedisClient.TTL(ctx, fmt.Sprintf("qrlogin:%s:%s", expectedToken.ClientId, expectedToken.Value)).Result()
 	assert.NoError(t, err)
 	assert.Equal(t, expectedTTL, actualTTL)
-	assert.NoError(t, err)
 	foundToken, err := testSuite.QRLoginTokens.FindOne(ctx, expectedToken.Value, expectedToken.ClientId)
 	require.NoError(t, err)
 	assert.Equal(t, expectedToken.Value, foundToken.Value)

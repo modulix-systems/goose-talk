@@ -68,7 +68,7 @@ func Run(cfg *config.Config) {
 
 	authService := auth.New(
 		pgRepos.Users,
-		redisRepos.Sessions,
+		redisRepos.AuthSessions,
 		redisRepos.QRLoginTokens,
 		redisRepos.Otp,
 		redisRepos.PasskeySession,

@@ -20,13 +20,14 @@ type (
 		CreateTwoFa(ctx context.Context, ent *entity.TwoFactorAuth) (*entity.TwoFactorAuth, error)
 		UpdateTwoFaContact(ctx context.Context, userId int, contact string) error
 	}
-	UserSessionsRepo interface {
+	AuthSessionsRepo interface {
 		CreateWithTTL(ctx context.Context, session *entity.AuthSession, ttl time.Duration) (*entity.AuthSession, error)
-		DeleteById(ctx context.Context, id string) error
+		DeleteById(ctx context.Context, userId int, sessionId string) error
+		DeleteAllByUserId(ctx context.Context, userId int, excludeSessionId string) error
 		GetAllByUserId(ctx context.Context, userId int) ([]entity.AuthSession, error)
-		GetByLoginData(ctx context.Context, ip string, deviceInfo string, userId int) (*entity.AuthSession, error)
-		GetById(ctx context.Context, id string) (*entity.AuthSession, error)
-		UpdateById(ctx context.Context, sessionId string, lastSeenAt time.Time, ttl time.Duration) (*entity.AuthSession, error)
+		GetByLoginData(ctx context.Context, userId int, ip string, deviceInfo string) (*entity.AuthSession, error)
+		GetById(ctx context.Context, userId int, sessionId string) (*entity.AuthSession, error)
+		UpdateById(ctx context.Context, userId int, sessionId string, lastSeenAt time.Time, ttl time.Duration) error
 	}
 	OtpRepo interface {
 		GetByEmail(ctx context.Context, email string) (*entity.OTP, error)
@@ -37,7 +38,6 @@ type (
 	QRLoginTokenRepo interface {
 		CreateWithTTL(ctx context.Context, token *entity.QRCodeLoginToken, ttl time.Duration) error
 		FindOne(ctx context.Context, value string, clientId string) (*entity.QRCodeLoginToken, error)
-		DeleteByValue(ctx context.Context, value string) error
 		DeleteAllByClient(ctx context.Context, clientId string) error
 	}
 	SecurityProvider interface {

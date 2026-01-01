@@ -64,7 +64,7 @@ func TestVerify2FASuccess(t *testing.T) {
 			mockOTP.UserEmail = dto.Email
 			mockUser := helpers.MockUser()
 			mockUser.TwoFactorAuth.Enabled = true
-			mockSession := helpers.MockUserSession(gofakeit.Bool())
+			mockSession := helpers.MockAuthSession(gofakeit.Bool())
 			mockSession.UserId = mockUser.ID
 			mockSession.ClientIdentity = &entity.ClientIdentity{DeviceInfo: dto.DeviceInfo, IPAddr: dto.IPAddr}
 			authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(mockOTP, nil)

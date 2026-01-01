@@ -15,8 +15,8 @@ func TestGetActiveSessionsSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	mockSessions := []entity.AuthSession{
-		*helpers.MockUserSession(true),
-		*helpers.MockUserSession(true),
+		*helpers.MockAuthSession(true),
+		*helpers.MockAuthSession(true),
 	}
 	sampleSession := &mockSessions[0]
 	ctx := context.Background()

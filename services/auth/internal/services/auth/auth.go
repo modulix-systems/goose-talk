@@ -23,7 +23,7 @@ type AuthService struct {
 	defaultSessionTTL   time.Duration
 	longLivedSessionTTL time.Duration
 	loginTokenTTL       time.Duration
-	sessionsRepo        gateways.UserSessionsRepo
+	sessionsRepo        gateways.AuthSessionsRepo
 	geoIPApi            gateways.GeoIPApi
 	loginTokenRepo      gateways.QRLoginTokenRepo
 	webAuthnProvider    gateways.WebAuthnProvider
@@ -32,7 +32,7 @@ type AuthService struct {
 
 func New(
 	usersRepo gateways.UsersRepo,
-	sessionsRepo gateways.UserSessionsRepo,
+	sessionsRepo gateways.AuthSessionsRepo,
 	loginTokenRepo gateways.QRLoginTokenRepo,
 	otpRepo gateways.OtpRepo,
 	passkeySessionRepo gateways.PasskeySessionsRepo,
@@ -91,13 +91,13 @@ func (s *AuthService) createOtp(ctx context.Context, email string, userId int) (
 // newAuthSession inserts a new session or updates existing one based on set of params
 // if new session was created - sends 'warning' email
 func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, ip string, deviceInfo string, rememberMe bool) (*entity.AuthSession, error) {
-	existingSession, err := s.sessionsRepo.GetByLoginData(ctx, ip, deviceInfo, user.ID)
+	existingSession, err := s.sessionsRepo.GetByLoginData(ctx, user.ID, ip, deviceInfo)
 	if err != nil && !errors.Is(err, storage.ErrNotFound) {
 		return nil, err
 	}
 
 	if existingSession != nil {
-		if err := s.sessionsRepo.DeleteById(ctx, existingSession.ID); err != nil {
+		if err := s.sessionsRepo.DeleteById(ctx, user.ID, existingSession.ID); err != nil {
 			return nil, err
 		}
 	}

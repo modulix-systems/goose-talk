@@ -400,8 +400,8 @@ func (s *AuthService) GetActiveSessions(
 	return sessions, nil
 }
 
-func (s *AuthService) DeleteSession(ctx context.Context, sessionId string) error {
-	if err := s.sessionsRepo.DeleteById(ctx, sessionId); err != nil {
+func (s *AuthService) DeleteSession(ctx context.Context, userId int, sessionId string) error {
+	if err := s.sessionsRepo.DeleteById(ctx, userId, sessionId); err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return ErrSessionNotFound
 		}
@@ -411,9 +411,10 @@ func (s *AuthService) DeleteSession(ctx context.Context, sessionId string) error
 
 func (s *AuthService) PingSession(
 	ctx context.Context,
+	userId int,
 	sessionId string,
 ) (*entity.AuthSession, error) {
-	session, err := s.sessionsRepo.GetById(ctx, sessionId)
+	session, err := s.sessionsRepo.GetById(ctx, userId, sessionId)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return nil, ErrSessionNotFound
@@ -426,10 +427,12 @@ func (s *AuthService) PingSession(
 		sessionTTL = s.longLivedSessionTTL
 	}
 
-	session, err = s.sessionsRepo.UpdateById(ctx, session.ID, time.Now(), sessionTTL)
+	now := time.Now()
+	err = s.sessionsRepo.UpdateById(ctx, userId, sessionId, now, sessionTTL)
 	if err != nil {
 		return nil, err
 	}
+	session.LastSeenAt = now
 
 	return session, nil
 }
@@ -474,7 +477,7 @@ func (s *AuthService) AcceptQRLoginToken(ctx context.Context, userId int, unauth
 		return nil, err
 	}
 
-	if err := s.loginTokenRepo.DeleteByValue(ctx, token.Value); err != nil {
+	if err := s.loginTokenRepo.DeleteAllByClient(ctx, token.ClientId); err != nil {
 		return nil, err
 	}
 

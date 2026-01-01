@@ -82,7 +82,7 @@ func TestSignInSuccessNo2FA(t *testing.T) {
 			if !tc.twoFAIncluded {
 				mockUser.TwoFactorAuth = nil
 			}
-			mockSession := helpers.MockUserSession(gofakeit.Bool())
+			mockSession := helpers.MockAuthSession(gofakeit.Bool())
 			mockSession.UserId = mockUser.ID
 			mockSession.ClientIdentity = &entity.ClientIdentity{DeviceInfo: dto.DeviceInfo, IPAddr: dto.IPAddr}
 			authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)

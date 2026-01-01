@@ -19,7 +19,7 @@ func TestAcceptLoginTokenSuccess(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
 	mockUser := helpers.MockUser()
-	mockSession := helpers.MockUserSession(true)
+	mockSession := helpers.MockAuthSession(true)
 	mockSession.UserId = mockUser.ID
 	mockLoginToken := helpers.MockLoginToken(authSuite.mockTTL)
 	mockSession.ClientIdentity = mockLoginToken.ClientIdentity
@@ -69,7 +69,7 @@ func TestAcceptLoginTokenExpired(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
 	mockUser := helpers.MockUser()
-	mockSession := helpers.MockUserSession(true)
+	mockSession := helpers.MockAuthSession(true)
 	mockLoginToken := helpers.MockLoginToken(authSuite.mockTTL)
 	mockLoginToken.ExpiresAt = time.Now()
 	mockSession.ClientIdentity = mockLoginToken.ClientIdentity

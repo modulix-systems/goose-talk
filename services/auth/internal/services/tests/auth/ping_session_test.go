@@ -20,7 +20,7 @@ func TestPingSessionSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
-	mockSession := helpers.MockUserSession(true)
+	mockSession := helpers.MockAuthSession(true)
 	expectedSessionId := mockSession.ID
 	actAndAssert := func() {
 		session, err := authSuite.service.PingSession(ctx, expectedSessionId)
@@ -72,7 +72,7 @@ func TestPingSessionNotActive(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
 	mockToken := gofakeit.UUID()
-	mockSession := helpers.MockUserSession(false)
+	mockSession := helpers.MockAuthSession(false)
 	authSuite.mockSessionsRepo.EXPECT().GetById(ctx, mockToken).Return(mockSession, nil)
 
 	session, err := authSuite.service.PingSession(ctx, mockToken)

@@ -10,7 +10,7 @@ import (
 
 type Repositories struct {
 	Otp            *OtpRepo
-	Sessions       *SessionsRepo
+	AuthSessions   *AuthSessionsRepo
 	QRLoginTokens  *QRLoginTokensRepo
 	PasskeySession *PasskeySessionsRepo
 }
@@ -18,7 +18,7 @@ type Repositories struct {
 func New(rdb *redis.Redis) *Repositories {
 	return &Repositories{
 		Otp:            &OtpRepo{rdb},
-		Sessions:       &SessionsRepo{rdb},
+		AuthSessions:   &AuthSessionsRepo{rdb},
 		QRLoginTokens:  &QRLoginTokensRepo{rdb},
 		PasskeySession: &PasskeySessionsRepo{rdb},
 	}

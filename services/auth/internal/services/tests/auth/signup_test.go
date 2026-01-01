@@ -45,7 +45,7 @@ func TestSignupSuccess(t *testing.T) {
 	}
 	insertedUser := *userToInsert
 	insertedUser.ID = gofakeit.Number(1, 1000)
-	expectedSession := helpers.MockUserSession(true)
+	expectedSession := helpers.MockAuthSession(true)
 	expectedSession.UserId = insertedUser.ID
 	setExpectations := func(rememberMe bool) {
 		dto.RememberMe = rememberMe

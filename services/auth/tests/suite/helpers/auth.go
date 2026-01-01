@@ -39,15 +39,10 @@ func MockUser() *entity.User {
 	}
 }
 
-func MockUserSession() *entity.AuthSession {
-	created := gofakeit.DateRange(time.Now().AddDate(0, -1, 0), time.Now())
-	lastSeen := gofakeit.DateRange(created, time.Now())
-
+func MockAuthSession() *entity.AuthSession {
 	return &entity.AuthSession{
 		ID:         gofakeit.UUID(),
 		UserId:     gofakeit.Number(1, 1000),
-		LastSeenAt: lastSeen,
-		CreatedAt:  created,
 		IPAddr:     gofakeit.IPv4Address(),
 		Location:   gofakeit.City(),
 		DeviceInfo: gofakeit.UserAgent(),
