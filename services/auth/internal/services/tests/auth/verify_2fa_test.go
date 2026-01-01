@@ -20,7 +20,7 @@ func mockVerify2FAPayload(twoFaTyp entity.TwoFATransport) *schemas.Verify2FASche
 		TwoFATyp: twoFaTyp,
 		Code:     "123456",
 		Email:    gofakeit.Email(),
-		ClientIdentitySchema: schemas.ClientIdentitySchema{
+		LoginInfoSchema: schemas.LoginInfoSchema{
 			IPAddr:     gofakeit.IPv4Address(),
 			DeviceInfo: gofakeit.UserAgent(),
 		},

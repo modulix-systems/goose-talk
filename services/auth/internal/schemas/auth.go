@@ -14,22 +14,22 @@ type (
 		FirstName        string
 		LastName         string
 		ConfirmationCode string
-		ClientIdentitySchema
+		LoginInfoSchema
 	}
 	SignInSchema struct {
 		Login      string
 		Password   string
 		RememberMe bool
-		ClientIdentitySchema
+		LoginInfoSchema
 	}
-	ClientIdentitySchema struct {
+	LoginInfoSchema struct {
 		IPAddr string
 		// DeviceInfo can be user-agent for browser or for example some platform info
 		// if request is coming from mobile app
 		DeviceInfo string
 	}
 	Verify2FASchema struct {
-		ClientIdentitySchema
+		LoginInfoSchema
 		TwoFATyp   entity.TwoFATransport
 		Email      string
 		Code       string
@@ -38,8 +38,8 @@ type (
 		SignInConfToken string
 	}
 	SessionUpdatePayload struct {
-		LastSeenAt    time.Time
-		ExpiresAt     time.Time
+		LastSeenAt time.Time
+		ExpiresAt  time.Time
 	}
 	Add2FASchema struct {
 		UserId  int
@@ -57,6 +57,6 @@ type (
 	}
 	ExportLoginTokenSchema struct {
 		ClientId string
-		ClientIdentitySchema
+		LoginInfoSchema
 	}
 )

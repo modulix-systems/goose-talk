@@ -23,7 +23,7 @@ func mockSignUpPayload() *schemas.SignUpSchema {
 		LastName:         helpers.RandomChoose(gofakeit.LastName(), ""),
 		ConfirmationCode: gofakeit.Numerify("######"),
 		Password:         helpers.RandomPassword(),
-		ClientIdentitySchema: schemas.ClientIdentitySchema{
+		LoginInfoSchema: schemas.LoginInfoSchema{
 			DeviceInfo: gofakeit.UserAgent(),
 			IPAddr:     gofakeit.IPv4Address(),
 		},

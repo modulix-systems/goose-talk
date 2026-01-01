@@ -19,7 +19,7 @@ func mockSignInPayload() *schemas.SignInSchema {
 	return &schemas.SignInSchema{
 		Login:    gofakeit.Username(),
 		Password: helpers.RandomPassword(),
-		ClientIdentitySchema: schemas.ClientIdentitySchema{
+		LoginInfoSchema: schemas.LoginInfoSchema{
 			DeviceInfo: gofakeit.UserAgent(),
 			IPAddr:     gofakeit.IPv4Address(),
 		},

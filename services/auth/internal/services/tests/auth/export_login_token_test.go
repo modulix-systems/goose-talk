@@ -17,7 +17,7 @@ import (
 func fakeExportLoginTokenPayload(fromEnt *entity.QRCodeLoginToken) *schemas.ExportLoginTokenSchema {
 	return &schemas.ExportLoginTokenSchema{
 		ClientId: fromEnt.ClientId,
-		ClientIdentitySchema: schemas.ClientIdentitySchema{
+		LoginInfoSchema: schemas.LoginInfoSchema{
 			IPAddr:     fromEnt.ClientIdentity.IPAddr,
 			DeviceInfo: fromEnt.ClientIdentity.DeviceInfo,
 		},
