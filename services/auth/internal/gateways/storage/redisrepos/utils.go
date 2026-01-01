@@ -26,3 +26,11 @@ func prefixOtpByUserId(userId int) string {
 func prefixPasskeySession(userId int) string {
 	return fmt.Sprintf("passkey_session:%d", userId)
 }
+
+func prefixQRLoginToken(value string, clientId string) string {
+	return fmt.Sprintf("qrlogin:%s:%s", clientId, value)
+}
+
+func prefixQRLoginTokenSearchByClient(clientId string) string {
+	return fmt.Sprintf("qrlogin:%s:*", clientId)
+}

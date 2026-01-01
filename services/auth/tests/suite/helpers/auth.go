@@ -61,7 +61,7 @@ func MockOTP() *entity.OTP {
 	}
 }
 
-func MockLoginToken(ttl time.Duration) *entity.QRCodeLoginToken {
+func MockLoginToken() *entity.QRCodeLoginToken {
 	return &entity.QRCodeLoginToken{
 		ClientId:   gofakeit.UUID(),
 		Value:      gofakeit.UUID(),

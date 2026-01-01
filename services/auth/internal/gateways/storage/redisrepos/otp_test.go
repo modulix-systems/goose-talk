@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateWithTTL(t *testing.T) {
+func TestCreateOtpWithTTL(t *testing.T) {
 	testSuite := redisrepos.NewTestSuite(t)
 	ctx := context.Background()
 	t.Run("with email", func(t *testing.T) {

@@ -35,10 +35,10 @@ type (
 		CreateWithTTL(ctx context.Context, otp *entity.OTP, ttl time.Duration) error
 	}
 	QRLoginTokenRepo interface {
-		CreateWithTTL(ctx context.Context, token *entity.QRCodeLoginToken, ttl time.Duration) (*entity.QRCodeLoginToken, error)
-		GetByValue(ctx context.Context, val string) (*entity.QRCodeLoginToken, error)
-		DeleteAllByClientId(ctx context.Context, sessionId string) error
-		DeleteByValue(ctx context.Context, val string) error
+		CreateWithTTL(ctx context.Context, token *entity.QRCodeLoginToken, ttl time.Duration) error
+		FindOne(ctx context.Context, value string, clientId string) (*entity.QRCodeLoginToken, error)
+		DeleteByValue(ctx context.Context, value string) error
+		DeleteAllByClient(ctx context.Context, clientId string) error
 	}
 	SecurityProvider interface {
 		GenerateOTPCode() string

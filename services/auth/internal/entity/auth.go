@@ -26,7 +26,7 @@ type (
 		ClientId string
 
 		// Login metadata
-		IPAddr     string
-		DeviceInfo string
+		IPAddr     string `json:"-"`
+		DeviceInfo string `json:"-"`
 	}
 )

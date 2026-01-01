@@ -435,7 +435,7 @@ func (s *AuthService) PingSession(
 }
 
 func (s *AuthService) ExportLoginToken(ctx context.Context, dto *schemas.ExportLoginTokenSchema) (*entity.QRCodeLoginToken, error) {
-	err := s.loginTokenRepo.DeleteAllByClientId(ctx, dto.ClientId)
+	err := s.loginTokenRepo.DeleteAllByClient(ctx, dto.ClientId)
 	if err != nil {
 		return nil, err
 	}
@@ -448,12 +448,12 @@ func (s *AuthService) ExportLoginToken(ctx context.Context, dto *schemas.ExportL
 		DeviceInfo: dto.DeviceInfo,
 	}
 
-	return s.loginTokenRepo.CreateWithTTL(ctx, token, s.loginTokenTTL)
+	return token, s.loginTokenRepo.CreateWithTTL(ctx, token, s.loginTokenTTL)
 }
 
-// AcceptQRLoginToken is used to authenticated another device from an authorized one (qrcode auth)
-func (s *AuthService) AcceptQRLoginToken(ctx context.Context, userId int, tokenVal string) (*entity.AuthSession, error) {
-	token, err := s.loginTokenRepo.GetByValue(ctx, tokenVal)
+// AcceptQRLoginToken allows to authenticate another device from an authorized one (qrcode auth)
+func (s *AuthService) AcceptQRLoginToken(ctx context.Context, userId int, unauthorizedClientToken string, unauthorizedClientId string) (*entity.AuthSession, error) {
+	token, err := s.loginTokenRepo.FindOne(ctx, unauthorizedClientToken, unauthorizedClientId)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return nil, ErrInvalidLoginToken
