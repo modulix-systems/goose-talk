@@ -13,7 +13,7 @@ func main() {
 	flag.StringVar(&configPath, "config", "./configs/local.yaml", "path to config file")
 	flag.Parse()
 	if configPath == "" {
-		configPath = config.ResolveConfigPath()
+		configPath = config.ResolveConfigPath("")
 	}
 	cfg := config.MustLoad(configPath)
 	app.Run(cfg)

@@ -26,13 +26,27 @@ type TestSuite struct {
 
 func NewTestSuite(t *testing.T) *TestSuite {
 	ctx := context.Background()
-	pg, tx := postgres.NewTestSuite(t, ctx)
+	cfg := config.MustLoad(config.ResolveConfigPath("tests"))
+	pg, err := postgres.New(cfg.Postgres.Url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txManager := postgres.NewTransactionManager(pg.Pool)
+	tx, err := txManager.StartTransaction(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := tx.Rollback(ctx); err != nil {
+			t.Fatal(err)
+		}
+	})
 	repos := New(pg)
 
 	return &TestSuite{
 		TxCtx:        context.WithValue(ctx, config.TRANSACTION_CTX_KEY, tx),
 		Repositories: *repos,
-		Tx:           tx,
+		Tx:           tx.(pgx.Tx),
 		Pg:           pg,
 	}
 }

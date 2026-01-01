@@ -21,7 +21,7 @@ func Exec(migrationsPath string) {
 	os.Args = os.Args[2:]
 	flag.Parse()
 
-	cfgPath := config.ResolveConfigPath()
+	cfgPath := config.ResolveConfigPath("")
 	cfg := config.MustLoad(cfgPath)
 
 	migrator, err := migrator.New("file://"+migrationsPath, cfg.Postgres.Url)

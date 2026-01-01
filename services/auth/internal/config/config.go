@@ -68,11 +68,13 @@ func MustLoad(configPath string) *Config {
 	return &cfg
 }
 
-func ResolveConfigPath() string {
-	mode := os.Getenv("MODE")
+func ResolveConfigPath(mode string) string {
 	if mode == "" {
-		mode = "local"
-		fmt.Println("MODE is not defined, use local by default")
+		mode = os.Getenv("MODE")
+		if mode == "" {
+			mode = "local"
+			fmt.Println("MODE is not defined, use 'local' by default")
+		}
 	}
 
 	rootPath := utils.FindRootPath()

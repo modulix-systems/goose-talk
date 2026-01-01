@@ -8,9 +8,9 @@ import (
 )
 
 func MockUser() *entity.User {
-	userId :=  gofakeit.Number(1, 100000)
+	userId := gofakeit.Number(1, 100000)
 	return &entity.User{
-		ID:       userId,
+		ID:        userId,
 		Username:  gofakeit.Username(),
 		FirstName: gofakeit.FirstName(),
 		LastName:  gofakeit.LastName(),
@@ -20,11 +20,11 @@ func MockUser() *entity.User {
 			time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC),
 			time.Now().AddDate(-18, 0, 0),
 		),
-		PhotoUrl: gofakeit.URL(),
-		AboutMe:  gofakeit.Sentence(10),
-		IsActive: true,
-		Email:    gofakeit.Email(),
-		Password: []byte(RandomPassword()),
+		PhotoUrl:   gofakeit.URL(),
+		AboutMe:    gofakeit.Sentence(10),
+		IsActive:   true,
+		Email:      gofakeit.Email(),
+		Password:   []byte(RandomPassword()),
 		PrivateKey: gofakeit.BitcoinPrivateKey(),
 		TwoFactorAuth: &entity.TwoFactorAuth{
 			UserId: userId,
@@ -44,10 +44,10 @@ func MockUserSession() *entity.AuthSession {
 	lastSeen := gofakeit.DateRange(created, time.Now())
 
 	return &entity.AuthSession{
-		ID:             gofakeit.UUID(),
-		UserId:         gofakeit.Number(1, 1000),
-		LastSeenAt:     lastSeen,
-		CreatedAt:      created,
+		ID:         gofakeit.UUID(),
+		UserId:     gofakeit.Number(1, 1000),
+		LastSeenAt: lastSeen,
+		CreatedAt:  created,
 		IPAddr:     gofakeit.IPv4Address(),
 		Location:   gofakeit.City(),
 		DeviceInfo: gofakeit.UserAgent(),
@@ -63,8 +63,8 @@ func MockOTP() *entity.OTP {
 
 func MockLoginToken(ttl time.Duration) *entity.QRCodeLoginToken {
 	return &entity.QRCodeLoginToken{
-		ClientId:         gofakeit.UUID(),
-		Value:            gofakeit.UUID(),
+		ClientId:   gofakeit.UUID(),
+		Value:      gofakeit.UUID(),
 		IPAddr:     gofakeit.IPv4Address(),
 		DeviceInfo: gofakeit.UserAgent(),
 	}
