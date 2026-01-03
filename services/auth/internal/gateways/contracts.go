@@ -42,13 +42,13 @@ type (
 	}
 	SecurityProvider interface {
 		GenerateOTPCode() string
-		GenerateTOTPEnrollUrlWithSecret(accName string) (string, string)
+		GenerateTOTPEnrollUrl(accountName string, secret string) string
 		ValidateTOTP(code string, secret string) bool
 		HashPassword(password string) ([]byte, error)
 		ComparePasswords(hashed []byte, plain string) error
 		EncryptSymmetric(plaintext string, key string) ([]byte, error)
 		DecryptSymmetric(encrypted []byte, key string) (string, error)
-		GenerateSecretTokenUrlSafe(entropy int) string
+		GenerateSecretTokenUrlSafe(len int) string
 		GenerateSessionId() string
 		GeneratePrivateKey() string
 	}

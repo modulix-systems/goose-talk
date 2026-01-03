@@ -20,19 +20,19 @@ func TestAcceptLoginTokenSuccess(t *testing.T) {
 	ctx := context.Background()
 	mockUser := helpers.MockUser()
 	mockSession := helpers.MockAuthSession(true)
-	mockSession.UserId = mockUser.ID
+	mockSession.UserId = mockUser.Id
 	mockLoginToken := helpers.MockLoginToken(authSuite.mockTTL)
 	mockSession.ClientIdentity = mockLoginToken.ClientIdentity
-	authSuite.mockUsersRepo.EXPECT().GetByID(ctx, mockUser.ID).Return(mockUser, nil)
+	authSuite.mockUsersRepo.EXPECT().GetByID(ctx, mockUser.Id).Return(mockUser, nil)
 	authSuite.mockLoginTokenRepo.EXPECT().GetByValue(ctx, mockLoginToken.Value).Return(mockLoginToken, nil)
-	authSuite.mockLoginTokenRepo.EXPECT().UpdateAuthSessionByClientId(ctx, mockLoginToken.ClientId, mockSession.ID).Return(nil)
-	authSuite.mockSecurityProvider.EXPECT().GenerateSessionId().Return(mockSession.ID)
+	authSuite.mockLoginTokenRepo.EXPECT().UpdateAuthSessionByClientId(ctx, mockLoginToken.ClientId, mockSession.Id).Return(nil)
+	authSuite.mockSecurityProvider.EXPECT().GenerateSessionId().Return(mockSession.Id)
 	setAuthSessionExpectations(t, ctx, authSuite, mockUser, mockSession, gofakeit.Bool(), false)
 
-	session, err := authSuite.service.AcceptLoginToken(ctx, mockUser.ID, mockLoginToken.Value)
+	session, err := authSuite.service.AcceptLoginToken(ctx, mockUser.Id, mockLoginToken.Value)
 
 	require.NoError(t, err)
-	assert.Equal(t, mockSession.ID, session.ID)
+	assert.Equal(t, mockSession.Id, session.ID)
 	assert.True(t, session.IsActive())
 }
 
@@ -55,10 +55,10 @@ func TestAcceptLoginTokenUserNotFound(t *testing.T) {
 	ctx := context.Background()
 	mockLoginToken := helpers.MockLoginToken(authSuite.mockTTL)
 	mockUser := helpers.MockUser()
-	authSuite.mockUsersRepo.EXPECT().GetByID(ctx, mockUser.ID).Return(nil, storage.ErrNotFound)
+	authSuite.mockUsersRepo.EXPECT().GetByID(ctx, mockUser.Id).Return(nil, storage.ErrNotFound)
 	authSuite.mockLoginTokenRepo.EXPECT().GetByValue(ctx, mockLoginToken.Value).Return(mockLoginToken, nil)
 
-	session, err := authSuite.service.AcceptLoginToken(ctx, mockUser.ID, mockLoginToken.Value)
+	session, err := authSuite.service.AcceptLoginToken(ctx, mockUser.Id, mockLoginToken.Value)
 
 	assert.Empty(t, session)
 	assert.ErrorIs(t, err, auth.ErrUserNotFound)
@@ -75,7 +75,7 @@ func TestAcceptLoginTokenExpired(t *testing.T) {
 	mockSession.ClientIdentity = mockLoginToken.ClientIdentity
 	authSuite.mockLoginTokenRepo.EXPECT().GetByValue(ctx, mockLoginToken.Value).Return(mockLoginToken, nil)
 
-	session, err := authSuite.service.AcceptLoginToken(ctx, mockUser.ID, mockLoginToken.Value)
+	session, err := authSuite.service.AcceptLoginToken(ctx, mockUser.Id, mockLoginToken.Value)
 
 	assert.Empty(t, session)
 	assert.ErrorIs(t, err, auth.ErrExpiredLoginToken)

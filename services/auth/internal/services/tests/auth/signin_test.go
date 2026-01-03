@@ -15,8 +15,8 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func mockSignInPayload() *schemas.SignInSchema {
-	return &schemas.SignInSchema{
+func mockSignInPayload() *schemas.SignInDto {
+	return &schemas.SignInDto{
 		Login:    gofakeit.Username(),
 		Password: helpers.RandomPassword(),
 		LoginInfoSchema: schemas.LoginInfoSchema{
@@ -29,12 +29,12 @@ func mockSignInPayload() *schemas.SignInSchema {
 func setSignInWith2FAExpectations(
 	ctx context.Context,
 	authSuite *AuthTestSuite,
-	dto *schemas.SignInSchema,
+	dto *schemas.SignInDto,
 	mockUser *entity.User,
 	plainOTPCode string,
 ) {
 	hashedOTPCode := []byte(plainOTPCode)
-	mockOTP := &entity.OTP{Code: hashedOTPCode, UserId: mockUser.ID}
+	mockOTP := &entity.OTP{Code: hashedOTPCode, UserId: mockUser.Id}
 	authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
 	authSuite.mockSecurityProvider.EXPECT().
 		ComparePasswords(mockUser.Password, dto.Password).
@@ -83,7 +83,7 @@ func TestSignInSuccessNo2FA(t *testing.T) {
 				mockUser.TwoFactorAuth = nil
 			}
 			mockSession := helpers.MockAuthSession(gofakeit.Bool())
-			mockSession.UserId = mockUser.ID
+			mockSession.UserId = mockUser.Id
 			mockSession.ClientIdentity = &entity.ClientIdentity{DeviceInfo: dto.DeviceInfo, IPAddr: dto.IPAddr}
 			authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Login).Return(mockUser, nil)
 			setAuthSessionExpectations(t, ctx, authSuite, mockUser, mockSession, tc.sessionExists, true)
@@ -91,14 +91,14 @@ func TestSignInSuccessNo2FA(t *testing.T) {
 				ComparePasswords(mockUser.Password, dto.Password).
 				Return(true, nil)
 			authSuite.mockSecurityProvider.EXPECT().
-				GenerateSessionId().Return(mockSession.ID)
+				GenerateSessionId().Return(mockSession.Id)
 
 			authInfo, err := authSuite.service.SignIn(ctx, dto)
 
 			assert.NoError(t, err)
 			assert.NotNil(t, authInfo)
-			assert.Equal(t, authInfo.Session.ID, mockSession.ID)
-			assert.Equal(t, authInfo.User.ID, mockUser.ID)
+			assert.Equal(t, authInfo.Session.Id, mockSession.Id)
+			assert.Equal(t, authInfo.User.Id, mockUser.Id)
 		})
 	}
 }
@@ -120,7 +120,7 @@ func TestSignInSuccess2FAByUserEmail(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Empty(t, authInfo.Session)
-	assert.Equal(t, authInfo.User.ID, mockUser.ID)
+	assert.Equal(t, authInfo.User.Id, mockUser.Id)
 }
 
 func TestSignInSuccess2FAByContactEmail(t *testing.T) {
@@ -141,7 +141,7 @@ func TestSignInSuccess2FAByContactEmail(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Empty(t, authInfo.Session)
-	assert.Equal(t, authInfo.User.ID, mockUser.ID)
+	assert.Equal(t, authInfo.User.Id, mockUser.Id)
 }
 
 func TestSignInSuccess2FAByContactTG(t *testing.T) {
@@ -162,7 +162,7 @@ func TestSignInSuccess2FAByContactTG(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Empty(t, authInfo.Session)
-	assert.Equal(t, authInfo.User.ID, mockUser.ID)
+	assert.Equal(t, authInfo.User.Id, mockUser.Id)
 }
 
 func TestSignInSuccess2FAByTotp(t *testing.T) {
@@ -179,8 +179,8 @@ func TestSignInSuccess2FAByTotp(t *testing.T) {
 	authInfo, err := authSuite.service.SignIn(ctx, dto)
 
 	assert.NoError(t, err)
-	assert.Equal(t, authInfo.SignInConfTokenType, plainOTPCode)
-	assert.Equal(t, authInfo.User.ID, mockUser.ID)
+	assert.Equal(t, authInfo.ConfirmationCode, plainOTPCode)
+	assert.Equal(t, authInfo.User.Id, mockUser.Id)
 }
 
 func TestSignIn2FAUnsupportedMethod(t *testing.T) {

@@ -10,7 +10,7 @@ import (
 func MockUser() *entity.User {
 	userId := gofakeit.Number(1, 100000)
 	return &entity.User{
-		ID:        userId,
+		Id:        userId,
 		Username:  gofakeit.Username(),
 		FirstName: gofakeit.FirstName(),
 		LastName:  gofakeit.LastName(),
@@ -41,9 +41,9 @@ func MockUser() *entity.User {
 
 func MockAuthSession() *entity.AuthSession {
 	return &entity.AuthSession{
-		ID:         gofakeit.UUID(),
+		Id:         gofakeit.UUID(),
 		UserId:     gofakeit.Number(1, 1000),
-		IPAddr:     gofakeit.IPv4Address(),
+		IpAddr:     gofakeit.IPv4Address(),
 		Location:   gofakeit.City(),
 		DeviceInfo: gofakeit.UserAgent(),
 	}
@@ -60,7 +60,7 @@ func MockLoginToken() *entity.QRCodeLoginToken {
 	return &entity.QRCodeLoginToken{
 		ClientId:   gofakeit.UUID(),
 		Value:      gofakeit.UUID(),
-		IPAddr:     gofakeit.IPv4Address(),
+		IpAddr:     gofakeit.IPv4Address(),
 		DeviceInfo: gofakeit.UserAgent(),
 	}
 }

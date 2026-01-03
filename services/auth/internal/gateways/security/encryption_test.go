@@ -11,7 +11,7 @@ import (
 )
 
 func TestEncryptDecryptSymmetric(t *testing.T) {
-	securityProvider := security.New(time.Hour, config.OTP_LENGTH)
+	securityProvider := security.New(time.Hour, config.OTP_LENGTH, "Test App")
 	plaintext := "Hello World. Lorem ipsum dolor sit amet"
 
 	t.Run("success", func(t *testing.T) {

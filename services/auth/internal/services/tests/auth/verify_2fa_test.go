@@ -15,8 +15,8 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func mockVerify2FAPayload(twoFaTyp entity.TwoFATransport) *schemas.Verify2FASchema {
-	schema := &schemas.Verify2FASchema{
+func mockVerify2FAPayload(twoFaTyp entity.TwoFATransport) *schemas.Verify2FADto {
+	schema := &schemas.Verify2FADto{
 		TwoFATyp: twoFaTyp,
 		Code:     "123456",
 		Email:    gofakeit.Email(),
@@ -65,7 +65,7 @@ func TestVerify2FASuccess(t *testing.T) {
 			mockUser := helpers.MockUser()
 			mockUser.TwoFactorAuth.Enabled = true
 			mockSession := helpers.MockAuthSession(gofakeit.Bool())
-			mockSession.UserId = mockUser.ID
+			mockSession.UserId = mockUser.Id
 			mockSession.ClientIdentity = &entity.ClientIdentity{DeviceInfo: dto.DeviceInfo, IPAddr: dto.IPAddr}
 			authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(mockOTP, nil)
 			authSuite.mockCodeRepo.EXPECT().DeleteByEmailOrUserId(ctx, dto.Email, 0).Return(nil)
@@ -85,7 +85,7 @@ func TestVerify2FASuccess(t *testing.T) {
 			setAuthSessionExpectations(t, ctx, authSuite, mockUser, mockSession, tc.sessionExists, true)
 			authSuite.mockUsersRepo.EXPECT().GetByLogin(ctx, dto.Email).Return(mockUser, nil)
 			authSuite.mockSecurityProvider.EXPECT().
-				GenerateSessionId().Return(mockSession.ID)
+				GenerateSessionId().Return(mockSession.Id)
 			authSession, err := authSuite.service.Verify2FA(ctx, dto)
 			assert.NoError(t, err)
 			assert.Equal(t, mockSession, authSession)

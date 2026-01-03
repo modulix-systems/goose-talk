@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"reflect"
 	"strconv"
 )
 
@@ -23,4 +24,17 @@ func (value *BoolString) UnmarshalJSON(raw []byte) error {
 	*value = BoolString(parsed)
 
 	return nil
+}
+
+func IsScalarType(t reflect.Type) bool {
+	if t.Kind() == reflect.Pointer {
+		t = t.Elem()
+	}
+	nonScalarTypes := []reflect.Kind{reflect.Struct, reflect.Slice, reflect.Map}
+	for _, nonScalarType := range nonScalarTypes {
+		if t.Kind() == nonScalarType {
+			return false
+		}
+	}
+	return true
 }

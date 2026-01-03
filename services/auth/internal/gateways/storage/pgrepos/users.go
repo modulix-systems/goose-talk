@@ -29,7 +29,7 @@ func (repo *UsersRepo) Insert(ctx context.Context, user *entity.User) (*entity.U
 		return nil, err
 	}
 	if user.TwoFactorAuth != nil {
-		user.TwoFactorAuth.UserId = insertedUser.ID
+		user.TwoFactorAuth.UserId = insertedUser.Id
 		twoFA, err := repo.CreateTwoFa(ctx, user.TwoFactorAuth)
 		if err != nil {
 			return nil, err

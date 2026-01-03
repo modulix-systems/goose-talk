@@ -26,11 +26,11 @@ func TestBeginPasskeyRegistrationSuccess(t *testing.T) {
 	fakePasskeySession := helpers.MockPasskeySession()
 	serializedPasskeySession, err := json.Marshal(fakePasskeySession)
 	require.NoError(t, err)
-	authSuite.mockUsersRepo.EXPECT().GetByIDWithPasskeyCredentials(ctx, fakeUser.ID).Return(fakeUser, nil)
+	authSuite.mockUsersRepo.EXPECT().GetByIDWithPasskeyCredentials(ctx, fakeUser.Id).Return(fakeUser, nil)
 	authSuite.mockWebAuthnProvider.EXPECT().GenerateRegistrationOptions(fakeUser).Return(expectedOptions, fakePasskeySession, nil)
-	authSuite.mockKeyValueStorage.EXPECT().Set(fmt.Sprintf("passkey_session:%d", fakeUser.ID), string(serializedPasskeySession), time.Duration(0)).Return(nil)
+	authSuite.mockKeyValueStorage.EXPECT().Set(fmt.Sprintf("passkey_session:%d", fakeUser.Id), string(serializedPasskeySession), time.Duration(0)).Return(nil)
 
-	options, err := authSuite.service.BeginPasskeyRegistration(ctx, fakeUser.ID)
+	options, err := authSuite.service.BeginPasskeyRegistration(ctx, fakeUser.Id)
 
 	assert.Equal(t, expectedOptions, options)
 	assert.NoError(t, err)
@@ -41,9 +41,9 @@ func TestBeginPasskeyRegistrationUserNotFound(t *testing.T) {
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
 	fakeUser := helpers.MockUser()
-	authSuite.mockUsersRepo.EXPECT().GetByIDWithPasskeyCredentials(ctx, fakeUser.ID).Return(nil, storage.ErrNotFound)
+	authSuite.mockUsersRepo.EXPECT().GetByIDWithPasskeyCredentials(ctx, fakeUser.Id).Return(nil, storage.ErrNotFound)
 
-	options, err := authSuite.service.BeginPasskeyRegistration(ctx, fakeUser.ID)
+	options, err := authSuite.service.BeginPasskeyRegistration(ctx, fakeUser.Id)
 
 	assert.Nil(t, options)
 	assert.ErrorIs(t, err, auth.ErrUserNotFound)

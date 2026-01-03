@@ -28,7 +28,7 @@ func TestCreateQRLoginTokenWithTTL(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, expectedToken.Value, foundToken.Value)
 	assert.Equal(t, expectedToken.ClientId, foundToken.ClientId)
-	assert.Equal(t, expectedToken.IPAddr, foundToken.IPAddr)
+	assert.Equal(t, expectedToken.IpAddr, foundToken.IpAddr)
 	assert.Equal(t, expectedToken.DeviceInfo, foundToken.DeviceInfo)
 }
 
@@ -39,7 +39,7 @@ func TestDeleteQRLoginTokensByClient(t *testing.T) {
 	expectedTTL := time.Minute
 	err := testSuite.QRLoginTokens.CreateWithTTL(ctx, expectedToken, expectedTTL)
 	require.NoError(t, err)
-	
+
 	err = testSuite.QRLoginTokens.DeleteAllByClient(ctx, expectedToken.ClientId)
 	assert.NoError(t, err)
 	foundToken, err := testSuite.QRLoginTokens.FindOne(ctx, expectedToken.Value, expectedToken.ClientId)

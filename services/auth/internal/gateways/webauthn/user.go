@@ -13,7 +13,7 @@ type webauthnUserAdapter struct {
 }
 
 func (u *webauthnUserAdapter) WebAuthnID() []byte {
-	return []byte(strconv.Itoa(u.user.ID))
+	return []byte(strconv.Itoa(u.user.Id))
 }
 
 func (u *webauthnUserAdapter) WebAuthnName() string {

@@ -7,6 +7,6 @@ type QRCodeLoginToken struct {
 	ClientId string
 
 	// Login metadata
-	IPAddr     string `json:"-"`
+	IpAddr     string `json:"-"`
 	DeviceInfo string `json:"-"`
 }

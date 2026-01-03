@@ -49,8 +49,8 @@ func TestConfirm2FASuccess(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		dto := &schemas.Confirm2FASchema{
-			UserId:           mockUser.ID,
+		dto := &schemas.Confirm2FADto{
+			UserId:           mockUser.Id,
 			Typ:              tc.twoFaTyp,
 			ConfirmationCode: confirmationCode,
 			Contact:          tc.contact,
@@ -58,7 +58,7 @@ func TestConfirm2FASuccess(t *testing.T) {
 		mockOTP.UserEmail = ""
 		mockOTP.UserId = dto.UserId
 		mock2FA := &entity.TwoFactorAuth{
-			UserId:    mockUser.ID,
+			UserId:    mockUser.Id,
 			Transport: dto.Typ,
 			Enabled:   true,
 		}
@@ -88,7 +88,7 @@ func TestConfirm2FASuccess(t *testing.T) {
 
 			res, err := authSuite.service.Confirm2FaAddition(ctx, dto)
 			assert.NoError(t, err)
-			assert.Equal(t, mockUser.ID, res.UserId)
+			assert.Equal(t, mockUser.Id, res.UserId)
 			assert.Equal(t, tc.twoFaTyp, res.Transport)
 		})
 	}
@@ -98,7 +98,7 @@ func TestConfirm2FAInvalidOTP(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	authSuite := NewAuthTestSuite(ctrl)
 	ctx := context.Background()
-	actAndAssert := func(dto *schemas.Confirm2FASchema) {
+	actAndAssert := func(dto *schemas.Confirm2FADto) {
 		res, err := authSuite.service.Confirm2FaAddition(ctx, dto)
 		assert.ErrorIs(t, err, auth.ErrOtpIsNotValid)
 		assert.Empty(t, res)
@@ -107,8 +107,8 @@ func TestConfirm2FAInvalidOTP(t *testing.T) {
 		mockUser := helpers.MockUser()
 		mockOTP := helpers.MockOTP()
 		confirmationCode := string(mockOTP.Code)
-		dto := &schemas.Confirm2FASchema{
-			UserId:           mockUser.ID,
+		dto := &schemas.Confirm2FADto{
+			UserId:           mockUser.Id,
 			Typ:              twoFaTyp,
 			ConfirmationCode: confirmationCode,
 		}

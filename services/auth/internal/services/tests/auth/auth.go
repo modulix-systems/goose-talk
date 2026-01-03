@@ -96,10 +96,10 @@ func setAuthSessionExpectations(t *testing.T, ctx context.Context, authSuite *Au
 	}
 	if sessionExists {
 		authSuite.mockSessionsRepo.EXPECT().
-			GetByParamsMatch(ctx, expectedIP, expectedDeviceInfo, mockUser.ID).
+			GetByParamsMatch(ctx, expectedIP, expectedDeviceInfo, mockUser.Id).
 			Return(mockSession, nil)
 		authSuite.mockSessionsRepo.EXPECT().UpdateById(
-			ctx, mockSession.ID,
+			ctx, mockSession.Id,
 			gomock.Any()).
 			DoAndReturn(func(ctx context.Context, sessionId string, payload *schemas.SessionUpdatePayload) (*entity.AuthSession, error) {
 				require.NotNil(t, payload)
@@ -110,11 +110,11 @@ func setAuthSessionExpectations(t *testing.T, ctx context.Context, authSuite *Au
 				return mockSession, nil
 			})
 	} else {
-		authSuite.mockSessionsRepo.EXPECT().GetByParamsMatch(ctx, expectedIP, expectedDeviceInfo, mockUser.ID).Return(nil, storage.ErrNotFound)
+		authSuite.mockSessionsRepo.EXPECT().GetByParamsMatch(ctx, expectedIP, expectedDeviceInfo, mockUser.Id).Return(nil, storage.ErrNotFound)
 		authSuite.mockSessionsRepo.EXPECT().Insert(ctx, gomock.Any()).
 			DoAndReturn(func(ctx context.Context, session *entity.AuthSession) (*entity.AuthSession, error) {
 				assert.Equal(t, mockSession.UserId, session.UserId)
-				assert.Equal(t, mockSession.ID, session.ID)
+				assert.Equal(t, mockSession.Id, session.Id)
 				// if related entity id is not provided - assert that has enought data to create that related entity
 				if session.ClientIdentityId == 0 {
 					assert.Equal(t, expectedIP, session.ClientIdentity.IPAddr)

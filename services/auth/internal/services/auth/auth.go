@@ -91,13 +91,13 @@ func (s *AuthService) createOtp(ctx context.Context, email string, userId int) (
 // newAuthSession inserts a new session or updates existing one based on set of params
 // if new session was created - sends 'warning' email
 func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, ip string, deviceInfo string, rememberMe bool) (*entity.AuthSession, error) {
-	existingSession, err := s.sessionsRepo.GetByLoginData(ctx, user.ID, ip, deviceInfo)
+	existingSession, err := s.sessionsRepo.GetByLoginData(ctx, user.Id, ip, deviceInfo)
 	if err != nil && !errors.Is(err, storage.ErrNotFound) {
 		return nil, err
 	}
 
 	if existingSession != nil {
-		if err := s.sessionsRepo.DeleteById(ctx, user.ID, existingSession.ID); err != nil {
+		if err := s.sessionsRepo.DeleteById(ctx, user.Id, existingSession.Id); err != nil {
 			return nil, err
 		}
 	}
@@ -115,9 +115,9 @@ func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, ip 
 	newSession, err := s.sessionsRepo.CreateWithTTL(
 		ctx,
 		&entity.AuthSession{
-			ID:          s.securityProvider.GenerateSessionId(),
-			UserId:      user.ID,
-			IPAddr:      ip,
+			Id:          s.securityProvider.GenerateSessionId(),
+			UserId:      user.Id,
+			IpAddr:      ip,
 			DeviceInfo:  deviceInfo,
 			Location:    location,
 			IsLongLived: rememberMe,
@@ -130,7 +130,7 @@ func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, ip 
 
 	if existingSession == nil {
 		if err = s.notificationsClient.SendSignInNewDeviceEmail(ctx, user.Email, newSession); err != nil {
-			s.log.Error(fmt.Errorf("AuthService - newAuthSession - notificationsClient.SendSignInNewDeviceEmail: %w", err), "sessionID", newSession.ID)
+			s.log.Error(fmt.Errorf("AuthService - newAuthSession - notificationsClient.SendSignInNewDeviceEmail: %w", err), "sessionID", newSession.Id)
 			return nil, err
 		}
 	}

@@ -18,11 +18,11 @@ func TestDeactivateAccSuccess(t *testing.T) {
 	ctx := context.Background()
 	mockUser := helpers.MockUser()
 	authSuite.mockUsersRepo.EXPECT().
-		UpdateIsActiveById(ctx, mockUser.ID, false).
+		UpdateIsActiveById(ctx, mockUser.Id, false).
 		Return(mockUser, nil)
 	authSuite.mockMailSender.EXPECT().SendAccDeactivationEmail(ctx, mockUser.Email).Return(nil)
 
-	err := authSuite.service.DeactivateAccount(ctx, mockUser.ID)
+	err := authSuite.service.DeactivateAccount(ctx, mockUser.Id)
 
 	assert.NoError(t, err)
 }

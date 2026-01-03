@@ -18,7 +18,7 @@ func TestInsertUser(t *testing.T) {
 	testSuite := pgrepos.NewTestSuite(t)
 
 	checkUserValid := func(expectedUser *entity.User, insertedUser *entity.User) {
-		assert.NotEmpty(t, insertedUser.ID)
+		assert.NotEmpty(t, insertedUser.Id)
 		assert.WithinDuration(t, time.Now(), insertedUser.CreatedAt, time.Second)
 		assert.WithinDuration(t, time.Now(), insertedUser.UpdatedAt, time.Second)
 		assert.Equal(t, expectedUser.Email, insertedUser.Email)
@@ -38,7 +38,7 @@ func TestInsertUser(t *testing.T) {
 		insertedUser, err := testSuite.Users.Insert(testSuite.TxCtx, user)
 		require.NoError(t, err)
 		checkUserValid(user, insertedUser)
-		checkUserInDB(user, insertedUser.ID)
+		checkUserInDB(user, insertedUser.Id)
 	})
 
 	t.Run("insert along with 2 fa related entity", func(t *testing.T) {
@@ -47,7 +47,7 @@ func TestInsertUser(t *testing.T) {
 		require.NoError(t, err)
 		checkUserValid(user, insertedUser)
 		require.NotNil(t, insertedUser.TwoFactorAuth)
-		assert.Equal(t, insertedUser.ID, insertedUser.TwoFactorAuth.UserId)
+		assert.Equal(t, insertedUser.Id, insertedUser.TwoFactorAuth.UserId)
 		assert.Equal(t, user.TwoFactorAuth.Transport, insertedUser.TwoFactorAuth.Transport)
 	})
 
@@ -87,9 +87,9 @@ func TestGetByLogin(t *testing.T) {
 
 	assertSuccess := func(user *entity.User, err error) {
 		assert.NoError(t, err)
-		assert.Equal(t, expectedUser.ID, user.ID)
+		assert.Equal(t, expectedUser.Id, user.Id)
 		require.NotNil(t, user.TwoFactorAuth)
-		assert.Equal(t, user.ID, user.TwoFactorAuth.UserId)
+		assert.Equal(t, user.Id, user.TwoFactorAuth.UserId)
 	}
 
 	t.Run("by username", func(t *testing.T) {
@@ -115,9 +115,9 @@ func TestGetByID(t *testing.T) {
 	expectedUser, err := testSuite.Users.Insert(testSuite.TxCtx, helpers.MockUser())
 	require.NoError(t, err)
 	t.Run("success", func(t *testing.T) {
-		user, err := testSuite.Users.GetByID(testSuite.TxCtx, expectedUser.ID)
+		user, err := testSuite.Users.GetByID(testSuite.TxCtx, expectedUser.Id)
 		assert.NoError(t, err)
-		assert.Equal(t, expectedUser.ID, user.ID)
+		assert.Equal(t, expectedUser.Id, user.Id)
 		assert.NotNil(t, user.TwoFactorAuth)
 	})
 	t.Run("not found", func(t *testing.T) {
@@ -133,9 +133,9 @@ func TestUpdateIsActiveById(t *testing.T) {
 	require.NoError(t, err)
 	expectedIsActive := gofakeit.Bool()
 	t.Run("success", func(t *testing.T) {
-		user, err := testSuite.Users.UpdateIsActiveById(testSuite.TxCtx, expectedUser.ID, expectedIsActive)
+		user, err := testSuite.Users.UpdateIsActiveById(testSuite.TxCtx, expectedUser.Id, expectedIsActive)
 		assert.NoError(t, err)
-		assert.Equal(t, expectedUser.ID, user.ID)
+		assert.Equal(t, expectedUser.Id, user.Id)
 		assert.Equal(t, expectedIsActive, user.IsActive)
 	})
 	t.Run("not found", func(t *testing.T) {
@@ -162,11 +162,11 @@ func TestCreatePasskeyCredential(t *testing.T) {
 	expectedUser, err := testSuite.Users.Insert(testSuite.TxCtx, helpers.MockUser())
 	require.NoError(t, err)
 	expectedCredential := helpers.MockPasskeyCredential()
-	expectedCredential.UserId = expectedUser.ID
+	expectedCredential.UserId = expectedUser.Id
 	t.Run("success", func(t *testing.T) {
-		err := testSuite.Users.CreatePasskeyCredential(testSuite.TxCtx, expectedUser.ID, expectedCredential)
+		err := testSuite.Users.CreatePasskeyCredential(testSuite.TxCtx, expectedUser.Id, expectedCredential)
 		assert.NoError(t, err)
-		user, err := testSuite.Users.GetByIDWithPasskeyCredentials(testSuite.TxCtx, expectedUser.ID)
+		user, err := testSuite.Users.GetByIDWithPasskeyCredentials(testSuite.TxCtx, expectedUser.Id)
 		require.NoError(t, err)
 		require.NotNil(t, user)
 		assertUserHasCred(t, user.PasskeyCredentials, expectedCredential)
@@ -184,7 +184,7 @@ func TestGetByIDWithPasskeyCredentials(t *testing.T) {
 	expectedUser, err := testSuite.Users.Insert(testSuite.TxCtx, helpers.MockUser())
 	require.NoError(t, err)
 	expectedCredential := helpers.MockPasskeyCredential()
-	expectedCredential.UserId = expectedUser.ID
+	expectedCredential.UserId = expectedUser.Id
 	qb := testSuite.Users.Builder.Insert(`"passkey_credential"(id, public_key, user_id, transports)`).
 		Values(expectedCredential.ID, expectedCredential.PublicKey, expectedCredential.UserId, expectedCredential.Transports)
 	query, args := qb.MustSql()
@@ -192,7 +192,7 @@ func TestGetByIDWithPasskeyCredentials(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("success", func(t *testing.T) {
-		user, err := testSuite.Users.GetByIDWithPasskeyCredentials(testSuite.TxCtx, expectedUser.ID)
+		user, err := testSuite.Users.GetByIDWithPasskeyCredentials(testSuite.TxCtx, expectedUser.Id)
 		assert.NoError(t, err)
 		require.NotNil(t, user)
 		assertUserHasCred(t, user.PasskeyCredentials, expectedCredential)
@@ -201,7 +201,7 @@ func TestGetByIDWithPasskeyCredentials(t *testing.T) {
 	t.Run("success no credentials", func(t *testing.T) {
 		expectedUser, err := testSuite.Users.Insert(testSuite.TxCtx, helpers.MockUser())
 		require.NoError(t, err)
-		user, err := testSuite.Users.GetByIDWithPasskeyCredentials(testSuite.TxCtx, expectedUser.ID)
+		user, err := testSuite.Users.GetByIDWithPasskeyCredentials(testSuite.TxCtx, expectedUser.Id)
 		assert.NoError(t, err)
 		require.NotNil(t, user)
 		assert.Nil(t, user.PasskeyCredentials)
@@ -222,7 +222,7 @@ func TestCreateTwoFa(t *testing.T) {
 	mockUser.TwoFactorAuth = nil
 	mockUser, err := testSuite.Users.Insert(testSuite.TxCtx, mockUser)
 	require.NoError(t, err)
-	mockTwoFa.UserId = mockUser.ID
+	mockTwoFa.UserId = mockUser.Id
 	expectedTwoFa, err := testSuite.Users.CreateTwoFa(testSuite.TxCtx, &mockTwoFa)
 	require.NoError(t, err)
 	require.NotNil(t, expectedTwoFa.UserId)

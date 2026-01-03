@@ -56,7 +56,7 @@ func (p *WebAuthnProvider) GenerateRegistrationOptions(user *entity.User) (gatew
 }
 
 func (p *WebAuthnProvider) VerifyRegistrationOptions(userId int, rawCredential []byte, prevSession *entity.PasskeyRegistrationSession) (*entity.PasskeyCredential, error) {
-	webauthnUser := webauthnUserAdapter{user: &entity.User{ID: userId}}
+	webauthnUser := webauthnUserAdapter{user: &entity.User{Id: userId}}
 	var ccr protocol.CredentialCreationResponse
 	if err := json.Unmarshal(rawCredential, &ccr); err != nil {
 		return nil, fmt.Errorf("%w: malformed json", gateways.ErrInvalidCredential)

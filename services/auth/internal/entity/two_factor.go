@@ -1,13 +1,17 @@
 package entity
 
-type TwoFATransport string
+type TwoFATransport int
 
 const (
-	TWO_FA_TELEGRAM TwoFATransport = "telegram"
-	TWO_FA_EMAIL    TwoFATransport = "email"
-	TWO_FA_SMS      TwoFATransport = "sms"
-	TWO_FA_TOTP_APP TwoFATransport = "totp_app"
+	TWO_FA_EMAIL    TwoFATransport = 1
+	TWO_FA_SMS      TwoFATransport = 2
+	TWO_FA_TELEGRAM TwoFATransport = 3
+	TWO_FA_TOTP_APP TwoFATransport = 4
 )
+
+func (t TwoFATransport) String() string {
+	return []string{"telegram", "email", "sms", "totp_app"}[t-1]
+}
 
 var OtpTransports = []TwoFATransport{TWO_FA_EMAIL, TWO_FA_TELEGRAM, TWO_FA_TOTP_APP}
 

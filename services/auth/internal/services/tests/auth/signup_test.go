@@ -15,8 +15,8 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func mockSignUpPayload() *schemas.SignUpSchema {
-	return &schemas.SignUpSchema{
+func mockSignUpPayload() *schemas.SignUpDto {
+	return &schemas.SignUpDto{
 		Username:         gofakeit.Username(),
 		Email:            gofakeit.Email(),
 		FirstName:        helpers.RandomChoose(gofakeit.FirstName(), ""),
@@ -44,9 +44,9 @@ func TestSignupSuccess(t *testing.T) {
 		Password:  []byte(dto.Password),
 	}
 	insertedUser := *userToInsert
-	insertedUser.ID = gofakeit.Number(1, 1000)
+	insertedUser.Id = gofakeit.Number(1, 1000)
 	expectedSession := helpers.MockAuthSession(true)
-	expectedSession.UserId = insertedUser.ID
+	expectedSession.UserId = insertedUser.Id
 	setExpectations := func(rememberMe bool) {
 		dto.RememberMe = rememberMe
 		authSuite.mockCodeRepo.EXPECT().GetByEmail(ctx, dto.Email).Return(mockOTP, nil)
@@ -56,7 +56,7 @@ func TestSignupSuccess(t *testing.T) {
 			Return(true, nil)
 		authSuite.mockSecurityProvider.EXPECT().
 			GenerateSessionId().
-			Return(expectedSession.ID)
+			Return(expectedSession.Id)
 		authSuite.mockSecurityProvider.EXPECT().
 			HashPassword(dto.Password).
 			Return(userToInsert.Password, nil)
@@ -68,7 +68,7 @@ func TestSignupSuccess(t *testing.T) {
 		authSuite.mockSessionsRepo.EXPECT().Insert(ctx, gomock.Any()).
 			DoAndReturn(func(ctx context.Context, session *entity.AuthSession) (*entity.AuthSession, error) {
 				assert.Equal(t, expectedSession.UserId, session.UserId)
-				assert.Equal(t, expectedSession.ID, session.ID)
+				assert.Equal(t, expectedSession.Id, session.Id)
 				assert.Equal(t, dto.IPAddr, session.ClientIdentity.IPAddr)
 				assert.Equal(t, dto.DeviceInfo, session.ClientIdentity.DeviceInfo)
 				assert.Equal(t, expectedLocation, session.ClientIdentity.Location)
@@ -92,7 +92,7 @@ func TestSignupSuccess(t *testing.T) {
 	makeAssertions := func(authSession *entity.AuthSession, err error) {
 		assert.NoError(t, err)
 		assert.True(t, authSession.IsActive())
-		assert.Equal(t, expectedSession.ID, authSession.ID)
+		assert.Equal(t, expectedSession.Id, authSession.Id)
 		assert.Equal(t, insertedUser, *authSession.User)
 	}
 	t.Run("Short lived session", func(t *testing.T) {

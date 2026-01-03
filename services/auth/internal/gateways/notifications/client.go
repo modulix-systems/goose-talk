@@ -36,6 +36,6 @@ func (c *Client) SendAccDeactivationEmail(ctx context.Context, to string) error 
 }
 
 func (c *Client) SendSignInNewDeviceEmail(ctx context.Context, to string, newSession *entity.AuthSession) error {
-	c.log.Info("Sending new device sign in email", "to", to, "sessionID", newSession.ID)
+	c.log.Info("Sending new device sign in email", "to", to, "sessionID", newSession.Id)
 	return nil
 }

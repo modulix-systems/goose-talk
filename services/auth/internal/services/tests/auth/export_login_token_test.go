@@ -14,8 +14,8 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func fakeExportLoginTokenPayload(fromEnt *entity.QRCodeLoginToken) *schemas.ExportLoginTokenSchema {
-	return &schemas.ExportLoginTokenSchema{
+func fakeExportLoginTokenPayload(fromEnt *entity.QRCodeLoginToken) *schemas.ExportLoginTokenDto {
+	return &schemas.ExportLoginTokenDto{
 		ClientId: fromEnt.ClientId,
 		LoginInfoSchema: schemas.LoginInfoSchema{
 			IPAddr:     fromEnt.ClientIdentity.IPAddr,

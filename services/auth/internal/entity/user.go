@@ -5,7 +5,7 @@ import (
 )
 
 type User struct {
-	ID                 int    `json:"id"`
+	Id                 int    `json:"id"`
 	Username           string `json:"username"`
 	Password           []byte `json:"-"`
 	Email              string `json:"email"`
@@ -20,7 +20,7 @@ type User struct {
 	AboutMe            string         `json:"about_me"`
 	TwoFactorAuth      *TwoFactorAuth `json:"two_factor_auth" db:"-"`
 	PasskeyCredentials []PasskeyCredential
-	PrivateKey string `json:"-"`
+	PrivateKey         string `json:"-"`
 }
 
 func (u *User) Is2FAEnabled() bool {

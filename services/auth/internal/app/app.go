@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/modulix-systems/goose-talk/internal/config"
 	rpc_v1 "github.com/modulix-systems/goose-talk/internal/controller/grpc/v1"
 	"github.com/modulix-systems/goose-talk/internal/gateways/geoip"
@@ -58,7 +59,7 @@ func Run(cfg *config.Config) {
 
 	notificationsClient := notifications.New(log)
 	geoipClient := geoip.New()
-	securityProvider := security.New(cfg.TotpTTL, config.OTP_LENGTH)
+	securityProvider := security.New(cfg.TotpTTL, config.OTP_LENGTH, cfg.App.Name)
 	webauthnProvider := webauthn.New(cfg.App.Name, appUrl.Host, []string{appUrl.Host})
 
 	tgBotClient, err := tgbot.New(cfg.Tgbot.Token)
@@ -85,10 +86,12 @@ func Run(cfg *config.Config) {
 		log,
 	)
 
+	validate := validator.New(validator.WithRequiredStructEnabled())
 	grpcServer := grpcserver.New(log, cfg.Port)
-	rpc_v1.Register(grpcServer, authService, log)
+	rpc_v1.Register(grpcServer, authService, log, validate)
 
 	go grpcServer.Run()
+	log.Info("GRPC server is ready to accept incoming requests")
 
 	// Waiting signal
 	interrupt := make(chan os.Signal, 1)

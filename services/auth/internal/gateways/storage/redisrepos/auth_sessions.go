@@ -42,11 +42,11 @@ func (repo *AuthSessionsRepo) CreateWithTTL(ctx context.Context, session *entity
 		CreatedAt:   newSession.CreatedAt,
 		IsLongLived: utils.BoolString(newSession.IsLongLived),
 		Location:    newSession.Location,
-		IPAddr:      newSession.IPAddr,
+		IPAddr:      newSession.IpAddr,
 		DeviceInfo:  newSession.DeviceInfo,
 	}
 
-	key := prefixAuthSession(session.UserId, session.ID)
+	key := prefixAuthSession(session.UserId, session.Id)
 
 	if err := repo.HSet(ctx, key, data).Err(); err != nil {
 		return nil, mapError(err)
@@ -86,7 +86,7 @@ func (repo *AuthSessionsRepo) GetByLoginData(ctx context.Context, userId int, ip
 
 	deviceInfo = strings.ToLower(deviceInfo)
 	for _, session := range sessions {
-		if session.IPAddr == ip && strings.ToLower(session.DeviceInfo) == deviceInfo {
+		if session.IpAddr == ip && strings.ToLower(session.DeviceInfo) == deviceInfo {
 			return &session, nil
 		}
 	}
@@ -113,13 +113,13 @@ func (repo *AuthSessionsRepo) getSession(ctx context.Context, key string) (*enti
 	}
 
 	return &entity.AuthSession{
-		ID:          extractAuthSessionId(key),
+		Id:          extractAuthSessionId(key),
 		UserId:      extractAuthSessionUserId(key),
 		LastSeenAt:  sessionData.LastSeenAt,
 		CreatedAt:   sessionData.CreatedAt,
 		IsLongLived: bool(sessionData.IsLongLived),
 		Location:    sessionData.Location,
-		IPAddr:      sessionData.IPAddr,
+		IpAddr:      sessionData.IPAddr,
 		DeviceInfo:  sessionData.DeviceInfo,
 	}, nil
 }

@@ -107,6 +107,8 @@ func (l *Logger) log(logEvent *zerolog.Event, message interface{}, args ...inter
 			logEvent = logEvent.Int(key, val)
 		case float64:
 			logEvent = logEvent.Float64(key, val)
+		case error:
+			logEvent = logEvent.Str(key, val.Error())
 		default:
 			panic(fmt.Sprintf("Unknown value '%v' of type: %T", val, val))
 		}

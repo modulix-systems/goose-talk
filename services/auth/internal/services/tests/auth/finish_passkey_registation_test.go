@@ -26,13 +26,13 @@ func TestFinishPasskeyRegistrationSuccess(t *testing.T) {
 	fakePasskeyCred := helpers.MockPasskeyCredential()
 	serializedPasskeySession, err := json.Marshal(fakePasskeySession)
 	require.NoError(t, err)
-	authSuite.mockKeyValueStorage.EXPECT().Get(fmt.Sprintf("passkey_session:%d", fakeUser.ID)).
+	authSuite.mockKeyValueStorage.EXPECT().Get(fmt.Sprintf("passkey_session:%d", fakeUser.Id)).
 		Return(string(serializedPasskeySession), nil)
-	authSuite.mockWebAuthnProvider.EXPECT().VerifyRegistrationOptions(fakeUser.ID, fakeRawCredential, fakePasskeySession).
+	authSuite.mockWebAuthnProvider.EXPECT().VerifyRegistrationOptions(fakeUser.Id, fakeRawCredential, fakePasskeySession).
 		Return(fakePasskeyCred, nil)
-	authSuite.mockUsersRepo.EXPECT().AddPasskeyCredential(ctx, fakeUser.ID, fakePasskeyCred).Return(nil)
+	authSuite.mockUsersRepo.EXPECT().AddPasskeyCredential(ctx, fakeUser.Id, fakePasskeyCred).Return(nil)
 
-	err = authSuite.service.FinishPasskeyRegistration(ctx, fakeUser.ID, fakeRawCredential)
+	err = authSuite.service.FinishPasskeyRegistration(ctx, fakeUser.Id, fakeRawCredential)
 	assert.NoError(t, err)
 }
 
@@ -45,12 +45,12 @@ func TestFinishPasskeyRegistrationInvalidCredential(t *testing.T) {
 	fakePasskeySession := helpers.MockPasskeySession()
 	serializedPasskeySession, err := json.Marshal(fakePasskeySession)
 	require.NoError(t, err)
-	authSuite.mockKeyValueStorage.EXPECT().Get(fmt.Sprintf("passkey_session:%d", fakeUser.ID)).
+	authSuite.mockKeyValueStorage.EXPECT().Get(fmt.Sprintf("passkey_session:%d", fakeUser.Id)).
 		Return(string(serializedPasskeySession), nil)
-	authSuite.mockWebAuthnProvider.EXPECT().VerifyRegistrationOptions(fakeUser.ID, fakeRawCredential, fakePasskeySession).
+	authSuite.mockWebAuthnProvider.EXPECT().VerifyRegistrationOptions(fakeUser.Id, fakeRawCredential, fakePasskeySession).
 		Return(nil, gateways.ErrInvalidCredential)
 
-	err = authSuite.service.FinishPasskeyRegistration(ctx, fakeUser.ID, fakeRawCredential)
+	err = authSuite.service.FinishPasskeyRegistration(ctx, fakeUser.Id, fakeRawCredential)
 	assert.ErrorIs(t, err, auth.ErrInvalidPasskeyCredential)
 }
 
@@ -60,9 +60,9 @@ func TestFinishPasskeyRegistrationNotFoundSession(t *testing.T) {
 	ctx := context.Background()
 	fakeUser := helpers.MockUser()
 	fakeRawCredential := []byte(gofakeit.Sentence(3))
-	authSuite.mockKeyValueStorage.EXPECT().Get(fmt.Sprintf("passkey_session:%d", fakeUser.ID)).
+	authSuite.mockKeyValueStorage.EXPECT().Get(fmt.Sprintf("passkey_session:%d", fakeUser.Id)).
 		Return("", storage.ErrNotFound)
 
-	err := authSuite.service.FinishPasskeyRegistration(ctx, fakeUser.ID, fakeRawCredential)
+	err := authSuite.service.FinishPasskeyRegistration(ctx, fakeUser.Id, fakeRawCredential)
 	assert.ErrorIs(t, err, auth.ErrPasskeyRegistrationNotInProgress)
 }
