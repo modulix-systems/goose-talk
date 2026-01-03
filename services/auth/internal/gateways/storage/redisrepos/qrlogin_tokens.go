@@ -15,12 +15,12 @@ type QRLoginTokensRepo struct {
 }
 
 type TokenData struct {
-	IPAddr     string
+	IpAddr     string
 	DeviceInfo string
 }
 
 func (repo *QRLoginTokensRepo) CreateWithTTL(ctx context.Context, token *entity.QRCodeLoginToken, ttl time.Duration) error {
-	data := TokenData{IPAddr: token.IpAddr, DeviceInfo: token.DeviceInfo}
+	data := TokenData{IpAddr: token.IpAddr, DeviceInfo: token.DeviceInfo}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("redisrepos - QRLoginTokenRepo.CreateWithTTL - json.Marshal: %w", err)
@@ -40,7 +40,7 @@ func (repo *QRLoginTokensRepo) FindOne(ctx context.Context, value string, client
 	if err := json.Unmarshal([]byte(jsonData), &data); err != nil {
 		return nil, fmt.Errorf("redisrepos - QRLoginTokenRepo.GetByValue - json.Unmarshal: %w", err)
 	}
-	return &entity.QRCodeLoginToken{Value: value, ClientId: clientId, IpAddr: data.IPAddr, DeviceInfo: data.DeviceInfo}, nil
+	return &entity.QRCodeLoginToken{Value: value, ClientId: clientId, IpAddr: data.IpAddr, DeviceInfo: data.DeviceInfo}, nil
 }
 
 func (repo *QRLoginTokensRepo) DeleteAllByClient(ctx context.Context, clientId string) error {

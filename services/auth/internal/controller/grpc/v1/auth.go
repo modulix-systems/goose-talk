@@ -3,6 +3,7 @@ package rpc_v1
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"buf.build/gen/go/co3n/goose-proto/grpc/go/auth/v1/authv1grpc"
 	pb "buf.build/gen/go/co3n/goose-proto/protocolbuffers/go/auth/v1"
@@ -31,7 +32,7 @@ func (a *AuthV1) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.SignUpR
 		FirstName:        req.GetFirstName(),
 		LastName:         req.GetLastName(),
 		ConfirmationCode: req.GetIpAddr(),
-		IPAddr:           req.GetIpAddr(),
+		IpAddr:           req.GetIpAddr(),
 		DeviceInfo:       req.GetDeviceInfo(),
 		BirthDate:        req.BirthDate.AsTime(),
 		AboutMe:          req.GetAboutMe(),

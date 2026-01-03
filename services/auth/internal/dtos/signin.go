@@ -6,7 +6,7 @@ type SignInRequest struct {
 	Login      string `validate:"required"`
 	Password   string `validate:"required,min=8"`
 	RememberMe bool
-	IPAddr     string `validate:"required,ip"`
+	IpAddr     string `validate:"required,ip"`
 	DeviceInfo string `validate:"required"`
 }
 

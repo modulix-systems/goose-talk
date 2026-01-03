@@ -23,7 +23,7 @@ type SessionData struct {
 	CreatedAt   time.Time        `redis:"CreatedAt"`
 	IsLongLived utils.BoolString `redis:"IsLongLived"`
 	Location    string           `redis:"Location"`
-	IPAddr      string           `redis:"IPAddr"`
+	IpAddr      string           `redis:"IpAddr"`
 	DeviceInfo  string           `redis:"DeviceInfo"`
 }
 
@@ -42,7 +42,7 @@ func (repo *AuthSessionsRepo) CreateWithTTL(ctx context.Context, session *entity
 		CreatedAt:   newSession.CreatedAt,
 		IsLongLived: utils.BoolString(newSession.IsLongLived),
 		Location:    newSession.Location,
-		IPAddr:      newSession.IpAddr,
+		IpAddr:      newSession.IpAddr,
 		DeviceInfo:  newSession.DeviceInfo,
 	}
 
@@ -119,7 +119,7 @@ func (repo *AuthSessionsRepo) getSession(ctx context.Context, key string) (*enti
 		CreatedAt:   sessionData.CreatedAt,
 		IsLongLived: bool(sessionData.IsLongLived),
 		Location:    sessionData.Location,
-		IpAddr:      sessionData.IPAddr,
+		IpAddr:      sessionData.IpAddr,
 		DeviceInfo:  sessionData.DeviceInfo,
 	}, nil
 }

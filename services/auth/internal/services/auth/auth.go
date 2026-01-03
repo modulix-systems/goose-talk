@@ -24,7 +24,7 @@ type AuthService struct {
 	longLivedSessionTTL time.Duration
 	loginTokenTTL       time.Duration
 	sessionsRepo        gateways.AuthSessionsRepo
-	geoIPApi            gateways.GeoIPApi
+	geoIpApi            gateways.GeoIpApi
 	loginTokenRepo      gateways.QRLoginTokenRepo
 	webAuthnProvider    gateways.WebAuthnProvider
 	log                 logger.Interface
@@ -41,7 +41,7 @@ func New(
 	webAuthnProvider gateways.WebAuthnProvider,
 	securityProvider gateways.SecurityProvider,
 	tgApi gateways.TelegramBotClient,
-	geoIPApi gateways.GeoIPApi,
+	geoIpApi gateways.GeoIpApi,
 
 	otpTTL time.Duration,
 	loginTokenTTL time.Duration,
@@ -62,7 +62,7 @@ func New(
 		securityProvider:    securityProvider,
 		tgApi:               tgApi,
 		sessionsRepo:        sessionsRepo,
-		geoIPApi:            geoIPApi,
+		geoIpApi:            geoIpApi,
 		loginTokenRepo:      loginTokenRepo,
 		webAuthnProvider:    webAuthnProvider,
 		log:                 log,
@@ -107,7 +107,7 @@ func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, ip 
 		sessionTTL = s.longLivedSessionTTL
 	}
 
-	location, err := s.geoIPApi.GetLocationByIP(ip)
+	location, err := s.geoIpApi.GetLocationByIP(ip)
 	if err != nil {
 		return nil, err
 	}

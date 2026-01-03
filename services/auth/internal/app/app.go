@@ -91,7 +91,6 @@ func Run(cfg *config.Config) {
 	rpc_v1.Register(grpcServer, authService, log, validate)
 
 	go grpcServer.Run()
-	log.Info("GRPC server is ready to accept incoming requests")
 
 	// Waiting signal
 	interrupt := make(chan os.Signal, 1)

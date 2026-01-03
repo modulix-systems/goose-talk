@@ -53,7 +53,7 @@ func (s *AuthService) SignUp(
 		return nil, err
 	}
 
-	session, err := s.newAuthSession(ctx, user, dto.IPAddr, dto.DeviceInfo, false)
+	session, err := s.newAuthSession(ctx, user, dto.IpAddr, dto.DeviceInfo, false)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func (s *AuthService) SignIn(ctx context.Context, dto *dtos.SignInRequest) (*dto
 		return &dtos.SignInResponse{User: user}, nil
 	}
 
-	session, err := s.newAuthSession(ctx, user, dto.IPAddr, dto.DeviceInfo, dto.RememberMe)
+	session, err := s.newAuthSession(ctx, user, dto.IpAddr, dto.DeviceInfo, dto.RememberMe)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +202,7 @@ func (s *AuthService) VerifyTwoFa(ctx context.Context, dto *dtos.Verify2FAReques
 		}
 	}
 
-	session, err := s.newAuthSession(ctx, user, dto.IPAddr, dto.DeviceInfo, dto.RememberMe)
+	session, err := s.newAuthSession(ctx, user, dto.IpAddr, dto.DeviceInfo, dto.RememberMe)
 	if err != nil {
 		return nil, err
 	}
@@ -440,7 +440,7 @@ func (s *AuthService) ExportLoginToken(ctx context.Context, dto *dtos.ExportLogi
 	token := &entity.QRCodeLoginToken{
 		ClientId:   dto.ClientId,
 		Value:      tokenValue,
-		IpAddr:     dto.IPAddr,
+		IpAddr:     dto.IpAddr,
 		DeviceInfo: dto.DeviceInfo,
 	}
 

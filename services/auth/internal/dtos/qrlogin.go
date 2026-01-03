@@ -2,6 +2,6 @@ package dtos
 
 type ExportLoginTokenRequest struct {
 	ClientId   string
-	IPAddr     string
+	IpAddr     string
 	DeviceInfo string
 }

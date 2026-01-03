@@ -32,7 +32,7 @@ func (s *Server) Run() {
 	if err != nil {
 		s.log.Fatal(fmt.Errorf("grpcserver - Run - net.Listen: %w", err), "port", s.Port)
 	}
-	s.log.Info("Starting gRPC server", "address", listener.Addr().String())
+	s.log.Info("gRPC server is ready to accept incoming requests", "address", listener.Addr().String())
 	if err := s.server.Serve(listener); err != nil {
 		s.log.Error(fmt.Errorf("Serve grpc server error: %w", err))
 		s.ServeErr <- err

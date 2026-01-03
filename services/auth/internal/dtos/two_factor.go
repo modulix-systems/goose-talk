@@ -8,7 +8,7 @@ type (
 		Email      string
 		Code       string
 		RememberMe bool
-		IPAddr     string
+		IpAddr     string
 		DeviceInfo string
 		// SignInConfirmationCode must be present only if TOTP 2fa type is used
 		SignInConfirmationCode string

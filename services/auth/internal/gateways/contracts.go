@@ -73,7 +73,7 @@ type (
 		GetStartLinkWithCode(code string) string
 		GetLatestMsg(ctx context.Context) (*TelegramMsg, error)
 	}
-	GeoIPApi interface {
+	GeoIpApi interface {
 		GetLocationByIP(ip string) (string, error)
 	}
 	Transaction interface {

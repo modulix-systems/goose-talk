@@ -14,7 +14,7 @@ type SignUpRequest struct {
 	FirstName        string
 	LastName         string
 	ConfirmationCode string `validate:"required,len=6"`
-	IPAddr           string `validate:"required,ip"`
+	IpAddr           string `validate:"required,ip"`
 	DeviceInfo       string `validate:"required"`
 	BirthDate        time.Time
 	AboutMe          string
