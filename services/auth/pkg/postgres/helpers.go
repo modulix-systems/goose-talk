@@ -22,11 +22,15 @@ type Queryable interface {
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 }
 
-type SupportsAcquire interface {
+type Releaseable interface {
+	Release()
+}
+
+type Acquirable interface {
 	Acquire(ctx context.Context) (Queryable, error)
 }
 
-func GetQueryable(ctx context.Context, acquirable SupportsAcquire) (Queryable, error) {
+func GetQueryable(ctx context.Context, acquirable Acquirable) (Queryable, error) {
 	tx := ctx.Value(config.TRANSACTION_CTX_KEY)
 	if tx != nil {
 		return tx.(Queryable), nil
@@ -45,6 +49,9 @@ func ExecAndGetMany[T any](ctx context.Context, qb queryBuilder, pool *PGPool, m
 	queryable, err := GetQueryable(ctx, pool)
 	if err != nil {
 		return nil, err
+	}
+	if r, ok := queryable.(Releaseable); ok {
+		defer r.Release()
 	}
 	query, args, err := qb.ToSql()
 	if err != nil {

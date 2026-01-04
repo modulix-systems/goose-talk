@@ -16,12 +16,12 @@ type UsersRepo struct {
 	*postgres.Postgres
 }
 
-func (repo *UsersRepo) Insert(ctx context.Context, user *entity.User) (*entity.User, error) {
+func (repo *UsersRepo) Save(ctx context.Context, user *entity.User) (*entity.User, error) {
 	query := repo.Builder.Insert(`"user"`).
 		Columns("username", "password", "email", "first_name", "last_name", "photo_url", "birth_date", "about_me", "is_active", "private_key").
 		Values(user.Username, user.Password, user.Email, user.FirstName, user.LastName, user.PhotoUrl, user.BirthDate, user.AboutMe, user.IsActive, user.PrivateKey).
 		Suffix("RETURNING *")
-	insertedUser, err := postgres.ExecAndGetOne[entity.User](ctx, query, repo.Pool, nil)
+	savedUser, err := postgres.ExecAndGetOne[entity.User](ctx, query, repo.Pool, nil)
 	if err != nil {
 		if postgres.IsUniqueViolationError(err) {
 			return nil, storage.ErrAlreadyExists
@@ -29,20 +29,23 @@ func (repo *UsersRepo) Insert(ctx context.Context, user *entity.User) (*entity.U
 		return nil, err
 	}
 	if user.TwoFactorAuth != nil {
-		user.TwoFactorAuth.UserId = insertedUser.Id
+		user.TwoFactorAuth.UserId = savedUser.Id
 		twoFA, err := repo.CreateTwoFa(ctx, user.TwoFactorAuth)
 		if err != nil {
 			return nil, err
 		}
-		insertedUser.TwoFactorAuth = twoFA
+		savedUser.TwoFactorAuth = twoFA
 	}
-	return insertedUser, nil
+	return savedUser, nil
 }
 
 func (repo *UsersRepo) CheckExistsWithEmail(ctx context.Context, email string) (bool, error) {
 	queryable, err := postgres.GetQueryable(ctx, repo.Pool)
 	if err != nil {
 		return false, err
+	}
+	if r, ok := queryable.(postgres.Releaseable); ok {
+		defer r.Release()
 	}
 
 	query, args := repo.Builder.Select("id").From(`"user"`).Where(squirrel.Eq{"email": email}).MustSql()
@@ -95,6 +98,9 @@ func (repo *UsersRepo) CreatePasskeyCredential(ctx context.Context, userId int, 
 	if err != nil {
 		return err
 	}
+	if r, ok := queryable.(postgres.Releaseable); ok {
+		defer r.Release()
+	}
 	query, args := qb.MustSql()
 
 	if _, err := queryable.Exec(ctx, query, args...); err != nil {
@@ -146,6 +152,9 @@ func (repo *UsersRepo) UpdateTwoFaContact(ctx context.Context, userId int, conta
 	queryable, err := postgres.GetQueryable(ctx, repo.Pool)
 	if err != nil {
 		return err
+	}
+	if r, ok := queryable.(postgres.Releaseable); ok {
+		defer r.Release()
 	}
 	query, args := qb.MustSql()
 
