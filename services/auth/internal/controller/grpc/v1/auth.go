@@ -3,7 +3,6 @@ package rpc_v1
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"buf.build/gen/go/co3n/goose-proto/grpc/go/auth/v1/authv1grpc"
 	pb "buf.build/gen/go/co3n/goose-proto/protocolbuffers/go/auth/v1"
@@ -31,17 +30,18 @@ func (a *AuthV1) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.SignUpR
 		Email:            req.GetEmail(),
 		FirstName:        req.GetFirstName(),
 		LastName:         req.GetLastName(),
-		ConfirmationCode: req.GetIpAddr(),
+		ConfirmationCode: req.GetConfirmationCode(),
 		IpAddr:           req.GetIpAddr(),
 		DeviceInfo:       req.GetDeviceInfo(),
 		BirthDate:        req.BirthDate.AsTime(),
 		AboutMe:          req.GetAboutMe(),
 	}
-	if errs := reqDto.Validate(); errs != nil {
+	if errs := reqDto.Validate(); len(errs) > 0 {
 		st := status.New(codes.InvalidArgument, "Validation error")
 		st, _ = st.WithDetails(&errdetails.BadRequest{FieldViolations: errs})
 		return nil, st.Err()
 	}
+
 	result, err := a.service.SignUp(ctx, reqDto)
 	if err != nil {
 		if errors.Is(err, auth.ErrOtpIsNotValid) {

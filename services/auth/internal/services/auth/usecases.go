@@ -36,12 +36,16 @@ func (s *AuthService) SignUp(
 	if err != nil {
 		return nil, err
 	}
-	user, err := s.usersRepo.Insert(
+
+	user, err := s.usersRepo.Save(
 		ctx,
 		&entity.User{
 			FirstName:  dto.FirstName,
 			LastName:   dto.LastName,
+			Username:   dto.Username,
+			BirthDate:  dto.BirthDate,
 			Email:      dto.Email,
+			AboutMe:    dto.AboutMe,
 			Password:   hashedPassword,
 			PrivateKey: s.securityProvider.GeneratePrivateKey(),
 		},
@@ -53,7 +57,7 @@ func (s *AuthService) SignUp(
 		return nil, err
 	}
 
-	session, err := s.newAuthSession(ctx, user, dto.IpAddr, dto.DeviceInfo, false)
+	session, err := s.newAuthSession(ctx, user, dto.IpAddr, dto.DeviceInfo, false, true)
 	if err != nil {
 		return nil, err
 	}
@@ -70,11 +74,9 @@ func (s *AuthService) SignUp(
 		}
 	}
 
-	go func() {
-		if err = s.notificationsClient.SendGreetingEmail(ctx, user.Email, displayName); err != nil {
-			s.log.Error("AuthService.SignUp - notificationsClient.SendGreetingEmail", "err", err, "to", user.Email)
-		}
-	}()
+	if err = s.notificationsClient.SendGreetingEmail(ctx, user.Email, displayName); err != nil {
+		s.log.Error("AuthService.SignUp - notificationsClient.SendGreetingEmail", "err", err, "to", user.Email)
+	}
 
 	return &dtos.SignUpResponse{Session: session, User: user}, nil
 }
@@ -147,7 +149,7 @@ func (s *AuthService) SignIn(ctx context.Context, dto *dtos.SignInRequest) (*dto
 		return &dtos.SignInResponse{User: user}, nil
 	}
 
-	session, err := s.newAuthSession(ctx, user, dto.IpAddr, dto.DeviceInfo, dto.RememberMe)
+	session, err := s.newAuthSession(ctx, user, dto.IpAddr, dto.DeviceInfo, dto.RememberMe, false)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +204,7 @@ func (s *AuthService) VerifyTwoFa(ctx context.Context, dto *dtos.Verify2FAReques
 		}
 	}
 
-	session, err := s.newAuthSession(ctx, user, dto.IpAddr, dto.DeviceInfo, dto.RememberMe)
+	session, err := s.newAuthSession(ctx, user, dto.IpAddr, dto.DeviceInfo, dto.RememberMe, false)
 	if err != nil {
 		return nil, err
 	}
@@ -465,7 +467,7 @@ func (s *AuthService) AcceptQRLoginToken(ctx context.Context, userId int, unauth
 		return nil, err
 	}
 
-	session, err := s.newAuthSession(ctx, user, token.IpAddr, token.DeviceInfo, true)
+	session, err := s.newAuthSession(ctx, user, token.IpAddr, token.DeviceInfo, true, false)
 	if err != nil {
 		return nil, err
 	}

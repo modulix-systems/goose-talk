@@ -25,7 +25,7 @@ func (req *SignUpRequest) Validate() validator.ValidationErrors {
 	validate.ValidateStruct(req)
 	if !req.BirthDate.IsZero() {
 		age := time.Now().Year() - req.BirthDate.Year()
-		validate.Check(age < 18, "birth_date", "You should be at least 18 years old to use it", validator.TOO_YOUNG)
+		validate.Check(age >= 18, "birth_date", "You should be at least 18 years old to use this service", validator.TOO_YOUNG)
 	}
 	return validate.Errors
 }

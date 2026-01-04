@@ -10,7 +10,7 @@ import (
 //go:generate mockgen -source=contracts.go -destination=../../tests/mocks/mocks_gateways.go -package=mocks
 type (
 	UsersRepo interface {
-		Insert(ctx context.Context, user *entity.User) (*entity.User, error)
+		Save(ctx context.Context, user *entity.User) (*entity.User, error)
 		CheckExistsWithEmail(ctx context.Context, email string) (bool, error)
 		GetByLogin(ctx context.Context, login string) (*entity.User, error)
 		GetByID(ctx context.Context, id int) (*entity.User, error)

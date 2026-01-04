@@ -90,15 +90,27 @@ func (s *AuthService) createOtp(ctx context.Context, email string, userId int) (
 
 // newAuthSession inserts a new session or updates existing one based on set of params
 // if new session was created - sends 'warning' email
-func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, ip string, deviceInfo string, rememberMe bool) (*entity.AuthSession, error) {
-	existingSession, err := s.sessionsRepo.GetByLoginData(ctx, user.Id, ip, deviceInfo)
-	if err != nil && !errors.Is(err, storage.ErrNotFound) {
-		return nil, err
-	}
+func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, ip string, deviceInfo string, rememberMe bool, signedUp bool) (newSession *entity.AuthSession, err error) {
+	if !signedUp {
+		var existingSession *entity.AuthSession
+		existingSession, err = s.sessionsRepo.GetByLoginData(ctx, user.Id, ip, deviceInfo)
+		if err != nil && !errors.Is(err, storage.ErrNotFound) {
+			return
+		}
 
-	if existingSession != nil {
-		if err := s.sessionsRepo.DeleteById(ctx, user.Id, existingSession.Id); err != nil {
-			return nil, err
+		if existingSession != nil {
+			if err = s.sessionsRepo.DeleteById(ctx, user.Id, existingSession.Id); err != nil {
+				return
+			}
+			defer func() {
+				// If new session was succesfully created - send email about new sign in and reassign the error
+				if newSession != nil {
+					err = s.notificationsClient.SendSignInNewDeviceEmail(ctx, user.Email, newSession)
+					if err != nil {
+						s.log.Error(fmt.Errorf("AuthService - newAuthSession - notificationsClient.SendSignInNewDeviceEmail: %w", err), "sessionID", newSession.Id)
+					}
+				}
+			}()
 		}
 	}
 
@@ -106,13 +118,13 @@ func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, ip 
 	if rememberMe {
 		sessionTTL = s.longLivedSessionTTL
 	}
-
+	s.log.Info("Query location")
 	location, err := s.geoIpApi.GetLocationByIP(ip)
 	if err != nil {
-		return nil, err
+		return
 	}
-
-	newSession, err := s.sessionsRepo.CreateWithTTL(
+	s.log.Info("Save session")
+	newSession, err = s.sessionsRepo.CreateWithTTL(
 		ctx,
 		&entity.AuthSession{
 			Id:          s.securityProvider.GenerateSessionId(),
@@ -125,15 +137,9 @@ func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, ip 
 		sessionTTL,
 	)
 	if err != nil {
-		return nil, err
+		return
 	}
+	s.log.Info("Return session")
 
-	if existingSession == nil {
-		if err = s.notificationsClient.SendSignInNewDeviceEmail(ctx, user.Email, newSession); err != nil {
-			s.log.Error(fmt.Errorf("AuthService - newAuthSession - notificationsClient.SendSignInNewDeviceEmail: %w", err), "sessionID", newSession.Id)
-			return nil, err
-		}
-	}
-
-	return newSession, nil
+	return
 }
