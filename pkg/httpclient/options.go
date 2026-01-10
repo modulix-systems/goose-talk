@@ -9,3 +9,9 @@ func BaseClient(client *http.Client) Option {
 		c.baseClient = client
 	}
 }
+
+func BearerAuth(token string) Option {
+	return func(c *Client) {
+		c.bearerAuthToken = token
+	}
+}

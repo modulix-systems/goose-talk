@@ -11,8 +11,9 @@ import (
 )
 
 type Client struct {
-	baseUrl    string
-	baseClient *http.Client
+	baseUrl         string
+	bearerAuthToken string
+	baseClient      *http.Client
 }
 
 func New(baseUrl string, opts ...Option) *Client {
@@ -37,11 +38,16 @@ func (c *Client) makeRequest(path string, method string, dst any, query url.Valu
 	}
 	reqUrl += fmt.Sprintf("?%s", query.Encode())
 
-	var resp *http.Response
-	switch method {
-	case "GET":
-		resp, err = c.baseClient.Get(reqUrl)
-	case "POST":
+	req, err := http.NewRequest(method, reqUrl, nil)
+	if err != nil {
+		return fmt.Errorf("httpclient - %s '%s' - http.NewRequest: %w", method, path, err)
+	}
+
+	if c.bearerAuthToken != "" {
+		req.Header.Add("Authorization", "Bearer "+c.bearerAuthToken)
+	}
+
+	if method == "POST" {
 		if body == nil {
 			body = map[string]any{}
 		}
@@ -50,10 +56,13 @@ func (c *Client) makeRequest(path string, method string, dst any, query url.Valu
 			return fmt.Errorf("httpclient - %s '%s' - json.Marshal: %w", method, path, err)
 		}
 		bufferedBody := bytes.NewBuffer(encodedBody)
-		resp, err = c.baseClient.Post(reqUrl, "application/json", bufferedBody)
+		req.Body = io.NopCloser(bufferedBody)
+		req.Header.Add("Content-Type", "application/json")
 	}
+
+	resp, err := c.baseClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("httpclient - %s '%s' - baseClient: %w", method, path, err)
+		return fmt.Errorf("httpclient - %s '%s' - baseClient.Do: %w", method, path, err)
 	}
 
 	defer resp.Body.Close()

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/modulix-systems/goose-talk/pkg/httpclient"
+	"github.com/modulix-systems/goose-talk/httpclient"
 )
 
 type Client struct {

@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/modulix-systems/goose-talk/httpclient"
 	"github.com/modulix-systems/goose-talk/internal/gateways"
-	"github.com/modulix-systems/goose-talk/pkg/httpclient"
 )
 
 type Client struct {

@@ -1,6 +1,6 @@
 module github.com/modulix-systems/goose-talk
 
-go 1.24.0
+go 1.25.5
 
 require (
 	buf.build/gen/go/co3n/goose-proto/grpc/go v1.6.0-20260102203506-171393a19e83.1
@@ -19,6 +19,8 @@ require (
 	google.golang.org/grpc v1.72.1
 	google.golang.org/protobuf v1.36.11
 )
+
+replace github.com/modulix-systems/goose-talk/httpclient => ../../pkg/httpclient
 
 require (
 	github.com/BurntSushi/toml v1.5.0 // indirect
@@ -46,6 +48,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/modulix-systems/goose-talk/httpclient v0.0.0-00010101000000-000000000000
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/redis/go-redis/v9 v9.17.2 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
