@@ -9,7 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/modulix-systems/goose-talk/internal/dtos"
 	"github.com/modulix-systems/goose-talk/internal/services/auth"
-	"github.com/modulix-systems/goose-talk/pkg/logger"
+	"github.com/modulix-systems/goose-talk/logger"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

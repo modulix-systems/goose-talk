@@ -12,6 +12,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.18.3
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jackc/pgx/v5 v5.8.0
+	github.com/modulix-systems/goose-talk/logger v0.0.0-00010101000000-000000000000
 	github.com/modulix-systems/goose-talk/postgres v0.0.0-00010101000000-000000000000
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
@@ -22,6 +23,7 @@ require (
 
 replace (
 	github.com/modulix-systems/goose-talk/httpclient => ../../pkg/httpclient
+	github.com/modulix-systems/goose-talk/logger => ../../pkg/logger
 	github.com/modulix-systems/goose-talk/postgres => ../../pkg/postgres
 )
 

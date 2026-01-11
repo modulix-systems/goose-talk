@@ -19,8 +19,8 @@ import (
 	"github.com/modulix-systems/goose-talk/internal/gateways/tgbot"
 	"github.com/modulix-systems/goose-talk/internal/gateways/webauthn"
 	"github.com/modulix-systems/goose-talk/internal/services/auth"
+	"github.com/modulix-systems/goose-talk/logger"
 	"github.com/modulix-systems/goose-talk/pkg/grpcserver"
-	"github.com/modulix-systems/goose-talk/pkg/logger"
 	"github.com/modulix-systems/goose-talk/pkg/redis"
 	"github.com/modulix-systems/goose-talk/postgres"
 )

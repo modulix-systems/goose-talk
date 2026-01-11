@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/modulix-systems/goose-talk/pkg/logger"
+	"github.com/modulix-systems/goose-talk/logger"
 	"google.golang.org/grpc"
 )
 

@@ -4,7 +4,7 @@ import (
 	pb "buf.build/gen/go/co3n/goose-proto/grpc/go/auth/v1/authv1grpc"
 	"github.com/go-playground/validator/v10"
 	"github.com/modulix-systems/goose-talk/internal/services/auth"
-	"github.com/modulix-systems/goose-talk/pkg/logger"
+	"github.com/modulix-systems/goose-talk/logger"
 	"google.golang.org/grpc"
 )
 

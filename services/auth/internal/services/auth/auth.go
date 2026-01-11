@@ -9,7 +9,7 @@ import (
 	"github.com/modulix-systems/goose-talk/internal/entity"
 	"github.com/modulix-systems/goose-talk/internal/gateways"
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage"
-	"github.com/modulix-systems/goose-talk/pkg/logger"
+	"github.com/modulix-systems/goose-talk/logger"
 )
 
 type AuthService struct {

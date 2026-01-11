@@ -8,7 +8,7 @@ import (
 
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/modulix-systems/goose-talk/internal/utils"
-	"github.com/modulix-systems/goose-talk/pkg/logger"
+	"github.com/modulix-systems/goose-talk/logger"
 )
 
 type (

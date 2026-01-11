@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/modulix-systems/goose-talk/internal/entity"
-	"github.com/modulix-systems/goose-talk/pkg/logger"
+	"github.com/modulix-systems/goose-talk/logger"
 )
 
 type Client struct {
