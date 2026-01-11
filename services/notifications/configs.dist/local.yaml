@@ -1,0 +1,4 @@
+pg:
+  dsn: postgresql://postgres:postgres@localhost:5432/goose?sslmode=disable
+sendgrid:
+  apikey: <your-key>
