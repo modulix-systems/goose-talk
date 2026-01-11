@@ -1,1 +1,1 @@
-package mailer
+package mail

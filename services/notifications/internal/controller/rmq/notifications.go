@@ -1,4 +1,4 @@
-package rmqv1
+package rmq
 
 type Notifications struct {
 	

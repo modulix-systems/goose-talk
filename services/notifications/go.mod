@@ -16,6 +16,7 @@ tool (
 
 require (
 	github.com/ilyakaznacheev/cleanenv v1.5.0
+	github.com/modulix-systems/goose-talk/contracts v0.0.0-00010101000000-000000000000
 	github.com/modulix-systems/goose-talk/logger v0.0.0-00010101000000-000000000000
 	github.com/modulix-systems/goose-talk/postgres v0.0.0-00010101000000-000000000000
 	github.com/rabbitmq/amqp091-go v1.10.0
@@ -39,6 +40,7 @@ require (
 )
 
 replace (
+	github.com/modulix-systems/goose-talk/contracts => ../../pkg/contracts
 	github.com/modulix-systems/goose-talk/httpclient => ../../pkg/httpclient
 	github.com/modulix-systems/goose-talk/logger => ../../pkg/logger
 	github.com/modulix-systems/goose-talk/postgres => ../../pkg/postgres

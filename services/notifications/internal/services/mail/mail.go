@@ -1,11 +1,11 @@
-package mailer
+package mail
 
 import "github.com/modulix-systems/goose-talk/logger"
 
-type MailService struct {
+type Service struct {
 	log logger.Interface
 }
 
-func New() *MailService {
-	return &MailService{}
+func New() *Service {
+	return &Service{}
 }
