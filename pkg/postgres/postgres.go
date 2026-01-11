@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	_defaultMaxPoolSize  = 1
-	_defaultConnAttempts = 10
-	_defaultConnTimeout  = time.Second
+	_defaultMaxPoolSize       = 1
+	_defaultConnAttempts      = 10
+	_defaultConnTimeout       = time.Second
 	_defaultTransactionCtxKey = "pg-transaction"
 )
 
@@ -92,8 +92,18 @@ func NewTransactionManager(pool *PGPool) *pgTransactionManager {
 	}
 }
 
-func (m *pgTransactionManager) StartTransaction(ctx context.Context) (pgx.Tx, error) {
-	return m.pool.BeginTx(ctx, pgx.TxOptions{})
+type QueryableTransaction interface {
+	Queryable
+	Commit(ctx context.Context) error
+	Rollback(ctx context.Context) error
+}
+
+func (m *pgTransactionManager) StartTransaction(ctx context.Context) (QueryableTransaction, error) {
+	tx, err := m.pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return newPgQueryable(tx).(QueryableTransaction), nil
 }
 
 type PGPool struct {
@@ -101,5 +111,9 @@ type PGPool struct {
 }
 
 func (p *PGPool) Acquire(ctx context.Context) (Queryable, error) {
-	return p.Pool.Acquire(ctx)
+	conn, err := p.Pool.Acquire(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &pgConn{conn}, nil
 }

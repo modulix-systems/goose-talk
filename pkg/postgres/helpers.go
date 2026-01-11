@@ -33,6 +33,7 @@ func GetQueryable(ctx context.Context, acquirable Acquirable, transactionCtxKey 
 	if tx != nil {
 		return tx.(Queryable), nil
 	}
+	fmt.Println("Acquire new connection")
 	conn, err := acquirable.Acquire(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire conn from pool: %w", err)
@@ -70,6 +71,9 @@ func ExecAndGetOne[T any](ctx context.Context, qb queryBuilder, pool *PGPool, ma
 	res, err := ExecAndGetMany(ctx, qb, pool, mapper, transactionCtxKey)
 	if err != nil {
 		return nil, err
+	}
+	if len(res) == 0 {
+		return nil, ErrNoRows
 	}
 	return &res[0], nil
 }
