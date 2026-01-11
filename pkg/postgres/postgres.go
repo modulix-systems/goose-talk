@@ -92,18 +92,12 @@ func NewTransactionManager(pool *PGPool) *pgTransactionManager {
 	}
 }
 
-type QueryableTransaction interface {
-	Queryable
-	Commit(ctx context.Context) error
-	Rollback(ctx context.Context) error
-}
-
-func (m *pgTransactionManager) StartTransaction(ctx context.Context) (QueryableTransaction, error) {
+func (m *pgTransactionManager) StartTransaction(ctx context.Context) (pgx.Tx, error) {
 	tx, err := m.pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return nil, err
 	}
-	return newPgQueryable(tx).(QueryableTransaction), nil
+	return tx, nil
 }
 
 type PGPool struct {
@@ -115,5 +109,5 @@ func (p *PGPool) Acquire(ctx context.Context) (Queryable, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &pgConn{conn}, nil
+	return conn, nil
 }

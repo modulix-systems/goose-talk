@@ -9,7 +9,7 @@ import (
 	"github.com/modulix-systems/goose-talk/internal/entity"
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage"
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage/pgrepos/sqlutils"
-	"github.com/modulix-systems/goose-talk/pkg/postgres"
+	"github.com/modulix-systems/goose-talk/postgres"
 )
 
 type UsersRepo struct {
@@ -21,9 +21,9 @@ func (repo *UsersRepo) Save(ctx context.Context, user *entity.User) (*entity.Use
 		Columns("username", "password", "email", "first_name", "last_name", "photo_url", "birth_date", "about_me", "is_active", "private_key").
 		Values(user.Username, user.Password, user.Email, user.FirstName, user.LastName, user.PhotoUrl, user.BirthDate, user.AboutMe, user.IsActive, user.PrivateKey).
 		Suffix("RETURNING *")
-	savedUser, err := postgres.ExecAndGetOne[entity.User](ctx, query, repo.Pool, nil)
+	savedUser, err := postgres.ExecAndGetOne[entity.User](ctx, query, repo.Pool, nil, repo.TransactionCtxKey)
 	if err != nil {
-		if postgres.IsUniqueViolationError(err) {
+		if errors.Is(err, postgres.ErrUniqueViolation) {
 			return nil, storage.ErrAlreadyExists
 		}
 		return nil, err
@@ -40,7 +40,7 @@ func (repo *UsersRepo) Save(ctx context.Context, user *entity.User) (*entity.Use
 }
 
 func (repo *UsersRepo) CheckExistsWithEmail(ctx context.Context, email string) (bool, error) {
-	queryable, err := postgres.GetQueryable(ctx, repo.Pool)
+	queryable, err := postgres.GetQueryable(ctx, repo.Pool, repo.TransactionCtxKey)
 	if err != nil {
 		return false, err
 	}
@@ -65,12 +65,19 @@ func (repo *UsersRepo) GetByLogin(ctx context.Context, login string) (*entity.Us
 	qb := repo.Builder.Select(sqlutils.UserSelect).From(`"user"`).
 		LeftJoin(`two_factor_auth ON two_factor_auth.user_id="user".id`).
 		Where(squirrel.Or{squirrel.Eq{"email": login}, squirrel.Eq{"username": login}})
-	return postgres.ExecAndGetOne(ctx, qb, repo.Pool, sqlutils.RowToUser)
+	user, err := postgres.ExecAndGetOne(ctx, qb, repo.Pool, sqlutils.RowToUser, repo.TransactionCtxKey)
+	if err != nil {
+		if errors.Is(err, postgres.ErrNoRows) {
+			return nil, storage.ErrNotFound
+		}
+		return nil, err
+	}
+	return user, nil
 }
 
 func (repo *UsersRepo) fetchPasskeyCredentials(ctx context.Context, userId int) ([]entity.PasskeyCredential, error) {
 	query := repo.Builder.Select("*").From("passkey_credential").Where(squirrel.Eq{"user_id": userId})
-	creds, err := postgres.ExecAndGetMany[entity.PasskeyCredential](ctx, query, repo.Pool, nil)
+	creds, err := postgres.ExecAndGetMany[entity.PasskeyCredential](ctx, query, repo.Pool, nil, repo.TransactionCtxKey)
 	if err != nil && !errors.Is(err, storage.ErrNotFound) {
 		return nil, err
 	}
@@ -81,34 +88,40 @@ func (repo *UsersRepo) GetByID(ctx context.Context, id int) (*entity.User, error
 	query := repo.Builder.Select(sqlutils.UserSelect).From(`"user"`).
 		LeftJoin(`two_factor_auth ON two_factor_auth.user_id="user".id`).
 		Where(squirrel.Eq{"id": id})
-	return postgres.ExecAndGetOne(ctx, query, repo.Pool, sqlutils.RowToUser)
+	user, err := postgres.ExecAndGetOne(ctx, query, repo.Pool, sqlutils.RowToUser, repo.TransactionCtxKey)
+	if err != nil {
+		if errors.Is(err, postgres.ErrNoRows) {
+			return nil, storage.ErrNotFound
+		}
+		return nil, err
+	}
+	return user, nil
 }
 
 func (repo *UsersRepo) UpdateIsActiveById(ctx context.Context, userId int, isActive bool) (*entity.User, error) {
 	query := repo.Builder.Update(`"user"`).Set("is_active", isActive).
 		Where(squirrel.Eq{"id": userId}).Suffix("RETURNING *")
-	return postgres.ExecAndGetOne[entity.User](ctx, query, repo.Pool, nil)
+	user, err := postgres.ExecAndGetOne[entity.User](ctx, query, repo.Pool, nil, repo.TransactionCtxKey)
+	if err != nil {
+		if errors.Is(err, postgres.ErrNoRows) {
+			return nil, storage.ErrNotFound
+		}
+		return nil, err
+	}
+	return user, nil
 }
 
 func (repo *UsersRepo) CreatePasskeyCredential(ctx context.Context, userId int, cred *entity.PasskeyCredential) error {
 	qb := repo.Builder.Insert(`"passkey_credential"`).
 		Columns("id", "public_key", "user_id", "transports", "backed_up").
 		Values(cred.ID, cred.PublicKey, userId, cred.Transports, cred.BackedUp)
-	queryable, err := postgres.GetQueryable(ctx, repo.Pool)
-	if err != nil {
-		return err
-	}
-	if r, ok := queryable.(postgres.Releaseable); ok {
-		defer r.Release()
-	}
-	query, args := qb.MustSql()
-
-	if _, err := queryable.Exec(ctx, query, args...); err != nil {
-		if postgres.IsForeightKeyViolationError(err) {
+	if _, err := postgres.Exec(ctx, qb, repo.Pool, repo.TransactionCtxKey); err != nil {
+		if errors.Is(err, postgres.ErrForeignKeyViolation) {
 			return storage.ErrNotFound
 		}
 		return err
 	}
+
 	return nil
 }
 
@@ -131,13 +144,13 @@ func (repo *UsersRepo) CreateTwoFa(ctx context.Context, ent *entity.TwoFactorAut
 		Values(ent.UserId, ent.Transport, ent.Contact, ent.TotpSecret).
 		Suffix("RETURNING *")
 
-	twoFA, err := postgres.ExecAndGetOne[entity.TwoFactorAuth](ctx, qb, repo.Pool, nil)
+	twoFA, err := postgres.ExecAndGetOne[entity.TwoFactorAuth](ctx, qb, repo.Pool, nil, repo.TransactionCtxKey)
 
 	if err != nil {
-		if postgres.IsForeightKeyViolationError(err) {
+		if errors.Is(err, postgres.ErrForeignKeyViolation) {
 			return nil, storage.ErrNotFound
 		}
-		if postgres.IsUniqueViolationError(err) {
+		if errors.Is(err, postgres.ErrUniqueViolation) {
 			return nil, storage.ErrAlreadyExists
 		}
 		return nil, err
@@ -148,18 +161,8 @@ func (repo *UsersRepo) CreateTwoFa(ctx context.Context, ent *entity.TwoFactorAut
 
 func (repo *UsersRepo) UpdateTwoFaContact(ctx context.Context, userId int, contact string) error {
 	qb := repo.Builder.Update("two_factor_auth").Set("contact", contact).Where(squirrel.Eq{"user_id": userId})
-
-	queryable, err := postgres.GetQueryable(ctx, repo.Pool)
-	if err != nil {
-		return err
-	}
-	if r, ok := queryable.(postgres.Releaseable); ok {
-		defer r.Release()
-	}
-	query, args := qb.MustSql()
-
-	if _, err := queryable.Exec(ctx, query, args...); err != nil {
-		if postgres.IsForeightKeyViolationError(err) {
+	if _, err := postgres.Exec(ctx, qb, repo.Pool, repo.TransactionCtxKey); err != nil {
+		if errors.Is(err, postgres.ErrForeignKeyViolation) {
 			return storage.ErrNotFound
 		}
 		return err

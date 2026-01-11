@@ -6,7 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/modulix-systems/goose-talk/internal/config"
-	"github.com/modulix-systems/goose-talk/pkg/postgres"
+	"github.com/modulix-systems/goose-talk/postgres"
 )
 
 type Repositories struct {
@@ -44,9 +44,9 @@ func NewTestSuite(t *testing.T) *TestSuite {
 	repos := New(pg)
 
 	return &TestSuite{
-		TxCtx:        context.WithValue(ctx, config.TRANSACTION_CTX_KEY, tx),
+		TxCtx:        context.WithValue(ctx, pg.TransactionCtxKey, tx),
 		Repositories: *repos,
-		Tx:           tx.(pgx.Tx),
+		Tx:           tx,
 		Pg:           pg,
 	}
 }

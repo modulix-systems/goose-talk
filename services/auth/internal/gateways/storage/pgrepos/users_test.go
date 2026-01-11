@@ -8,7 +8,7 @@ import (
 	"github.com/modulix-systems/goose-talk/internal/entity"
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage"
 	"github.com/modulix-systems/goose-talk/internal/gateways/storage/pgrepos"
-	"github.com/modulix-systems/goose-talk/pkg/postgres"
+	"github.com/modulix-systems/goose-talk/postgres"
 	"github.com/modulix-systems/goose-talk/tests/suite/helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -204,7 +204,7 @@ func TestGetByIDWithPasskeyCredentials(t *testing.T) {
 		user, err := testSuite.Users.GetByIDWithPasskeyCredentials(testSuite.TxCtx, expectedUser.Id)
 		assert.NoError(t, err)
 		require.NotNil(t, user)
-		assert.Nil(t, user.PasskeyCredentials)
+		assert.Len(t, user.PasskeyCredentials, 0)
 	})
 
 	t.Run("not found user", func(t *testing.T) {
@@ -232,6 +232,7 @@ func TestCreateTwoFa(t *testing.T) {
 		testSuite.Users.Builder.Select("user_id, transport").From("two_factor_auth"),
 		testSuite.Pg.Pool,
 		nil,
+		testSuite.Pg.TransactionCtxKey,
 	)
 	require.NoError(t, err)
 	assert.Equal(t, expectedTwoFa.UserId, actualTwoFa.UserId)
@@ -255,6 +256,7 @@ func TestUpdateTwoFaContact(t *testing.T) {
 		testSuite.Users.Builder.Select("contact").From("two_factor_auth"),
 		testSuite.Pg.Pool,
 		nil,
+		testSuite.Pg.TransactionCtxKey,
 	)
 	require.NoError(t, err)
 	assert.Equal(t, expectedContact, actualTwoFa.Contact)

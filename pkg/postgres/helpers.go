@@ -33,12 +33,30 @@ func GetQueryable(ctx context.Context, acquirable Acquirable, transactionCtxKey 
 	if tx != nil {
 		return tx.(Queryable), nil
 	}
-	fmt.Println("Acquire new connection")
 	conn, err := acquirable.Acquire(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire conn from pool: %w", err)
 	}
 	return conn, nil
+}
+
+func Exec(ctx context.Context, qb queryBuilder, pool *PGPool, transactionCtxKey string) (commandTag pgconn.CommandTag, err error) {
+	queryable, err := GetQueryable(ctx, pool, transactionCtxKey)
+	if err != nil {
+		return commandTag, err
+	}
+	if r, ok := queryable.(Releaseable); ok {
+		defer r.Release()
+	}
+	query, args, err := qb.ToSql()
+	if err != nil {
+		return commandTag, fmt.Errorf("failed to build sql query: %w", err)
+	}
+	commandTag, err = queryable.Exec(ctx, query, args...)
+	if err != nil {
+		return commandTag, MapPgxError(err)
+	}
+	return
 }
 
 func ExecAndGetMany[T any](ctx context.Context, qb queryBuilder, pool *PGPool, mapper pgx.RowToFunc[T], transactionCtxKey string) ([]T, error) {
@@ -62,7 +80,7 @@ func ExecAndGetMany[T any](ctx context.Context, qb queryBuilder, pool *PGPool, m
 	}
 	res, err := pgx.CollectRows(rows, mapper)
 	if err != nil {
-		return nil, fmt.Errorf("failed to collect row into user struct: %w", err)
+		return nil, fmt.Errorf("failed to collect row into struct: %w", MapPgxError(err))
 	}
 	return res, nil
 }

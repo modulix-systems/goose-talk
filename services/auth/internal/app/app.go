@@ -21,8 +21,8 @@ import (
 	"github.com/modulix-systems/goose-talk/internal/services/auth"
 	"github.com/modulix-systems/goose-talk/pkg/grpcserver"
 	"github.com/modulix-systems/goose-talk/pkg/logger"
-	"github.com/modulix-systems/goose-talk/pkg/postgres"
 	"github.com/modulix-systems/goose-talk/pkg/redis"
+	"github.com/modulix-systems/goose-talk/postgres"
 )
 
 // Run creates objects via constructors.

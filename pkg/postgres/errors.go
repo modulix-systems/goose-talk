@@ -13,7 +13,7 @@ var (
 	ErrForeignKeyViolation = errors.New("foreign key violation")
 )
 
-func mapPgxError(err error) error {
+func MapPgxError(err error) error {
 	var pgxErr *pgconn.PgError
 	wrap := func(mappedErr error) error {
 		return fmt.Errorf("%w: %w", mappedErr, err)
