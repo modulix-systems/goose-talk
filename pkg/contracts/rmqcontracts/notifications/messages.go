@@ -1,7 +1,8 @@
 package notifications
 
 type EmailMessage struct {
-	Name        string
-	Data        map[string]any
-	To string
+	Type    string
+	Subject string
+	Data    map[string]any
+	To      string
 }
