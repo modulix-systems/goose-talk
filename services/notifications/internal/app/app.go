@@ -9,9 +9,10 @@ import (
 
 	"github.com/modulix-systems/goose-talk/internal/config"
 	rmqController "github.com/modulix-systems/goose-talk/internal/controller/rmq"
+	mailclient "github.com/modulix-systems/goose-talk/internal/gateways/mail"
 	"github.com/modulix-systems/goose-talk/internal/services/mail"
 	"github.com/modulix-systems/goose-talk/logger"
-	"github.com/modulix-systems/goose-talk/pkg/rabbitmq"
+	"github.com/modulix-systems/goose-talk/rabbitmq"
 )
 
 func Run(cfg *config.Config) {
@@ -22,7 +23,8 @@ func Run(cfg *config.Config) {
 	}
 	defer rmq.Close()
 
-	mailService := mail.New()
+	mailClient := mailclient.New(cfg.Smtp.Host, cfg.Smtp.Port, cfg.Smtp.Username, cfg.Smtp.Password, cfg.App.Name, cfg.App.Url)
+	mailService := mail.New(mailClient, log)
 
 	rmqServer := rabbitmq.NewServer(rmq)
 	rmqController.Register(rmqServer, mailService, log)

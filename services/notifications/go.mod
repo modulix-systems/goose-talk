@@ -18,14 +18,11 @@ require (
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/modulix-systems/goose-talk/contracts v0.0.0-00010101000000-000000000000
 	github.com/modulix-systems/goose-talk/logger v0.0.0-00010101000000-000000000000
-	github.com/modulix-systems/goose-talk/postgres v0.0.0-00010101000000-000000000000
+	github.com/modulix-systems/goose-talk/rabbitmq v0.0.0-00010101000000-000000000000
 	github.com/rabbitmq/amqp091-go v1.10.0
-	golang.org/x/sync v0.19.0
-	google.golang.org/grpc v1.78.0
 )
 
 require (
-	github.com/Masterminds/squirrel v1.5.4 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/golang-migrate/migrate/v4 v4.19.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -35,6 +32,8 @@ require (
 	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/swaggo/swag v1.16.6 // indirect
 	go.uber.org/mock v0.6.0 // indirect
+	golang.org/x/sync v0.19.0 // indirect
+	google.golang.org/grpc v1.78.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	olympos.io/encoding/edn v0.0.0-20201019073823-d3554ca0b0a3 // indirect
 )
@@ -44,6 +43,8 @@ replace (
 	github.com/modulix-systems/goose-talk/httpclient => ../../pkg/httpclient
 	github.com/modulix-systems/goose-talk/logger => ../../pkg/logger
 	github.com/modulix-systems/goose-talk/postgres => ../../pkg/postgres
+	github.com/modulix-systems/goose-talk/rabbitmq => ../../pkg/rabbitmq
+	github.com/modulix-systems/goose-talk/contracts => ../../pkg/contracts
 )
 
 require (
@@ -259,8 +260,6 @@ require (
 	github.com/ktrysmt/go-bitbucket v0.6.4 // indirect
 	github.com/kulti/thelper v0.7.1 // indirect
 	github.com/kunwardeep/paralleltest v1.0.15 // indirect
-	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
-	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
 	github.com/lasiar/canonicalheader v1.1.2 // indirect
 	github.com/ldez/exptostd v0.4.5 // indirect
 	github.com/ldez/gomoddirectives v0.8.0 // indirect

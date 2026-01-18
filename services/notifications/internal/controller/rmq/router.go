@@ -4,7 +4,7 @@ import (
 	notificationsContracts "github.com/modulix-systems/goose-talk/contracts/rmqcontracts/notifications"
 	"github.com/modulix-systems/goose-talk/internal/services/mail"
 	"github.com/modulix-systems/goose-talk/logger"
-	"github.com/modulix-systems/goose-talk/pkg/rabbitmq"
+	"github.com/modulix-systems/goose-talk/rabbitmq"
 )
 
 func Register(

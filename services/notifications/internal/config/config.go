@@ -15,9 +15,9 @@ type (
 	Config struct {
 		Postgres Postgres
 		RabbitMQ RabbitMQ
+		Smtp     Smtp
 		Log      Log
 		App      App
-		Port     string `env-default:"8001"`
 	}
 
 	App struct {
@@ -35,9 +35,11 @@ type (
 		Url string `env:"RABBIT_URL,required"`
 	}
 
-	SendGrid struct {
-		ApiKey string `env:"SENDGRID_API_KEY"`
-		Token  string `env:"TG_BOT_TOKEN,required"`
+	Smtp struct {
+		Host     string `env:"SMTP_HOST,required"`
+		Port     string `env:"SMTP_PORT" env-default:"587"`
+		Username string `env:"SMTP_USERNAME,required"`
+		Password string `env:"SMTP_PASSWORD,required"`
 	}
 
 	Log struct {

@@ -1,6 +1,7 @@
 package rmq
 
 import (
+	"context"
 	"encoding/json"
 
 	notificationsContracts "github.com/modulix-systems/goose-talk/contracts/rmqcontracts/notifications"
@@ -24,7 +25,8 @@ func (c *EmailsHandler) Handle(delivery amqp091.Delivery) {
 		c.log.Error("rmq - EmailHandler.Handle - parse delivery", "err", err)
 		return
 	}
-	if err := c.mailService.SendMail(email.Name, email.Data, email.To); err != nil {
+
+	if err := c.mailService.SendMail(context.Background(), email); err != nil {
 		c.log.Error("rmq - EmailHandler.Handle - SendMail", "err", err)
 	}
 }
