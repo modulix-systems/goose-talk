@@ -91,16 +91,16 @@ func (l *Logger) log(logEvent *zerolog.Event, message interface{}, args ...inter
 		return
 	}
 
-	for i := 0; i < len(args)-1; i++ {
-		argKey := args[i]
-		argValue := args[i+1]
+	for i := 0; i < len(args)-1; i += 2 {
+		_key := args[i]
+		_value := args[i+1]
 
-		key, ok := argKey.(string)
+		key, ok := _key.(string)
 		if !ok {
-			panic("Log argument key should always be a string")
+			panic(fmt.Errorf("Log argument key should always be a string, got: %T", key))
 		}
 
-		switch val := argValue.(type) {
+		switch val := _value.(type) {
 		case string:
 			logEvent = logEvent.Str(key, val)
 		case int:
@@ -110,7 +110,7 @@ func (l *Logger) log(logEvent *zerolog.Event, message interface{}, args ...inter
 		case error:
 			logEvent = logEvent.Str(key, val.Error())
 		default:
-			panic(fmt.Sprintf("Unknown value '%v' of type: %T", val, val))
+			logEvent = logEvent.Str(key, fmt.Sprintf("%+v", val))
 		}
 	}
 
