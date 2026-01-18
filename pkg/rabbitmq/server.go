@@ -44,6 +44,7 @@ func (s *Server) serveQueue(serveableQueue serveableQueue) error {
 	if err != nil {
 		return fmt.Errorf("rabbitmq - RabbitMQ.ServiceQueue - create channel: %w", err)
 	}
+	s.channels = append(s.channels, channel)
 	queue, err := s.rmq.QueueDeclare(serveableQueue.definition, channel)
 	if err != nil {
 		return fmt.Errorf("rabbitmq - RabbitMQ.ServiceQueue - declare queue: %w", err)
