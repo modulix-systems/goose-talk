@@ -48,7 +48,7 @@ func TestInsertUser(t *testing.T) {
 		checkUserValid(user, insertedUser)
 		require.NotNil(t, insertedUser.TwoFactorAuth)
 		assert.Equal(t, insertedUser.Id, insertedUser.TwoFactorAuth.UserId)
-		assert.Equal(t, user.TwoFactorAuth.Transport, insertedUser.TwoFactorAuth.Transport)
+		assert.Equal(t, user.TwoFactorAuth.Method, insertedUser.TwoFactorAuth.Method)
 	})
 
 	t.Run("already exists", func(t *testing.T) {
@@ -236,7 +236,7 @@ func TestCreateTwoFa(t *testing.T) {
 	)
 	require.NoError(t, err)
 	assert.Equal(t, expectedTwoFa.UserId, actualTwoFa.UserId)
-	assert.Equal(t, expectedTwoFa.Transport, actualTwoFa.Transport)
+	assert.Equal(t, expectedTwoFa.Method, actualTwoFa.Method)
 }
 
 func TestUpdateTwoFaContact(t *testing.T) {

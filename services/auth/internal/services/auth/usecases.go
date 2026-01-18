@@ -66,15 +66,7 @@ func (s *AuthService) SignUp(
 		return nil, err
 	}
 
-	displayName := dto.Username
-	if dto.FirstName != "" {
-		displayName = dto.FirstName
-		if dto.LastName != "" {
-			displayName = displayName + " " + dto.LastName
-		}
-	}
-
-	if err = s.notificationsClient.SendGreetingEmail(ctx, user.Email, displayName); err != nil {
+	if err = s.notificationsClient.SendSignUpEmail(ctx, user); err != nil {
 		s.log.Error("AuthService.SignUp - notificationsClient.SendGreetingEmail", "err", err, "to", user.Email)
 	}
 
@@ -94,7 +86,7 @@ func (s *AuthService) RequestEmailConfirmationCode(ctx context.Context, email st
 	if err != nil {
 		return err
 	}
-	if err = s.notificationsClient.SendSignUpConfirmationEmail(ctx, email, otpCode); err != nil {
+	if err = s.notificationsClient.SendEmailVerifyEmail(ctx, email, otpCode); err != nil {
 		s.log.Error("Failed to send signup confirmation email with otp code", "to", email)
 		return err
 	}
@@ -125,13 +117,13 @@ func (s *AuthService) SignIn(ctx context.Context, dto *dtos.SignInRequest) (*dto
 			return nil, err
 		}
 		contact := user.TwoFactorAuth.Contact
-		switch user.TwoFactorAuth.Transport {
+		switch user.TwoFactorAuth.Method {
 		case entity.TWO_FA_EMAIL:
 			toEmail := user.Email
 			if contact != "" {
 				toEmail = contact
 			}
-			if err = s.notificationsClient.Send2FAEmail(ctx, toEmail, otpCode); err != nil {
+			if err = s.notificationsClient.SendConfirmEmailTwoFaEmail(ctx, toEmail, user.GetDisplayName(), otpCode, user.Language); err != nil {
 				return nil, err
 			}
 		case entity.TWO_FA_TELEGRAM:
@@ -216,11 +208,11 @@ func (s *AuthService) VerifyTwoFa(ctx context.Context, dto *dtos.Verify2FAReques
 	return session, nil
 }
 
-func (s *AuthService) ConfirmTwoFaAddition(ctx context.Context, dto *dtos.Confirm2FARequest) (*entity.TwoFactorAuth, error) {
+func (s *AuthService) CompleteAddingTwoFa(ctx context.Context, dto *dtos.Confirm2FARequest) (*entity.TwoFactorAuth, error) {
 	twoFactorAuth := &entity.TwoFactorAuth{
-		UserId:    dto.UserId,
-		Transport: dto.Typ,
-		Enabled:   true,
+		UserId:  dto.UserId,
+		Method:  dto.Typ,
+		Enabled: true,
 	}
 
 	user, err := s.usersRepo.GetByID(ctx, dto.UserId)
@@ -280,9 +272,9 @@ type TwoFAConnectInfo struct {
 }
 
 func (s *AuthService) handleAddTwoFaEmail(ctx context.Context, user *entity.User, contact string) error {
-	emailRecipient := user.Email
+	to := user.Email
 	if contact != "" {
-		emailRecipient = contact
+		to = contact
 	}
 
 	otpCode, err := s.createOtp(ctx, "", user.Id)
@@ -290,7 +282,7 @@ func (s *AuthService) handleAddTwoFaEmail(ctx context.Context, user *entity.User
 		return err
 	}
 
-	return s.notificationsClient.Send2FAEmail(ctx, emailRecipient, otpCode)
+	return s.notificationsClient.SendConfirmEmailTwoFaEmail(ctx, to, user.GetDisplayName(), otpCode, user.Language)
 }
 
 func (s *AuthService) handleAddTwoFaTelegram(ctx context.Context, userId int) (string, error) {
@@ -339,7 +331,7 @@ func (s *AuthService) handleAddTwoFaTelegram(ctx context.Context, userId int) (s
 	return link, nil
 }
 
-func (s *AuthService) RequestTwoFaAddition(ctx context.Context, dto *dtos.Add2FARequest) (*TwoFAConnectInfo, error) {
+func (s *AuthService) RequestAddingTwoFa(ctx context.Context, dto *dtos.Add2FARequest) (*TwoFAConnectInfo, error) {
 	user, err := s.usersRepo.GetByID(ctx, dto.UserId)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
@@ -376,7 +368,7 @@ func (s *AuthService) DeactivateAccount(ctx context.Context, userId int) error {
 		}
 		return err
 	}
-	if err := s.notificationsClient.SendAccDeactivationEmail(ctx, user.Email); err != nil {
+	if err := s.notificationsClient.SendAccountDeactivatedEmail(ctx, user.Email, user.GetDisplayName(), user.Language); err != nil {
 		return err
 	}
 	return nil
@@ -479,7 +471,7 @@ func (s *AuthService) AcceptQRLoginToken(ctx context.Context, userId int, unauth
 	return session, nil
 }
 
-func (s *AuthService) BeginPasskeyRegistration(ctx context.Context, userId int) (gateways.WebAuthnRegistrationOptions, error) {
+func (s *AuthService) RequestPasskeyRegistrationOptions(ctx context.Context, userId int) (gateways.WebAuthnRegistrationOptions, error) {
 	user, err := s.usersRepo.GetByIDWithPasskeyCredentials(ctx, userId)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
@@ -498,7 +490,7 @@ func (s *AuthService) BeginPasskeyRegistration(ctx context.Context, userId int) 
 	return registrationOptions, nil
 }
 
-func (s *AuthService) FinishPasskeyRegistration(ctx context.Context, userId int, rawCredential []byte) error {
+func (s *AuthService) CompletePasskeyRegistration(ctx context.Context, userId int, rawCredential []byte) error {
 	passkeySession, err := s.passkeySessionsRepo.GetByUserId(ctx, userId)
 	if err != nil {
 		return err

@@ -105,7 +105,7 @@ func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, ip 
 			defer func() {
 				// If new session was succesfully created - send email about new sign in and reassign the error
 				if newSession != nil {
-					err = s.notificationsClient.SendSignInNewDeviceEmail(ctx, user.Email, newSession)
+					err = s.notificationsClient.SendLoginNewDeviceEmail(ctx, user.Email, user.GetDisplayName(), newSession, user.Language)
 					if err != nil {
 						s.log.Error(fmt.Errorf("AuthService - newAuthSession - notificationsClient.SendSignInNewDeviceEmail: %w", err), "sessionID", newSession.Id)
 					}

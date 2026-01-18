@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func mapTwoFATransport(t entity.TwoFATransport) usersv1.TwoFactorAuth_TwoFATransport {
+func mapTwoFATransport(t entity.TwoFaMethod) usersv1.TwoFactorAuth_TwoFATransport {
 	switch t {
 	case entity.TWO_FA_TELEGRAM:
 		return usersv1.TwoFactorAuth_TWO_FA_TRANSPORT_TELEGRAM
@@ -31,7 +31,7 @@ func mapTwoFactorAuth(src *entity.TwoFactorAuth) *usersv1.TwoFactorAuth {
 
 	return &usersv1.TwoFactorAuth{
 		UserId:     int64(src.UserId),
-		Transport:  mapTwoFATransport(src.Transport),
+		Transport:  mapTwoFATransport(src.Method),
 		Contact:    src.Contact,
 		TotpSecret: src.TotpSecret,
 		Enabled:    src.Enabled,

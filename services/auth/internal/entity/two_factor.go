@@ -1,15 +1,13 @@
 package entity
 
-type TwoFATransport string
+type TwoFaMethod string
 
 const (
-	TWO_FA_EMAIL    TwoFATransport = "email"
-	TWO_FA_SMS      TwoFATransport = "sms"
-	TWO_FA_TELEGRAM TwoFATransport = "telegram"
-	TWO_FA_TOTP_APP TwoFATransport = "totp_app"
+	TWO_FA_EMAIL    TwoFaMethod = "email"
+	TWO_FA_SMS      TwoFaMethod = "sms"
+	TWO_FA_TELEGRAM TwoFaMethod = "telegram"
+	TWO_FA_TOTP_APP TwoFaMethod = "totp_app"
 )
-
-var OtpTransports = []TwoFATransport{TWO_FA_EMAIL, TWO_FA_TELEGRAM, TWO_FA_TOTP_APP}
 
 type (
 	// OTP represents storage for verifications codes
@@ -24,8 +22,8 @@ type (
 	// TwoFactorAuth entity representing 2FA auth
 	TwoFactorAuth struct {
 		// user can have only one related 2fa entity
-		UserId    int            `json:"user_id"`
-		Transport TwoFATransport `json:"transport"`
+		UserId int         `json:"user_id"`
+		Method TwoFaMethod `json:"method"`
 		// could be whether user's telegram, email address, etc
 		// or even optional (if required info is already present in user'entity) depending on Transport.
 		// The field can be optional e.g for email because it can be taken from user's acc

@@ -4,7 +4,7 @@ import "github.com/modulix-systems/goose-talk/internal/entity"
 
 type (
 	Verify2FARequest struct {
-		TwoFATyp   entity.TwoFATransport
+		TwoFATyp   entity.TwoFaMethod
 		Email      string
 		Code       string
 		RememberMe bool
@@ -15,12 +15,12 @@ type (
 	}
 	Add2FARequest struct {
 		UserId  int
-		Typ     entity.TwoFATransport
+		Typ     entity.TwoFaMethod
 		Contact string
 	}
 	Confirm2FARequest struct {
 		UserId  int
-		Typ     entity.TwoFATransport
+		Typ     entity.TwoFaMethod
 		Contact string
 		// TotpSecret can be ommited if Typ is not TOTP_APP
 		TotpSecret string

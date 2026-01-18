@@ -23,6 +23,7 @@ import (
 	"github.com/modulix-systems/goose-talk/pkg/grpcserver"
 	"github.com/modulix-systems/goose-talk/pkg/redis"
 	"github.com/modulix-systems/goose-talk/postgres"
+	"github.com/modulix-systems/goose-talk/rabbitmq"
 )
 
 // Run creates objects via constructors.
@@ -38,6 +39,12 @@ func Run(cfg *config.Config) {
 		log.Fatal(fmt.Errorf("app - Run - postgres.New: %w", err))
 	}
 	defer pg.Close()
+
+	rmq, err := rabbitmq.New(cfg.RabbitMQ.Url)
+	if err != nil {
+		log.Fatal(fmt.Errorf("app - Run - rabbitmq.New: %w", err))
+	}
+	defer rmq.Close()
 
 	redisOpts := []redis.Option{}
 	if cfg.Redis.MaxPoolSize != 0 {
@@ -57,7 +64,11 @@ func Run(cfg *config.Config) {
 		log.Fatal(fmt.Errorf("app - Run - url.Parse: %w", err))
 	}
 
-	notificationsClient := notifications.New(log)
+	notificationsClient, err := notifications.New(rmq, log)
+	if err != nil {
+		log.Fatal(fmt.Errorf("app - Run - notifications.New: %w", err))
+	}
+
 	geoipClient := geoip.New()
 	securityProvider := security.New(cfg.TotpTTL, config.OTP_LENGTH, cfg.App.Name)
 	webauthnProvider := webauthn.New(cfg.App.Name, appUrl.Host, []string{appUrl.Host})

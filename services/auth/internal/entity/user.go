@@ -21,8 +21,21 @@ type User struct {
 	TwoFactorAuth      *TwoFactorAuth `json:"two_factor_auth" db:"-"`
 	PasskeyCredentials []PasskeyCredential
 	PrivateKey         string `json:"-"`
+	Language           string `json:"language"`
 }
 
 func (u *User) Is2FAEnabled() bool {
 	return u.TwoFactorAuth != nil && u.TwoFactorAuth.Enabled
+}
+
+func (u *User) GetDisplayName() string {
+	displayName := u.Username
+	if u.FirstName != "" {
+		displayName = u.FirstName
+		if u.LastName != "" {
+			displayName = displayName + " " + u.LastName
+		}
+	}
+
+	return displayName
 }

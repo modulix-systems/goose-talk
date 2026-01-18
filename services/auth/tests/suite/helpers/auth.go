@@ -28,7 +28,7 @@ func MockUser() *entity.User {
 		PrivateKey: gofakeit.BitcoinPrivateKey(),
 		TwoFactorAuth: &entity.TwoFactorAuth{
 			UserId: userId,
-			Transport: RandomChoose(
+			Method: RandomChoose(
 				entity.TWO_FA_TELEGRAM, entity.TWO_FA_EMAIL,
 				entity.TWO_FA_SMS, entity.TWO_FA_TOTP_APP,
 			),

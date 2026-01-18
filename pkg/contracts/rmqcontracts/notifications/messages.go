@@ -37,8 +37,7 @@ type EmailTwoFaNotice struct {
 }
 
 type EmailVerifyNotice struct {
-	Username string
-	Code     string
+	Code string
 }
 
 type AccountDeactivatedNotice struct {

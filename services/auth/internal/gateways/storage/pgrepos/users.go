@@ -141,7 +141,7 @@ func (repo *UsersRepo) GetByIDWithPasskeyCredentials(ctx context.Context, userId
 func (repo *UsersRepo) CreateTwoFa(ctx context.Context, ent *entity.TwoFactorAuth) (*entity.TwoFactorAuth, error) {
 	qb := repo.Builder.Insert("two_factor_auth").
 		Columns("user_id", "transport", "contact", "totp_secret").
-		Values(ent.UserId, ent.Transport, ent.Contact, ent.TotpSecret).
+		Values(ent.UserId, ent.Method, ent.Contact, ent.TotpSecret).
 		Suffix("RETURNING *")
 
 	twoFA, err := postgres.ExecAndGetOne[entity.TwoFactorAuth](ctx, qb, repo.Pool, nil, repo.TransactionCtxKey)

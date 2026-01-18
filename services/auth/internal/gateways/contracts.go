@@ -62,11 +62,11 @@ type (
 		VerifyRegistrationOptions(userId int, rawCredential []byte, prevSession *entity.PasskeyRegistrationSession) (*entity.PasskeyCredential, error)
 	}
 	NotificationsClient interface {
-		SendSignUpConfirmationEmail(ctx context.Context, to string, otp string) error
-		SendGreetingEmail(ctx context.Context, to string, name string) error
-		Send2FAEmail(ctx context.Context, to string, otp string) error
-		SendAccDeactivationEmail(ctx context.Context, to string) error
-		SendSignInNewDeviceEmail(ctx context.Context, to string, newSession *entity.AuthSession) error
+		SendEmailVerifyEmail(ctx context.Context, to, otp string) error
+		SendSignUpEmail(ctx context.Context, user *entity.User) error
+		SendConfirmEmailTwoFaEmail(ctx context.Context, to, username, otp, lang string) error
+		SendAccountDeactivatedEmail(ctx context.Context, to, username, lang string) error
+		SendLoginNewDeviceEmail(ctx context.Context, to, username string, newSession *entity.AuthSession, lang string) error
 	}
 	TelegramBotClient interface {
 		SendTextMsg(ctx context.Context, chatId string, text string) error

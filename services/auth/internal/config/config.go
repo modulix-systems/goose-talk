@@ -16,6 +16,7 @@ type (
 	Config struct {
 		Postgres            Postgres
 		Redis               Redis
+		RabbitMQ            RabbitMQ
 		Log                 Log
 		App                 App
 		Tgbot               Tgbot
@@ -36,6 +37,10 @@ type (
 	Postgres struct {
 		Url         string `env:"PG_URL,required"`
 		MaxPoolSize int    `env:"PG_MAX_POOL_SIZE"`
+	}
+
+	RabbitMQ struct {
+		Url string `env:"RABBIT_URL,required"`
 	}
 
 	Redis struct {
