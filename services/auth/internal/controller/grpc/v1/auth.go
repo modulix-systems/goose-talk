@@ -38,7 +38,10 @@ func (a *AuthV1) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.SignUpR
 	}
 	if errs := reqDto.Validate(); len(errs) > 0 {
 		st := status.New(codes.InvalidArgument, "Validation error")
-		st, _ = st.WithDetails(&errdetails.BadRequest{FieldViolations: errs})
+		st, err := st.WithDetails(&errdetails.BadRequest{FieldViolations: errs})
+		if err != nil {
+			return nil, ErrInternalError
+		}
 		return nil, st.Err()
 	}
 
@@ -50,7 +53,15 @@ func (a *AuthV1) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.SignUpR
 		if errors.Is(err, auth.ErrUserAlreadyExists) {
 			return nil, status.Error(codes.AlreadyExists, err.Error())
 		}
-		return nil, status.Error(codes.Internal, "Internal error")
+		if errors.Is(err, auth.ErrEmailUnverified) {
+			st := status.New(codes.InvalidArgument, "Verify email to proceed")
+			st, err = st.WithDetails(&errdetails.ErrorInfo{Reason: "EMAIL_UNVERIFIED"})
+			if err != nil {
+				return nil, ErrInternalError
+			}
+			return nil, st.Err()
+		}
+		return nil, ErrInternalError
 	}
 
 	return &pb.SignUpResponse{

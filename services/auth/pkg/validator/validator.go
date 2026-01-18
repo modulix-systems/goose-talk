@@ -97,7 +97,10 @@ func (v *Validator) ValidateStruct(s interface{}) ValidationErrors {
 			reason = "IS_ONE_OF"
 		case "len":
 			errorMsg = fmt.Sprintf("Length should be equal to %s", err.Param())
-			reason = "INVALID_LEN"
+		case "http_url":
+		case "https_url":
+		case "url":
+			errorMsg = "Enter a valid url"
 		case "unique":
 			errorMsg = "Enter non-repitive values"
 		default:

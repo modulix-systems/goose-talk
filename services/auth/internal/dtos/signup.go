@@ -13,11 +13,12 @@ type SignUpRequest struct {
 	Email            string `validate:"required,email"`
 	FirstName        string
 	LastName         string
-	ConfirmationCode string `validate:"required,len=6"`
+	ConfirmationCode string `validate:"omitempty,len=6"`
 	IpAddr           string `validate:"required,ip"`
 	DeviceInfo       string `validate:"required"`
 	BirthDate        time.Time
 	AboutMe          string
+	PhotoUrl         string `validate:"omitempty,url"`
 }
 
 func (req *SignUpRequest) Validate() validator.ValidationErrors {

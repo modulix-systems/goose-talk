@@ -62,7 +62,7 @@ type (
 		VerifyRegistrationOptions(userId int, rawCredential []byte, prevSession *entity.PasskeyRegistrationSession) (*entity.PasskeyCredential, error)
 	}
 	NotificationsClient interface {
-		SendEmailVerifyEmail(ctx context.Context, to, otp string) error
+		SendEmailVerifyEmail(ctx context.Context, to, username, otp string) error
 		SendSignUpEmail(ctx context.Context, user *entity.User) error
 		SendConfirmEmailTwoFaEmail(ctx context.Context, to, username, otp, lang string) error
 		SendAccountDeactivatedEmail(ctx context.Context, to, username, lang string) error

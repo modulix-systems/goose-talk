@@ -8,6 +8,7 @@ var (
 		"you have not enabled two factor authentication for your account",
 	)
 	ErrUserAlreadyExists    = errors.New("user with provided email already exists")
+	ErrEmailUnverified      = errors.New("email verification is required to proceed")
 	ErrUserNotFound         = errors.New("user with provided email does not exist")
 	ErrInvalidCredentials   = errors.New("invalid credentials")
 	ErrUnsupported2FAMethod = errors.New(

@@ -6,6 +6,7 @@ import (
 
 	"github.com/modulix-systems/goose-talk/logger"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 type Server struct {
@@ -19,6 +20,7 @@ type Server struct {
 
 func New(log logger.Interface, port string) *Server {
 	gRPCServer := grpc.NewServer()
+	reflection.Register(gRPCServer)
 	errChan := make(chan error, 1)
 	return &Server{log: log, server: gRPCServer, ServeErr: errChan, Port: port}
 }

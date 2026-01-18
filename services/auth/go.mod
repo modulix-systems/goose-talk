@@ -4,7 +4,7 @@ go 1.25.5
 
 require (
 	buf.build/gen/go/co3n/goose-proto/grpc/go v1.6.0-20260102203506-171393a19e83.1
-	buf.build/gen/go/co3n/goose-proto/protocolbuffers/go v1.36.10-20260102203506-171393a19e83.1
+	buf.build/gen/go/co3n/goose-proto/protocolbuffers/go v1.36.11-20260118192846-29625ecf5663.1
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/brianvoe/gofakeit/v7 v7.2.1
 	github.com/go-webauthn/webauthn v0.13.0
@@ -12,19 +12,16 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.18.3
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jackc/pgx/v5 v5.8.0
+	github.com/modulix-systems/goose-talk/contracts v0.0.0-00010101000000-000000000000
 	github.com/modulix-systems/goose-talk/logger v0.0.0-00010101000000-000000000000
 	github.com/modulix-systems/goose-talk/postgres v0.0.0-00010101000000-000000000000
 	github.com/modulix-systems/goose-talk/rabbitmq v0.0.0-00010101000000-000000000000
+	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.46.0
 	google.golang.org/grpc v1.72.1
 	google.golang.org/protobuf v1.36.11
-)
-
-require (
-	github.com/modulix-systems/goose-talk/contracts v0.0.0-00010101000000-000000000000 // indirect
-	github.com/rabbitmq/amqp091-go v1.10.0 // indirect
 )
 
 replace (

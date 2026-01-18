@@ -2,6 +2,8 @@ buf.build/gen/go/co3n/goose-proto/grpc/go v1.6.0-20260102203506-171393a19e83.1 h
 buf.build/gen/go/co3n/goose-proto/grpc/go v1.6.0-20260102203506-171393a19e83.1/go.mod h1:OAPokbGCJxYWBkawZGq9CcFOfNAIt9AIJQ2lj6jalC4=
 buf.build/gen/go/co3n/goose-proto/protocolbuffers/go v1.36.10-20260102203506-171393a19e83.1 h1:E9/yo4dZX1iR5EaoZCFZAbv7HOaxq1RYT4gZz/kITyA=
 buf.build/gen/go/co3n/goose-proto/protocolbuffers/go v1.36.10-20260102203506-171393a19e83.1/go.mod h1:cPWdjzBDxC0Ad7kgln8+QEllcz/RIsYE4YubIAK08B4=
+buf.build/gen/go/co3n/goose-proto/protocolbuffers/go v1.36.11-20260118192846-29625ecf5663.1 h1:3lE54T71PM9+cAgulifnjWg3gQbdGIFKalc9ZXxQvLg=
+buf.build/gen/go/co3n/goose-proto/protocolbuffers/go v1.36.11-20260118192846-29625ecf5663.1/go.mod h1:AUmeBQtelSjLDqFj2epSun2iQdePH8uuZ+pS26lUeF0=
 github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 h1:L/gRVlceqvL25UVaW/CKtUDjefjrs0SPonmDGUVOYP0=
 github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161/go.mod h1:xomTg63KZ2rFqZQzSB4Vz2SUXa1BpHTVz9L5PTmPC4E=
 github.com/BurntSushi/toml v1.2.1/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=

@@ -18,6 +18,25 @@ func (s *AuthService) SignUp(
 	ctx context.Context,
 	dto *dtos.SignUpRequest,
 ) (*dtos.SignUpResponse, error) {
+	userExists, err := s.usersRepo.CheckExistsWithEmail(ctx, dto.Email)
+	if err != nil {
+		return nil, fmt.Errorf("auth.Service.SignUp - error checking user existence: %w", err)
+	}
+	if userExists {
+		return nil, ErrUserAlreadyExists
+	}
+
+	if dto.ConfirmationCode == "" {
+		otpCode, err := s.createOtp(ctx, dto.Email, 0)
+		if err != nil {
+			return nil, fmt.Errorf("auth.Service.SignUp - error creating otp: %w", err)
+		}
+		if err = s.notificationsClient.SendEmailVerifyEmail(ctx, dto.Email, dto.Username, otpCode); err != nil {
+			return nil, fmt.Errorf("auth.Service.SignUp - error sending email verification email: %w", err)
+		}
+		return nil, ErrEmailUnverified
+	}
+
 	otp, err := s.otpRepo.GetByEmail(ctx, dto.Email)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
@@ -71,26 +90,6 @@ func (s *AuthService) SignUp(
 	}
 
 	return &dtos.SignUpResponse{Session: session, User: user}, nil
-}
-
-func (s *AuthService) RequestEmailConfirmationCode(ctx context.Context, email string) error {
-	isExists, err := s.usersRepo.CheckExistsWithEmail(ctx, email)
-	if err != nil {
-		return err
-	}
-	if isExists {
-		return ErrUserAlreadyExists
-	}
-
-	otpCode, err := s.createOtp(ctx, email, 0)
-	if err != nil {
-		return err
-	}
-	if err = s.notificationsClient.SendEmailVerifyEmail(ctx, email, otpCode); err != nil {
-		s.log.Error("Failed to send signup confirmation email with otp code", "to", email)
-		return err
-	}
-	return nil
 }
 
 func (s *AuthService) SignIn(ctx context.Context, dto *dtos.SignInRequest) (*dtos.SignInResponse, error) {

@@ -9,18 +9,18 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func mapTwoFATransport(t entity.TwoFaMethod) usersv1.TwoFactorAuth_TwoFATransport {
-	switch t {
+func mapTwoFaMethod(method entity.TwoFaMethod) usersv1.TwoFactorAuth_TwoFaMethod {
+	switch method {
 	case entity.TWO_FA_TELEGRAM:
-		return usersv1.TwoFactorAuth_TWO_FA_TRANSPORT_TELEGRAM
+		return usersv1.TwoFactorAuth_TWO_FA_METHOD_TELEGRAM
 	case entity.TWO_FA_EMAIL:
-		return usersv1.TwoFactorAuth_TWO_FA_TRANSPORT_EMAIL
+		return usersv1.TwoFactorAuth_TWO_FA_METHOD_EMAIL
 	case entity.TWO_FA_SMS:
-		return usersv1.TwoFactorAuth_TWO_FA_TRANSPORT_SMS
+		return usersv1.TwoFactorAuth_TWO_FA_METHOD_SMS
 	case entity.TWO_FA_TOTP_APP:
-		return usersv1.TwoFactorAuth_TWO_FA_TRANSPORT_TOTP
+		return usersv1.TwoFactorAuth_TWO_FA_METHOD_TOTP
 	default:
-		return usersv1.TwoFactorAuth_TWO_FA_TRANSPORT_UNSPECIFIED
+		return usersv1.TwoFactorAuth_TWO_FA_METHOD_UNSPECIFIED
 	}
 }
 
@@ -31,7 +31,7 @@ func mapTwoFactorAuth(src *entity.TwoFactorAuth) *usersv1.TwoFactorAuth {
 
 	return &usersv1.TwoFactorAuth{
 		UserId:     int64(src.UserId),
-		Transport:  mapTwoFATransport(src.Method),
+		Method:     mapTwoFaMethod(src.Method),
 		Contact:    src.Contact,
 		TotpSecret: src.TotpSecret,
 		Enabled:    src.Enabled,

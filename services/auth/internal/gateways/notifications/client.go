@@ -38,7 +38,6 @@ func New(rmq *rabbitmq.RabbitMQ, log logger.Interface) (*Client, error) {
 }
 
 func (c *Client) sendEmailNotice(ctx context.Context, typ notificationsContracts.EmailType, to string, payload any, lang string) error {
-	c.log.Info("Sending email notice", "to", to, "typ", typ)
 	payloadJson, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("notifications.Client.sendEmailNotice - %s - marshal payload: %w", typ, err)
@@ -63,9 +62,10 @@ func (c *Client) sendEmailNotice(ctx context.Context, typ notificationsContracts
 	return nil
 }
 
-func (c *Client) SendEmailVerifyEmail(ctx context.Context, to, otp string) error {
+func (c *Client) SendEmailVerifyEmail(ctx context.Context, to, username, otp string) error {
 	payload := notificationsContracts.EmailVerifyNotice{
-		Code: otp,
+		Code:     otp,
+		Username: username,
 	}
 
 	return c.sendEmailNotice(
