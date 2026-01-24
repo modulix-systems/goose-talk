@@ -1,9 +1,11 @@
 package logger
 
 import (
+	"context"
 	"fmt"
 	"os"
 
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 )
 
@@ -115,4 +117,17 @@ func (l *Logger) log(logEvent *zerolog.Event, message interface{}, args ...inter
 	}
 
 	logEvent.Msg(messageContent)
+}
+
+var CorrelationIDKey = "X-Correlation-ID"
+
+func CorrelationIDFromContext(ctx context.Context) string {
+	if v := ctx.Value(CorrelationIDKey); v != nil {
+		return v.(string)
+	}
+	return ""
+}
+
+func CtxWithCorrelationID(ctx context.Context) context.Context {
+	return context.WithValue(ctx, CorrelationIDKey, uuid.New().String())
 }
