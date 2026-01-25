@@ -37,7 +37,7 @@ func New(host, port, username, password, appName, appUrl string) *SmtpMailClient
 	return &SmtpMailClient{from: username, addr: addr, auth: auth, appName: appName, appUrl: appUrl}
 }
 
-func send[T any](client *SmtpMailClient, payload T, templateName, to, subject string) error {
+func send[T any](client *SmtpMailClient, payload T, to, templateName, subject string) error {
 	var messageBody bytes.Buffer
 
 	templateData := TemplateData[T]{
@@ -58,6 +58,7 @@ func send[T any](client *SmtpMailClient, payload T, templateName, to, subject st
 		fmt.Sprintf("From: %s", client.from),
 		fmt.Sprintf("Subject: %s", subject),
 		fmt.Sprintf("To: %s", to),
+		"Content-Type: text/html",
 		"",
 		messageBody.String(),
 	}

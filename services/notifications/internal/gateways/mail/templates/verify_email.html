@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Welcome</title>
+    <title>Verify your email</title>
     <style>
       body {
         margin: 0;
@@ -25,15 +25,15 @@
         line-height: 1.5;
         color: #333333;
       }
-      .button {
-        display: inline-block;
-        margin-top: 20px;
-        padding: 12px 18px;
-        background-color: #007bff;
-        color: #ffffff !important;
-        text-decoration: none;
+      .code {
+        margin: 20px 0;
+        padding: 14px;
+        background-color: #f0f0f0;
         border-radius: 4px;
-        font-size: 14px;
+        font-size: 18px;
+        font-weight: bold;
+        letter-spacing: 2px;
+        text-align: center;
       }
       .footer {
         margin-top: 32px;
@@ -44,14 +44,21 @@
   </head>
   <body>
     <div class="container">
-      <h1>Welcome, {{.Payload.Username}}</h1>
+      <h1>Hello, {{.Payload.Username}}</h1>
 
       <p>
-        Thanks for signing up for <strong>{{.AppName}}</strong>. We're excited
-        to have you on board.
+        Thank you for registering with <strong>{{.AppName}}</strong>. To
+        complete your registration, please verify your email address.
       </p>
 
-      <p>If you didn’t create an account, you can safely ignore this email.</p>
+      <p>Use the verification code below:</p>
+
+      <div class="code">{{.Payload.Code}}</div>
+
+      <p>
+        This code will expire soon. If you did not request this verification,
+        you can safely ignore this email.
+      </p>
 
       <div class="footer">
         <p>© {{.Year}} {{.AppName}}. All rights reserved.</p>

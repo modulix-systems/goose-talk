@@ -44,7 +44,6 @@ replace (
 	github.com/modulix-systems/goose-talk/logger => ../../pkg/logger
 	github.com/modulix-systems/goose-talk/postgres => ../../pkg/postgres
 	github.com/modulix-systems/goose-talk/rabbitmq => ../../pkg/rabbitmq
-	github.com/modulix-systems/goose-talk/contracts => ../../pkg/contracts
 )
 
 require (
@@ -287,7 +286,6 @@ require (
 	github.com/minio/c2goasm v0.0.0-20190812172519-36a3d3bbc4f3 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/modulix-systems/goose-talk/httpclient v0.0.0-00010101000000-000000000000
 	github.com/moricho/tparallel v0.3.2 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect

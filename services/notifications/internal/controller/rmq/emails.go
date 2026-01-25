@@ -19,14 +19,19 @@ func NewEmailsHandler(mailService *mail.Service, log logger.Interface) *EmailsHa
 	return &EmailsHandler{mailService, log}
 }
 
-func (c *EmailsHandler) Handle(delivery amqp091.Delivery) {
+func (c *EmailsHandler) Handle(delivery amqp091.Delivery) error {
 	var email notificationsContracts.EmailMessage
 	if err := json.Unmarshal(delivery.Body, &email); err != nil {
-		c.log.Error("rmq - EmailHandler.Handle - parse delivery", "err", err)
-		return
+		c.log.Error("rmq - EmailHandler.Handle - error parse delivery", "err", err)
+		return err
 	}
 
+	c.log.Info("rmq - EmailHandler.Handle - handling new email", "type", email.Type, "to", email.To)
+
 	if err := c.mailService.SendMail(context.Background(), email); err != nil {
-		c.log.Error("rmq - EmailHandler.Handle - SendMail", "err", err)
+		c.log.Error("rmq - EmailHandler.Handle - error sending mail", "err", err)
+		return err
 	}
+
+	return nil
 }

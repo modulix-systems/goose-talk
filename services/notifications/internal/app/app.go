@@ -17,7 +17,7 @@ import (
 
 func Run(cfg *config.Config) {
 	log := logger.New(cfg.Log.Level)
-	rmq, err := rabbitmq.New(cfg.RabbitMQ.Url)
+	rmq, err := rabbitmq.New(cfg.RabbitMQ.Url, log)
 	if err != nil {
 		log.Fatal("app - New - rabbitmq.New: rabbitmq startup failed", "err", err)
 	}
@@ -26,11 +26,13 @@ func Run(cfg *config.Config) {
 	mailClient := mailclient.New(cfg.Smtp.Host, cfg.Smtp.Port, cfg.Smtp.Username, cfg.Smtp.Password, cfg.App.Name, cfg.App.Url)
 	mailService := mail.New(mailClient, log)
 
-	rmqServer := rabbitmq.NewServer(rmq)
+	rmqServer := rabbitmq.NewServer(rmq, time.Second)
 	rmqController.Register(rmqServer, mailService, log)
 
+	go rmqServer.Run()
+
 	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt)
+	signal.Notify(interrupt, os.Interrupt)
 
 	select {
 	case s := <-interrupt:

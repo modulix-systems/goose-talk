@@ -43,6 +43,7 @@ func (s *Service) SendMail(ctx context.Context, email notifications.EmailMessage
 		if err := json.Unmarshal(email.Data, &data); err != nil {
 			return fmt.Errorf("mail - Service.SendMail - email two fa - json.Unmarshal: %w", err)
 		}
+		return s.mailClient.SendConfirmEmailTwoFaNotice(ctx, email.To, data, email.Language)
 
 	case notifications.EMAIL_TYPE_TWO_FA_CONFIRMED:
 		var data notifications.TwoFaConfirmedNotice
