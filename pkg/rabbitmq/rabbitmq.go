@@ -2,10 +2,10 @@ package rabbitmq
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/modulix-systems/goose-talk/contracts/rmqcontracts"
+	"github.com/modulix-systems/goose-talk/logger"
 	"github.com/rabbitmq/amqp091-go"
 )
 
@@ -18,14 +18,18 @@ type RabbitMQ struct {
 	connAttempts int
 	connTimeout  time.Duration
 	conn         *amqp091.Connection
+	log          logger.Interface
 }
 
-func New(url string, options ...Option) (*RabbitMQ, error) {
-	rmq := &RabbitMQ{connAttempts: _defaultConnAttempts, connTimeout: _defaultConnTimeout}
+func New(url string, log logger.Interface, options ...Option) (*RabbitMQ, error) {
+	rmq := &RabbitMQ{connAttempts: _defaultConnAttempts, connTimeout: _defaultConnTimeout, log: log}
 
 	for _, opt := range options {
 		opt(rmq)
 	}
+
+	op := "rabbitmq.New"
+	log = log.With("op", op)
 
 	var err error
 	for rmq.connAttempts > 0 {
@@ -34,7 +38,7 @@ func New(url string, options ...Option) (*RabbitMQ, error) {
 			break
 		}
 
-		log.Printf("RabbitMQ is trying to connect, attempts left: %d", rmq.connAttempts)
+		log.Error("connection failed, trying to reconnect", "attemptsLeft", rmq.connAttempts, "timeout", rmq.connTimeout, "err", err)
 
 		time.Sleep(rmq.connTimeout)
 
@@ -42,7 +46,7 @@ func New(url string, options ...Option) (*RabbitMQ, error) {
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("rabbitmq - New - connAttempts == 0: %w", err)
+		return nil, fmt.Errorf("%s - no connection attempts left: %w", op, err)
 	}
 
 	return rmq, nil
@@ -57,9 +61,13 @@ func (rmq *RabbitMQ) Close() error {
 }
 
 func (rmq *RabbitMQ) QueueDeclare(queueContract rmqcontracts.Queue, channel *amqp091.Channel) (*amqp091.Queue, error) {
+	op := "rabbitmq.RabbitMQ.QueueDeclare"
+	log := rmq.log.With("op", op, "queue", queueContract.Name)
+
 	queue, err := channel.QueueDeclare(queueContract.Name, queueContract.Durable, queueContract.Autodelete, queueContract.Exclusive, queueContract.NoWait, queueContract.Args)
 	if err != nil {
-		return nil, fmt.Errorf("rabbitmq - RabbitMQ.QueueDeclare - channel.QueueDeclare: %w", err)
+		log.Error("failed to declare queue", "err", err)
+		return nil, fmt.Errorf("%s - failed to declare queue: %w", op, err)
 	}
 
 	if queueContract.Binding != nil {
