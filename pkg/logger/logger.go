@@ -1,22 +1,12 @@
 package logger
 
 import (
-	"context"
 	"fmt"
+	"io"
 	"os"
 
-	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 )
-
-// Interface -.
-type Interface interface {
-	Debug(message interface{}, args ...interface{})
-	Info(message string, args ...interface{})
-	Warn(message string, args ...interface{})
-	Error(message interface{}, args ...interface{})
-	Fatal(message interface{}, args ...interface{})
-}
 
 type LogLevel int8
 
@@ -39,11 +29,14 @@ var _ Interface = (*Logger)(nil)
 func New(level LogLevel) *Logger {
 	zerolog.SetGlobalLevel(zerolog.Level(level))
 
-	skipFrameCount := 3
-	logger := zerolog.New(os.Stdout).
+	var outputWriter io.Writer = os.Stdout
+	if level == DebugLevel {
+		outputWriter = zerolog.ConsoleWriter{Out: os.Stdout}
+	}
+
+	logger := zerolog.New(outputWriter).
 		With().
 		Timestamp().
-		CallerWithSkipFrameCount(zerolog.CallerSkipFrameCount + skipFrameCount).
 		Logger()
 
 	return &Logger{
@@ -88,46 +81,11 @@ func (l *Logger) log(logEvent *zerolog.Event, message interface{}, args ...inter
 		panic(fmt.Sprintf("message %v has unknown type %v", message, msg))
 	}
 
-	if len(args) == 0 || len(args)%2 != 0 {
-		logEvent.Msg(messageContent)
-		return
-	}
-
-	for i := 0; i < len(args)-1; i += 2 {
-		_key := args[i]
-		_value := args[i+1]
-
-		key, ok := _key.(string)
-		if !ok {
-			panic(fmt.Errorf("Log argument key should always be a string, got: %T", key))
-		}
-
-		switch val := _value.(type) {
-		case string:
-			logEvent = logEvent.Str(key, val)
-		case int:
-			logEvent = logEvent.Int(key, val)
-		case float64:
-			logEvent = logEvent.Float64(key, val)
-		case error:
-			logEvent = logEvent.Str(key, val.Error())
-		default:
-			logEvent = logEvent.Str(key, fmt.Sprintf("%+v", val))
-		}
-	}
-
+	logEvent = attachContextFields(logEvent, args...)
 	logEvent.Msg(messageContent)
 }
 
-var CorrelationIDKey = "X-Correlation-ID"
-
-func CorrelationIDFromContext(ctx context.Context) string {
-	if v := ctx.Value(CorrelationIDKey); v != nil {
-		return v.(string)
-	}
-	return ""
-}
-
-func CtxWithCorrelationID(ctx context.Context) context.Context {
-	return context.WithValue(ctx, CorrelationIDKey, uuid.New().String())
+func (l *Logger) With(args ...any) Interface {
+	logger := attachContextFields(l.logger.With(), args...).Logger()
+	return &Logger{&logger}
 }
