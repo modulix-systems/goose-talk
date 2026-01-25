@@ -19,28 +19,33 @@ type Client struct {
 }
 
 func New(rmq *rabbitmq.RabbitMQ, log logger.Interface) (*Client, error) {
+	op := "notifications.Client.New"
 	channel, err := rmq.NewChannel()
 	if err != nil {
-		return nil, fmt.Errorf("notifications.New - rmq.NewChannel: %w", err)
+		return nil, fmt.Errorf("%s - rmq.NewChannel: %w", op, err)
 	}
 
 	contracts := notificationsContracts.New()
 
 	if _, err := rmq.QueueDeclare(contracts.Queues.Emails, channel); err != nil {
-		return nil, fmt.Errorf("notifications.New - rmq.QueueDeclare - declare emails queue: %w", err)
+		return nil, fmt.Errorf("%s - rmq.QueueDeclare declare emails queue: %w", op, err)
 	}
 
 	if _, err := rmq.QueueDeclare(contracts.Queues.Notifications, channel); err != nil {
-		return nil, fmt.Errorf("notifications.New - rmq.QueueDeclare - declare notifications queue: %w", err)
+		return nil, fmt.Errorf("%s - rmq.QueueDeclare declare notifications queue: %w", op, err)
 	}
 
 	return &Client{channel: channel, contracts: contracts, log: log}, nil
 }
 
 func (c *Client) sendEmailNotice(ctx context.Context, typ notificationsContracts.EmailType, to string, payload any, lang string) error {
+	correlationId := logger.CorrelationIDFromContext(ctx)
+	op := "notifications.Client.sendEmailNotice"
+	log := c.log.With("op", op, "correlationId", correlationId, "to", to, "typ", typ)
 	payloadJson, err := json.Marshal(payload)
 	if err != nil {
-		return fmt.Errorf("notifications.Client.sendEmailNotice - %s - marshal payload: %w", typ, err)
+		log.Error("marshal payload failed", "err", err)
+		return fmt.Errorf("%s - marshal payload %s: %w", op, typ, err)
 	}
 	message := notificationsContracts.EmailMessage{
 		Language: notificationsContracts.Language(lang),
@@ -50,14 +55,16 @@ func (c *Client) sendEmailNotice(ctx context.Context, typ notificationsContracts
 	}
 	messageJson, err := json.Marshal(message)
 	if err != nil {
-		return fmt.Errorf("notifications.Client.sendEmailNotice - %s - marshal email message: %w", typ, err)
+		log.Error("marshal email message failed", "err", err)
+		return fmt.Errorf("%s - marshal email message: %w", op, err)
 	}
 
-	publishing := amqp091.Publishing{Body: messageJson}
+	publishing := amqp091.Publishing{Body: messageJson, CorrelationId: correlationId}
 	if err = c.channel.PublishWithContext(ctx, "", c.contracts.Queues.Emails.Name, false, false, publishing); err != nil {
-		return fmt.Errorf("notifications.Client.sendEmailNotice - %s - publish to queue: %w", typ, err)
+		log.Error("rmq publish failed", "err", err)
+		return fmt.Errorf("%s - publish to queue: %w", op, err)
 	}
-	c.log.Info("Email notice published", "to", to, "typ", typ)
+	log.Info("Email notice published")
 
 	return nil
 }

@@ -40,7 +40,7 @@ func Run(cfg *config.Config) {
 	}
 	defer pg.Close()
 
-	rmq, err := rabbitmq.New(cfg.RabbitMQ.Url)
+	rmq, err := rabbitmq.New(cfg.RabbitMQ.Url, log)
 	if err != nil {
 		log.Fatal(fmt.Errorf("app - Run - rabbitmq.New: %w", err))
 	}

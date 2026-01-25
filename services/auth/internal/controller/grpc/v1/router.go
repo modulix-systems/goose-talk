@@ -10,7 +10,7 @@ import (
 
 func Register(
 	registrar grpc.ServiceRegistrar,
-	authService *auth.AuthService,
+	authService *auth.Service,
 	log logger.Interface,
 	validate *validator.Validate,
 ) {

@@ -17,12 +17,13 @@ require (
 	github.com/modulix-systems/goose-talk/postgres v0.0.0-00010101000000-000000000000
 	github.com/modulix-systems/goose-talk/rabbitmq v0.0.0-00010101000000-000000000000
 	github.com/rabbitmq/amqp091-go v1.10.0
-	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.46.0
 	google.golang.org/grpc v1.72.1
 	google.golang.org/protobuf v1.36.11
 )
+
+require github.com/rs/zerolog v1.34.0 // indirect
 
 replace (
 	github.com/modulix-systems/goose-talk/contracts => ../../pkg/contracts

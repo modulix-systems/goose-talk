@@ -9,6 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/modulix-systems/goose-talk/internal/dtos"
 	"github.com/modulix-systems/goose-talk/internal/services/auth"
+	"github.com/modulix-systems/goose-talk/internal/utils"
 	"github.com/modulix-systems/goose-talk/logger"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
@@ -18,12 +19,15 @@ import (
 type AuthV1 struct {
 	authv1grpc.UnimplementedAuthServiceServer
 
-	service  *auth.AuthService
+	service  *auth.Service
 	log      logger.Interface
 	validate *validator.Validate
 }
 
 func (a *AuthV1) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.SignUpResponse, error) {
+	correlationId := utils.GetCorrelationIdFromGrpcCtx(ctx)
+	ctx = logger.CtxWithCorrelationID(ctx, correlationId)
+
 	reqDto := &dtos.SignUpRequest{
 		Username:         req.GetUsername(),
 		Password:         req.Password,
@@ -71,10 +75,13 @@ func (a *AuthV1) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.SignUpR
 }
 
 func (a *AuthV1) SignIn(ctx context.Context, req *pb.SignInRequest) (*pb.SignInResponse, error) {
+	correlationId := utils.GetCorrelationIdFromGrpcCtx(ctx)
+	ctx = logger.CtxWithCorrelationID(ctx, correlationId)
+
 	return nil, status.Errorf(codes.Unimplemented, "method SignIn not implemented")
 }
 
-func newAuthController(service *auth.AuthService, log logger.Interface, validate *validator.Validate) *AuthV1 {
+func newAuthController(service *auth.Service, log logger.Interface, validate *validator.Validate) *AuthV1 {
 	return &AuthV1{
 		service:  service,
 		log:      log,

@@ -12,7 +12,7 @@ import (
 	"github.com/modulix-systems/goose-talk/logger"
 )
 
-type AuthService struct {
+type Service struct {
 	usersRepo           gateways.UsersRepo
 	notificationsClient gateways.NotificationsClient
 	tgApi               gateways.TelegramBotClient
@@ -49,8 +49,8 @@ func New(
 	longLivedSessionTTL time.Duration,
 
 	log logger.Interface,
-) *AuthService {
-	return &AuthService{
+) *Service {
+	return &Service{
 		usersRepo:           usersRepo,
 		passkeySessionsRepo: passkeySessionRepo,
 		notificationsClient: notificationsClient,
@@ -71,7 +71,7 @@ func New(
 
 // createOtp generates, hashes and saves hashed otp token to database
 // returning plain code and insertion error for caller to handle
-func (s *AuthService) createOtp(ctx context.Context, email string, userId int) (string, error) {
+func (s *Service) createOtp(ctx context.Context, email string, userId int) (string, error) {
 	if email == "" && userId == 0 {
 		panic("AuthService - createOtp - email or userId must be provided")
 	}
@@ -90,7 +90,7 @@ func (s *AuthService) createOtp(ctx context.Context, email string, userId int) (
 
 // newAuthSession inserts a new session or updates existing one based on set of params
 // if new session was created - sends 'warning' email
-func (s *AuthService) newAuthSession(ctx context.Context, user *entity.User, ip string, deviceInfo string, rememberMe bool, signedUp bool) (newSession *entity.AuthSession, err error) {
+func (s *Service) newAuthSession(ctx context.Context, user *entity.User, ip string, deviceInfo string, rememberMe bool, signedUp bool) (newSession *entity.AuthSession, err error) {
 	if !signedUp {
 		var existingSession *entity.AuthSession
 		existingSession, err = s.sessionsRepo.GetByLoginData(ctx, user.Id, ip, deviceInfo)
